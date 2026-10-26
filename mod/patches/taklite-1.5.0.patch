@@ -855,25 +855,45 @@ diff -ruN a/smali_classes2/com/taklite/client/tak/TakLocationService.smali b/sma
 diff -ruN a/smali_classes2/com/taklite/client/tak/TakManager.smali b/smali_classes2/com/taklite/client/tak/TakManager.smali
 --- a/smali_classes2/com/taklite/client/tak/TakManager.smali
 +++ b/smali_classes2/com/taklite/client/tak/TakManager.smali
-@@ -1482,6 +1482,8 @@
+@@ -388,6 +388,8 @@
+ 
+     move-result-object p1
+ 
++    invoke-static {p1}, Lcom/taklite/client/mod/RemoteMarkers;->adjust(Lcom/taklite/client/tak/TakUser;)V
++
+     if-eqz p1, :cond_e
+ 
+     .line 282
+@@ -1482,6 +1484,10 @@
  .method public onCotReceived(Ljava/lang/String;)V
      .locals 3
  
 +    invoke-static {p1}, Lcom/taklite/client/mod/imports/Imports;->onCotReceived(Ljava/lang/String;)V
 +
++    invoke-static {p1}, Lcom/taklite/client/mod/RemoteMarkers;->observe(Ljava/lang/String;)V
++
      .line 190
      new-instance v0, Ljava/lang/StringBuilder;
  
-@@ -1760,6 +1762,12 @@
+@@ -1762,6 +1768,12 @@
  
-     move-result-object v1
+     iget-object v2, v0, Lcom/taklite/client/tak/TakManager;->uid:Ljava/lang/String;
  
-+    iget-object v2, v0, Lcom/taklite/client/tak/TakManager;->uid:Ljava/lang/String;
-+
 +    invoke-static {v2, v1}, Lcom/taklite/client/mod/MarkerIds;->uidForSend(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;
 +
 +    move-result-object v1
 +
-     iget-object v2, v0, Lcom/taklite/client/tak/TakManager;->uid:Ljava/lang/String;
- 
++    iget-object v2, v0, Lcom/taklite/client/tak/TakManager;->uid:Ljava/lang/String;
++
      iget-object v3, v0, Lcom/taklite/client/tak/TakManager;->callsign:Ljava/lang/String;
+ 
+     move-object v4, v1
+@@ -1783,6 +1795,8 @@
+ 
+     move-result-object v2
+ 
++    invoke-static {v2}, Lcom/taklite/client/mod/MarkerIds;->logOutgoing(Ljava/lang/String;)V
++
+     iget-object v3, v0, Lcom/taklite/client/tak/TakManager;->client:Lcom/taklite/client/tak/TakClient;
+ 
+     .line 172
