@@ -65,6 +65,18 @@ diff -ruN a/res/layout/activity_settings.xml b/res/layout/activity_settings.xml
              <LinearLayout android:gravity="center_vertical" android:orientation="horizontal" android:id="@id/advancedHeader" android:background="?selectableItemBackground" android:layout_width="fill_parent" android:layout_height="44.0dip" android:layout_marginBottom="8.0dip" android:paddingStart="4.0dip" android:paddingEnd="4.0dip">
                  <TextView android:textSize="14.0sp" android:textStyle="bold" android:textColor="@color/text_secondary" android:id="@id/advancedHeaderText" android:layout_width="0.0dip" android:layout_height="wrap_content" android:text="Advanced Settings" android:layout_weight="1.0" />
                  <ImageView android:id="@id/advancedArrow" android:layout_width="24.0dip" android:layout_height="24.0dip" android:src="@android:drawable/arrow_down_float" android:contentDescription="Expand" app:tint="@color/text_secondary" />
+diff -ruN a/smali_classes2/com/taklite/client/MainActivity$6.smali b/smali_classes2/com/taklite/client/MainActivity$6.smali
+--- a/smali_classes2/com/taklite/client/MainActivity$6.smali
++++ b/smali_classes2/com/taklite/client/MainActivity$6.smali
+@@ -369,6 +369,8 @@
+ 
+     iget-object v10, v0, Lcom/taklite/client/DroppedMarker;->remarks:Ljava/lang/String;
+ 
++    invoke-static {v0}, Lcom/taklite/client/mod/MarkerIds;->beforeSend(Lcom/taklite/client/DroppedMarker;)V
++
+     .line 1584
+     invoke-virtual/range {v1 .. v10}, Lcom/taklite/client/tak/TakManager;->sendMarker(DDDLjava/lang/String;Ljava/lang/String;Ljava/lang/String;)V
+ 
 diff -ruN a/smali_classes2/com/taklite/client/MainActivity.smali b/smali_classes2/com/taklite/client/MainActivity.smali
 --- a/smali_classes2/com/taklite/client/MainActivity.smali
 +++ b/smali_classes2/com/taklite/client/MainActivity.smali
@@ -90,7 +102,7 @@ diff -ruN a/smali_classes2/com/taklite/client/MainActivity.smali b/smali_classes
      const/4 v0, 0x1
  
      if-eq p1, v0, :cond_2
-@@ -2998,6 +3013,96 @@
+@@ -2998,6 +3013,112 @@
      return-object v0
  .end method
  
@@ -126,6 +138,22 @@ diff -ruN a/smali_classes2/com/taklite/client/MainActivity.smali b/smali_classes
 +    invoke-direct {p0}, Lcom/taklite/client/MainActivity;->toggleGpsLock()V
 +
 +    :mod_not_following
++    return-void
++.end method
++
++.method public modDismissRadialMenu()V
++    .locals 0
++
++    invoke-direct {p0}, Lcom/taklite/client/MainActivity;->dismissRadialMenu()V
++
++    return-void
++.end method
++
++.method public modSaveDroppedMarkers()V
++    .locals 0
++
++    invoke-direct {p0}, Lcom/taklite/client/MainActivity;->saveDroppedMarkers()V
++
 +    return-void
 +.end method
 +
@@ -187,7 +215,7 @@ diff -ruN a/smali_classes2/com/taklite/client/MainActivity.smali b/smali_classes
  .method private cycleMapType()V
      .locals 4
  
-@@ -3006,7 +3111,11 @@
+@@ -3006,7 +3127,11 @@
      add-int/lit8 v0, v0, 0x1
  
      .line 1806
@@ -200,7 +228,25 @@ diff -ruN a/smali_classes2/com/taklite/client/MainActivity.smali b/smali_classes
  
      iput v0, p0, Lcom/taklite/client/MainActivity;->currentMapType:I
  
-@@ -9232,6 +9341,8 @@
+@@ -6091,6 +6216,8 @@
+ 
+     iput-object v1, p0, Lcom/taklite/client/MainActivity;->activeRadialMenu:Landroid/view/View;
+ 
++    invoke-static {p0, v1, p1}, Lcom/taklite/client/mod/MarkerMove;->attach(Lcom/taklite/client/MainActivity;Landroid/view/View;Lcom/taklite/client/DroppedMarker;)V
++
+     .line 1602
+     invoke-virtual {p0}, Lcom/taklite/client/MainActivity;->getWindow()Landroid/view/Window;
+ 
+@@ -8948,6 +9075,8 @@
+     iget-object v9, p1, Lcom/taklite/client/DroppedMarker;->remarks:Ljava/lang/String;
+ 
+     .line 1717
++    invoke-static {p1}, Lcom/taklite/client/mod/MarkerIds;->beforeSend(Lcom/taklite/client/DroppedMarker;)V
++
+     invoke-virtual/range {v0 .. v9}, Lcom/taklite/client/tak/TakManager;->sendMarker(DDDLjava/lang/String;Ljava/lang/String;Ljava/lang/String;)V
+ 
+     const/4 p2, 0x1
+@@ -9232,6 +9361,8 @@
  
      invoke-interface {v1, v2}, Lorg/osmdroid/config/IConfigurationProvider;->setUserAgentValue(Ljava/lang/String;)V
  
@@ -209,7 +255,7 @@ diff -ruN a/smali_classes2/com/taklite/client/MainActivity.smali b/smali_classes
      .line 146
      sget v1, Lcom/taklite/client/R$layout;->activity_main:I
  
-@@ -9624,6 +9735,8 @@
+@@ -9624,6 +9755,8 @@
      invoke-virtual {v0, p1}, Landroid/app/NotificationManager;->createNotificationChannel(Landroid/app/NotificationChannel;)V
  
      :cond_4
@@ -218,7 +264,7 @@ diff -ruN a/smali_classes2/com/taklite/client/MainActivity.smali b/smali_classes
      return-void
  .end method
  
-@@ -9768,6 +9881,8 @@
+@@ -9768,6 +9901,8 @@
      .line 260
      invoke-virtual {v1}, Lorg/osmdroid/views/MapView;->onResume()V
  
@@ -227,6 +273,68 @@ diff -ruN a/smali_classes2/com/taklite/client/MainActivity.smali b/smali_classes
      :cond_0
      iget-object v1, p0, Lcom/taklite/client/MainActivity;->videoPlayer:Landroidx/media3/exoplayer/ExoPlayer;
  
+diff -ruN a/smali_classes2/com/taklite/client/RadialMenuView.smali b/smali_classes2/com/taklite/client/RadialMenuView.smali
+--- a/smali_classes2/com/taklite/client/RadialMenuView.smali
++++ b/smali_classes2/com/taklite/client/RadialMenuView.smali
+@@ -49,6 +49,8 @@
+ 
+ .field private userListener:Lcom/taklite/client/RadialMenuView$UserRadialMenuListener;
+ 
++.field public modMove:Ljava/lang/Runnable;
++
+ 
+ # direct methods
+ .method public constructor <init>(Landroid/content/Context;FFLcom/taklite/client/RadialMenuView$RadialMenuListener;)V
+@@ -63,7 +65,7 @@
+ 
+     iput-object p4, p0, Lcom/taklite/client/RadialMenuView;->listener:Lcom/taklite/client/RadialMenuView$RadialMenuListener;
+ 
+-    const/4 p4, 0x3
++    const/4 p4, 0x4
+ 
+     iput p4, p0, Lcom/taklite/client/RadialMenuView;->numItems:I
+ 
+@@ -143,7 +145,21 @@
+ 
+     aput-object p1, p2, p3
+ 
+-    const/high16 p1, -0x3cae0000    # -210.0f
++    iget-object p2, p0, Lcom/taklite/client/RadialMenuView;->icons:[Landroid/graphics/Bitmap;
++
++    invoke-virtual {p0}, Lcom/taklite/client/RadialMenuView;->getContext()Landroid/content/Context;
++
++    move-result-object p1
++
++    invoke-static {p1}, Lcom/taklite/client/mod/MarkerMove;->radialIcon(Landroid/content/Context;)Landroid/graphics/Bitmap;
++
++    move-result-object p1
++
++    const/4 p3, 0x3
++
++    aput-object p1, p2, p3
++
++    const/high16 p1, -0x3c9f0000    # -225.0f
+ 
+     .line 57
+     invoke-direct {p0, p1}, Lcom/taklite/client/RadialMenuView;->setupSectors(F)V
+@@ -247,6 +263,17 @@
+ 
+     if-eq p1, v2, :cond_0
+ 
++    const/4 v2, 0x3
++
++    if-ne p1, v2, :mod_not_move
++
++    iget-object v2, p0, Lcom/taklite/client/RadialMenuView;->modMove:Ljava/lang/Runnable;
++
++    if-eqz v2, :mod_not_move
++
++    invoke-interface {v2}, Ljava/lang/Runnable;->run()V
++
++    :mod_not_move
+     goto :goto_0
+ 
+     .line 206
 diff -ruN a/smali_classes2/com/taklite/client/SettingsActivity.smali b/smali_classes2/com/taklite/client/SettingsActivity.smali
 --- a/smali_classes2/com/taklite/client/SettingsActivity.smali
 +++ b/smali_classes2/com/taklite/client/SettingsActivity.smali
@@ -263,3 +371,16 @@ diff -ruN a/smali_classes2/com/taklite/client/tak/TakManager.smali b/smali_class
      .line 190
      new-instance v0, Ljava/lang/StringBuilder;
  
+@@ -1760,6 +1762,12 @@
+ 
+     move-result-object v1
+ 
++    iget-object v2, v0, Lcom/taklite/client/tak/TakManager;->uid:Ljava/lang/String;
++
++    invoke-static {v2, v1}, Lcom/taklite/client/mod/MarkerIds;->uidForSend(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;
++
++    move-result-object v1
++
+     iget-object v2, v0, Lcom/taklite/client/tak/TakManager;->uid:Ljava/lang/String;
+ 
+     iget-object v3, v0, Lcom/taklite/client/tak/TakManager;->callsign:Ljava/lang/String;
