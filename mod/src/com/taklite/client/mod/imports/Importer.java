@@ -243,9 +243,17 @@ final class Importer {
     }
 
     /** One KML, KMZ, GPX or CoT document. */
-    private void readDocument(InputStream raw, String name, Result result) throws IOException {
-        String lower = name.toLowerCase(Locale.US);
-        if (lower.endsWith(".kmz")) {
+    private void readDocument(InputStream input, String name, Result result) throws IOException {
+        // Go by the content, not the name: ATAK packages can hold a KMZ (a zip) named ".kml".
+        BufferedInputStream raw = new BufferedInputStream(input, 16384);
+        raw.mark(4);
+        byte[] magic = new byte[4];
+        int got = 0;
+        int n;
+        while (got < 4 && (n = raw.read(magic, got, 4 - got)) > 0) got += n;
+        raw.reset();
+        boolean zipped = got == 4 && magic[0] == 'P' && magic[1] == 'K' && magic[2] == 3 && magic[3] == 4;
+        if (zipped) {
             // A KMZ inside a data package: use its first .kml.
             try (ZipInputStream zin = new ZipInputStream(raw)) {
                 for (ZipEntry e = zin.getNextEntry(); e != null; e = zin.getNextEntry()) {

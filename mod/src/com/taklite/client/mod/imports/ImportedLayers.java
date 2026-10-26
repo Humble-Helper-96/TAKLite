@@ -328,6 +328,17 @@ final class ImportedLayers {
                 });
         row.addView(text, new LinearLayout.LayoutParams(0,
                 LinearLayout.LayoutParams.WRAP_CONTENT, 1f));
+
+        android.widget.ImageButton delete = new android.widget.ImageButton(context);
+        delete.setImageResource(android.R.drawable.ic_menu_delete);
+        delete.setImageTintList(android.content.res.ColorStateList.valueOf(DarkDialog.COLOR_DANGER));
+        delete.setBackgroundColor(Color.TRANSPARENT);
+        delete.setContentDescription("Delete " + e.name);
+        delete.setOnClickListener(v -> {
+            d.dismiss();
+            confirmDelete(context, e, () -> showManager(context));
+        });
+        row.addView(delete, new LinearLayout.LayoutParams(d.dp(44), d.dp(44)));
         d.content.addView(row, DarkDialog.matchWrap());
     }
 
@@ -442,7 +453,7 @@ final class ImportedLayers {
         });
         d.addAction("DELETE", DarkDialog.COLOR_DANGER, v -> {
             d.dismiss();
-            confirmDelete(context, e);
+            confirmDelete(context, e, () -> showEntry(context, e));
         });
         d.addActionSpacer();
         d.addAction("BACK", DarkDialog.COLOR_LABEL, v -> {
@@ -452,12 +463,13 @@ final class ImportedLayers {
         d.show();
     }
 
-    private static void confirmDelete(final Context context, final ImportStore.Entry e) {
+    /** {@code back} reopens whichever dialog the delete was started from. */
+    private static void confirmDelete(final Context context, final ImportStore.Entry e, final Runnable back) {
         final DarkDialog d = new DarkDialog(context, "Delete \"" + e.name + "\"?");
         d.addText("Removes its " + e.count + " items from the map and this phone.");
         d.addAction("CANCEL", DarkDialog.COLOR_LABEL, v -> {
             d.dismiss();
-            showEntry(context, e);
+            back.run();
         });
         d.addAction("DELETE", DarkDialog.COLOR_DANGER, v -> {
             try {
