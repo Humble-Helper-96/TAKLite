@@ -1,5 +1,10 @@
 # TAK Lite: custom maps and data import
 
+**Version 1.5.1** (this branch, `claude/gui-takpilot-theme`): the features below
+plus a restyle after TAK Aware (map screen) and the TAKPilot2 UI spec (dialogs and
+settings). Version 1.5.0 (branch `claude/gracious-ritchie-f7t94f`) has the same
+features on TAK Lite's original look.
+
 This adds your own raster map sources and data import (TAK data packages,
 KML, KMZ, GPX, CoT) to TAK Lite 1.5.0. Map sources are built for
 [TileServer GL](https://github.com/maptiler/tileserver-gl) but working with any
@@ -104,7 +109,7 @@ applies this mod to it:
 ```
 cd mod
 ./build.sh
-# -> out/TAKLite-V1.5.0-custommaps.apk
+# -> out/TAKLite-V1.5.1-custommaps.apk
 ```
 
 It needs `bash`, `curl`, `unzip`, `python3`, `patch` and JDK 17+. The Android

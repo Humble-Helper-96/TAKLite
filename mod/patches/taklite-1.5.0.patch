@@ -21,12 +21,14 @@ diff -ruN a/AndroidManifest.xml b/AndroidManifest.xml
 diff -ruN a/apktool.yml b/apktool.yml
 --- a/apktool.yml
 +++ b/apktool.yml
-@@ -13,7 +13,7 @@
+@@ -12,8 +12,8 @@
+   forcedPackageId: 127
    renameManifestPackage: null
  versionInfo:
-   versionCode: 29
+-  versionCode: 29
 -  versionName: 1.5.0
-+  versionName: 1.5.0-custommaps
++  versionCode: 30
++  versionName: 1.5.1-custommaps
  resourcesAreCompressed: false
  sharedLibrary: false
  sparseResources: false

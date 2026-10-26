@@ -12,7 +12,7 @@
 #   4. rebuild, zip-align and sign with your own key
 #
 # Needs: bash, curl, unzip, python3, patch, and a JDK 17+ (java, javac, keytool).
-# No Android SDK required. Output: mod/out/TAKLite-V1.5.0-custommaps.apk
+# No Android SDK required. Output: mod/out/TAKLite-V1.5.1-custommaps.apk
 set -euo pipefail
 
 MOD="$(cd "$(dirname "$0")" && pwd)"
@@ -114,6 +114,6 @@ fi
 
 log "Signing"
 java -cp "$JADX_JAR" "$MOD/tools/SignApk.java" "$WORK/unsigned.apk" \
-    "$OUT/TAKLite-V1.5.0-custommaps.apk" "$KEYSTORE" "$KEYSTORE_PASS" "$KEY_ALIAS"
+    "$OUT/TAKLite-V1.5.1-custommaps.apk" "$KEYSTORE" "$KEYSTORE_PASS" "$KEY_ALIAS"
 
-log "Done: $OUT/TAKLite-V1.5.0-custommaps.apk"
+log "Done: $OUT/TAKLite-V1.5.1-custommaps.apk"
