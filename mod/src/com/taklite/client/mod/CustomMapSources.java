@@ -134,6 +134,19 @@ public final class CustomMapSources {
         }
     }
 
+    /**
+     * MainActivity.onCreate(), right after osmdroid's Configuration is loaded and before the
+     * MapView exists: osmdroid trims its tile cache when the map starts, so the user's cache
+     * size has to be in place by then.
+     */
+    public static void beforeMapCreated(Context context) {
+        try {
+            TileCache.apply(context);
+        } catch (RuntimeException e) {
+            Log.e(TAG, "Could not apply tile cache size", e);
+        }
+    }
+
     /** End of MainActivity.onCreate(): long-press on the map layers button opens the picker. */
     public static void onMainActivityCreated(final MainActivity activity) {
         int id = activity.getResources().getIdentifier("mapTypeButton", "id", activity.getPackageName());
@@ -264,6 +277,24 @@ public final class CustomMapSources {
                         activity.modSetMapType(type, true);
                     });
         }
+
+        d.addDivider();
+        int selectedIndex = selected - BUILT_IN_NAMES.length;
+        int mapViewId = activity.getResources().getIdentifier("mapView", "id", activity.getPackageName());
+        final View mapView = mapViewId == 0 ? null : activity.findViewById(mapViewId);
+        if (selectedIndex >= 0 && selectedIndex < sources.size() && mapView instanceof MapView) {
+            final Source source = sources.get(selectedIndex);
+            d.addButton("Download visible area for offline", DarkDialog.COLOR_ACCENT, v -> {
+                d.dismiss();
+                AreaDownloader.show(activity, (MapView) mapView, source);
+            });
+        } else {
+            d.addText(sources.isEmpty()
+                    ? "Add your own map source to download maps for offline use."
+                    : "Switch to one of your own map sources to download it for offline use. "
+                    + "(The built-in maps' providers don't allow bulk downloads.)");
+        }
+
         d.addAction("MANAGE SOURCES", DarkDialog.COLOR_ACCENT, v -> {
             d.dismiss();
             showManager(activity, () -> refreshMainMap(activity));
@@ -309,6 +340,17 @@ public final class CustomMapSources {
             d.dismiss();
             showImport(context, () -> showManager(context, onClose));
         });
+
+        d.addDivider();
+        d.addLabel("Offline cache");
+        d.addText(TileCache.summary(context) + " To save an area ahead of time, long-press the "
+                + "map layers button and choose \"Download visible area\".");
+        d.addButton("Cache size: " + TileCache.formatSize(TileCache.limitMb(context) * 1024L * 1024L),
+                DarkDialog.COLOR_FIELD, v -> {
+                    d.dialog.setOnDismissListener(null);
+                    d.dismiss();
+                    TileCache.showLimitPicker(context, () -> showManager(context, onClose));
+                });
         d.addAction("CLOSE", DarkDialog.COLOR_LABEL, v -> d.dismiss());
         d.show();
     }

@@ -136,7 +136,16 @@ diff -ruN a/smali_classes2/com/taklite/client/MainActivity.smali b/smali_classes
  
      iput v0, p0, Lcom/taklite/client/MainActivity;->currentMapType:I
  
-@@ -9624,6 +9698,8 @@
+@@ -9232,6 +9306,8 @@
+ 
+     invoke-interface {v1, v2}, Lorg/osmdroid/config/IConfigurationProvider;->setUserAgentValue(Ljava/lang/String;)V
+ 
++    invoke-static {p0}, Lcom/taklite/client/mod/CustomMapSources;->beforeMapCreated(Landroid/content/Context;)V
++
+     .line 146
+     sget v1, Lcom/taklite/client/R$layout;->activity_main:I
+ 
+@@ -9624,6 +9700,8 @@
      invoke-virtual {v0, p1}, Landroid/app/NotificationManager;->createNotificationChannel(Landroid/app/NotificationChannel;)V
  
      :cond_4
@@ -145,7 +154,7 @@ diff -ruN a/smali_classes2/com/taklite/client/MainActivity.smali b/smali_classes
      return-void
  .end method
  
-@@ -9768,6 +9844,8 @@
+@@ -9768,6 +9846,8 @@
      .line 260
      invoke-virtual {v1}, Lorg/osmdroid/views/MapView;->onResume()V
  

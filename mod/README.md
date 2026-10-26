@@ -21,8 +21,24 @@ XYZ tile server, for example:
   Topo → your sources, as before. **Long-press** it to pick a map from a list
   or open the source manager.
 
-Tiles are cached on the phone the same way the built-in maps are, so areas you
-have viewed keep working when the server is out of reach.
+### Offline use
+
+Every tile you view is saved on the phone. It keeps showing when the server is
+out of reach, even after it goes stale (7 days for TileServer GL, which sends
+no cache headers). Stale tiles are refreshed when the server can be reached.
+
+- **Download visible area**: long-press the layers button while one of your
+  own sources is showing. Choose a zoom range and you get a tile count and a
+  rough size first. It downloads on 4 threads and skips tiles that are already
+  saved and fresh, so running it again only fetches what's missing or stale.
+  Keep the app open while it runs; the screen stays on. Built-in maps can't
+  be downloaded because their providers' usage policies don't allow bulk
+  downloads.
+- **Cache size**: Settings → Map Sources → Manage → **Cache size** (300 MB to
+  16 GB; the default is 600 MB). The cache is shared by all maps. When it's
+  full, the oldest tiles are removed down to 5/6 of the limit. The limit is
+  capped at 95% of the phone's free space. A lower limit takes effect the next
+  time the map opens.
 
 ### Notes
 
@@ -67,8 +83,8 @@ with your TAK server again), then install the APK.
 
 | Path | What it is |
 |---|---|
-| `src/com/taklite/client/mod/` | The feature, in Java: source storage, the osmdroid tile source and the dialogs |
-| `patches/taklite-1.5.0.patch` | Changes to the decoded app: hooks in `MainActivity` (map-type cycling, `onCreate`, `onResume`, a new `modSetMapType`) and `SettingsActivity.onCreate`, the Settings button, `usesCleartextTraffic`, and the version name |
+| `src/com/taklite/client/mod/` | The feature, in Java: source storage, the osmdroid tile source and dialogs (`CustomMapSources`), area download (`AreaDownloader`) and cache size (`TileCache`) |
+| `patches/taklite-1.5.0.patch` | Changes to the decoded app: hooks in `MainActivity` (map-type cycling; `onCreate` before and after the map is created; `onResume`; a new `modSetMapType`) and `SettingsActivity.onCreate`, the Settings button, `usesCleartextTraffic`, and the version name |
 | `stubs/` | A compile-time stand-in for `MainActivity`; it is not packaged |
 | `tools/SignApk.java` | Zip-aligns, signs and verifies with apksig |
 
