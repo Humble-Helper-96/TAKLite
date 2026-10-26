@@ -275,29 +275,139 @@ final class ImportedLayers {
         return BitmapFactory.decodeFile(file.getPath(), opts);
     }
 
+    /** The Data Packages menu (toolbar button): imports with visibility checkboxes, server, file. */
     static void showManager(final Context context) {
-        final DarkDialog d = new DarkDialog(context, "Imported Data");
-        d.addText("Data packages sent to you over TAK appear here automatically. You can also "
-                + "import KML, KMZ, GPX, CoT or data package (.zip) files, or open them with "
-                + "TAK Lite from a file manager.");
+        final DarkDialog d = new DarkDialog(context, "Data Packages");
         List<ImportStore.Entry> entries = Imports.list();
-        if (entries.isEmpty()) d.addLabel("Nothing imported yet.");
+        if (entries.isEmpty()) {
+            d.addText("Nothing imported yet. Data packages sent to you over TAK appear here "
+                    + "automatically; you can also download them from the server or import a file.");
+        }
         for (final ImportStore.Entry e : entries) {
-            String date = DateFormat.getMediumDateFormat(context).format(new Date(e.importedAt));
-            d.addRow(e.visible ? e.name : e.name + " (hidden)",
-                    e.origin + " · " + e.count + " items · " + date,
-                    e.visible ? Color.WHITE : DarkDialog.COLOR_LABEL, v -> {
-                        d.dismiss();
-                        showEntry(context, e);
-                    });
+            addEntryRow(context, d, e);
         }
         d.addDivider();
-        d.addButton("Import File…", DarkDialog.COLOR_ACCENT, v -> {
+        d.addButton("Download from Server", DarkDialog.COLOR_ACCENT, v -> {
+            d.dismiss();
+            showServerPackages(context);
+        });
+        d.addButton("Import File (KML, KMZ, GPX, CoT, .zip)", DarkDialog.COLOR_FIELD, v -> {
             d.dismiss();
             context.startActivity(new Intent(context, ImportActivity.class));
         });
         d.addAction("CLOSE", DarkDialog.COLOR_LABEL, v -> d.dismiss());
         d.show();
+    }
+
+    /** Checkbox toggles visibility; tapping the name opens zoom / show / delete. */
+    private static void addEntryRow(final Context context, final DarkDialog d, final ImportStore.Entry e) {
+        LinearLayout row = new LinearLayout(context);
+        row.setOrientation(LinearLayout.HORIZONTAL);
+        row.setGravity(android.view.Gravity.CENTER_VERTICAL);
+
+        final android.widget.CheckBox box = new android.widget.CheckBox(context);
+        box.setChecked(e.visible);
+        box.setButtonTintList(android.content.res.ColorStateList.valueOf(DarkDialog.COLOR_ACCENT));
+        box.setContentDescription("Show " + e.name + " on the map");
+        box.setOnCheckedChangeListener((b, checked) -> {
+            try {
+                Imports.setVisible(e.id, checked);
+                e.visible = checked;
+            } catch (IOException ex) {
+                b.setChecked(!checked);
+                Toast.makeText(context, "Could not save: " + ex.getMessage(), Toast.LENGTH_LONG).show();
+            }
+        });
+        row.addView(box);
+
+        String date = DateFormat.getMediumDateFormat(context).format(new Date(e.importedAt));
+        LinearLayout text = DarkDialog.row(context, e.name,
+                e.origin + " \u00b7 " + e.count + " items \u00b7 " + date, Color.WHITE, v -> {
+                    d.dismiss();
+                    showEntry(context, e);
+                });
+        row.addView(text, new LinearLayout.LayoutParams(0,
+                LinearLayout.LayoutParams.WRAP_CONTENT, 1f));
+        d.content.addView(row, DarkDialog.matchWrap());
+    }
+
+    /** Lists the server's data packages; tap one to download and import it. */
+    private static void showServerPackages(final Context context) {
+        final DarkDialog d = new DarkDialog(context, "Server Data Packages");
+        final android.widget.TextView status = d.addLabel("Asking the server\u2026");
+        final LinearLayout list = new LinearLayout(context);
+        list.setOrientation(LinearLayout.VERTICAL);
+        d.content.addView(list, DarkDialog.matchWrap());
+        d.addAction("BACK", DarkDialog.COLOR_LABEL, v -> {
+            d.dismiss();
+            showManager(context);
+        });
+        d.show();
+
+        final Handler main = new Handler(Looper.getMainLooper());
+        new Thread(() -> {
+            List<DataPackages.ServerPackage> found = null;
+            String error = null;
+            try {
+                found = DataPackages.queryServer(context);
+            } catch (IOException | RuntimeException ex) {
+                Log.e(TAG, "Server query failed", ex);
+                error = ex.getMessage();
+            }
+            final List<DataPackages.ServerPackage> packages = found;
+            final String failure = error;
+            main.post(() -> {
+                if (!d.dialog.isShowing()) return;
+                if (packages == null) {
+                    status.setTextColor(DarkDialog.COLOR_DANGER);
+                    status.setText("Could not get the list: " + failure);
+                    return;
+                }
+                status.setText(packages.isEmpty() ? "The server has no data packages you can see."
+                        : "Tap a package to download it and add it to the map.");
+                for (final DataPackages.ServerPackage p : packages) {
+                    boolean have = DataPackages.isImported(context, p.hash);
+                    StringBuilder sub = new StringBuilder(formatSize(p.size));
+                    if (!p.submitter.isEmpty()) sub.append(" \u00b7 ").append(p.submitter);
+                    if (p.submitted.length() >= 10) sub.append(" \u00b7 ").append(p.submitted.substring(0, 10));
+                    if (have) sub.append(" \u00b7 on this phone");
+                    final android.widget.TextView[] title = new android.widget.TextView[1];
+                    LinearLayout row = DarkDialog.row(context, have ? p.name + "  \u2713" : p.name, sub.toString(),
+                            have ? DarkDialog.COLOR_ACCENT : Color.WHITE, v -> download(context, p, title[0]));
+                    title[0] = (android.widget.TextView) row.getChildAt(0);
+                    list.addView(row, DarkDialog.matchWrap());
+                }
+            });
+        }, "ServerPackageQuery").start();
+    }
+
+    private static void download(final Context context, final DataPackages.ServerPackage p,
+                                 final android.widget.TextView title) {
+        title.setText(p.name + "  (downloading\u2026)");
+        title.setTextColor(DarkDialog.COLOR_LABEL);
+        final Handler main = new Handler(Looper.getMainLooper());
+        try {
+            DataPackages.importFromServer(context, p, (entry, error) -> main.post(() -> {
+                if (entry != null) {
+                    title.setText(p.name + "  \u2713");
+                    title.setTextColor(DarkDialog.COLOR_ACCENT);
+                    Toast.makeText(context, "\"" + entry.name + "\": " + entry.count + " items added to the map.",
+                            Toast.LENGTH_LONG).show();
+                } else {
+                    title.setText(p.name + "  (failed)");
+                    title.setTextColor(DarkDialog.COLOR_DANGER);
+                    Toast.makeText(context, "Could not download " + p.name + ": " + error, Toast.LENGTH_LONG).show();
+                }
+            }));
+        } catch (IllegalStateException ex) {
+            Toast.makeText(context, ex.getMessage(), Toast.LENGTH_LONG).show();
+        }
+    }
+
+    private static String formatSize(long bytes) {
+        if (bytes <= 0) return "size unknown";
+        if (bytes < 1024 * 1024) return Math.max(1, bytes / 1024) + " KB";
+        return String.format(Locale.US, "%.1f MB", bytes / (1024.0 * 1024.0));
     }
 
     private static void showEntry(final Context context, final ImportStore.Entry e) {

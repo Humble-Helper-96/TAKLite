@@ -25,6 +25,7 @@ public final class Imports {
 
     private static final String TAG = "Imports";
     private static final String CHANNEL_ID = "mod_data_packages";
+    private static final String TOOLBAR_BUTTON_TAG = "data_packages_button";
 
     private static Context app;
     private static ImportStore store;
@@ -57,21 +58,21 @@ public final class Imports {
         }
     }
 
-    /** End of MainActivity.onCreate: draw imported data on the map. */
+    /** End of MainActivity.onCreate: draw imported data and wire the toolbar's Data Packages button. */
     public static void onMainActivityCreated(MainActivity activity) {
         init(activity);
         ImportedLayers.attach(activity);
+        android.view.View button = activity.getWindow().getDecorView().findViewWithTag(TOOLBAR_BUTTON_TAG);
+        if (button != null) {
+            button.setOnClickListener(v -> ImportedLayers.showManager(activity));
+        } else {
+            Log.w(TAG, "Data Packages toolbar button not found");
+        }
     }
 
     /** MainActivity.onResume. */
     public static void onMainActivityResumed(MainActivity activity) {
         ImportedLayers.onResume(activity);
-    }
-
-    /** Opens the Imported Data manager (Settings button and map picker). */
-    public static void showManager(Context context) {
-        init(context);
-        ImportedLayers.showManager(context);
     }
 
     // ==================== Internal API ====================

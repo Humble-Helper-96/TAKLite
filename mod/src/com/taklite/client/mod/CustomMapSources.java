@@ -53,7 +53,6 @@ public final class CustomMapSources {
     private static final String KEY_MAP_TYPE = "map_type";
     private static final String KEY_TIP_SHOWN = "custom_map_sources_tip_shown";
     private static final String SETTINGS_BUTTON_TAG = "custom_map_sources_button";
-    private static final String IMPORTS_BUTTON_TAG = "imported_data_button";
 
     /** Same order as the stock MainActivity.applyMapType(). */
     private static final String[] BUILT_IN_NAMES = {"Street Map", "Dark", "Satellite", "Topographical"};
@@ -179,8 +178,6 @@ public final class CustomMapSources {
             return;
         }
         button.setOnClickListener(v -> showManager(activity, null));
-        View imports = activity.getWindow().getDecorView().findViewWithTag(IMPORTS_BUTTON_TAG);
-        if (imports != null) imports.setOnClickListener(v -> Imports.showManager(activity));
     }
 
     // ==================== Storage ====================
@@ -301,11 +298,6 @@ public final class CustomMapSources {
                     : "Switch to one of your own map sources to download it for offline use. "
                     + "(The built-in maps' providers don't allow bulk downloads.)");
         }
-
-        d.addButton("Imported data (KML, GPX, data packages)", DarkDialog.COLOR_FIELD, v -> {
-            d.dismiss();
-            Imports.showManager(activity);
-        });
 
         d.addAction("MANAGE SOURCES", DarkDialog.COLOR_ACCENT, v -> {
             d.dismiss();

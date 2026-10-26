@@ -101,7 +101,7 @@ public final class DarkDialog {
         action.setPadding(dp(10), dp(10), dp(10), dp(10));
         action.setClickable(true);
         action.setFocusable(true);
-        action.setBackgroundResource(selectableBackground());
+        action.setBackgroundResource(selectableBackground(context));
         action.setOnClickListener(listener);
         LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
                 ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
@@ -169,12 +169,20 @@ public final class DarkDialog {
 
     /** A tappable two-line row (title + subtitle) for lists. */
     public LinearLayout addRow(String title, String subtitle, int titleColor, View.OnClickListener listener) {
+        LinearLayout row = row(context, title, subtitle, titleColor, listener);
+        content.addView(row, matchWrap());
+        return row;
+    }
+
+    /** The view behind {@link #addRow}, for lists built outside a dialog's content. Child 0 is the title. */
+    public static LinearLayout row(Context context, String title, String subtitle, int titleColor,
+                                   View.OnClickListener listener) {
         LinearLayout row = new LinearLayout(context);
         row.setOrientation(LinearLayout.VERTICAL);
-        row.setPadding(dp(8), dp(10), dp(8), dp(10));
+        row.setPadding(dp(context, 8), dp(context, 10), dp(context, 8), dp(context, 10));
         row.setClickable(true);
         row.setFocusable(true);
-        row.setBackgroundResource(selectableBackground());
+        row.setBackgroundResource(selectableBackground(context));
         row.setOnClickListener(listener);
 
         TextView titleView = new TextView(context);
@@ -193,7 +201,6 @@ public final class DarkDialog {
             sub.setEllipsize(TextUtils.TruncateAt.MIDDLE);
             row.addView(sub, matchWrap());
         }
-        content.addView(row, matchWrap());
         return row;
     }
 
@@ -220,7 +227,7 @@ public final class DarkDialog {
                 ViewGroup.LayoutParams.WRAP_CONTENT);
     }
 
-    private int selectableBackground() {
+    private static int selectableBackground(Context context) {
         TypedValue tv = new TypedValue();
         context.getTheme().resolveAttribute(android.R.attr.selectableItemBackground, tv, true);
         return tv.resourceId;

@@ -28,13 +28,17 @@ import javax.net.ssl.SSLContext;
 import javax.net.ssl.TrustManagerFactory;
 
 /**
- * Receives data packages that other TAK users send to this device.
+ * Data packages from the TAK server, downloaded with the device's TAK client
+ * certificate, checked against their SHA-256 and imported.
  *
- * ATAK/iTAK/WinTAK share a package by uploading it to the TAK server and sending
- * a CoT "file transfer request" (type b-f-t-r) whose {@code <fileshare>} gives
- * the download URL (usually https://server:8443/Marti/sync/content?hash=...),
- * size and SHA-256. This downloads it with the device's TAK client certificate,
- * checks the hash and imports it.
+ * <ul>
+ *   <li>Packages sent to this device: ATAK/iTAK/WinTAK upload the package to the
+ *       server and send a CoT "file transfer request" (type b-f-t-r) whose
+ *       {@code <fileshare>} gives the download URL (usually
+ *       https://server:8443/Marti/sync/content?hash=...), size and SHA-256.</li>
+ *   <li>Packages stored on the server: listed with the same query ATAK's
+ *       "Data Package server query" uses, /Marti/sync/search?keywords=missionpackage.</li>
+ * </ul>
  */
 final class DataPackages {
 
@@ -48,10 +52,26 @@ final class DataPackages {
     private static final String KEY_RECEIVED = "mod_received_packages";
     private static final int REMEMBER_RECEIVED = 200;
     private static final int TIMEOUT_MS = 20000;
+    /** TAK Server's HTTPS API port (TAK Lite's own server calls use it too). */
+    private static final int API_PORT = 8443;
 
     private static final Set<String> inFlight = new HashSet<>();
 
     private DataPackages() {
+    }
+
+    /** Called on a worker thread when a download+import ends: entry on success, else error. */
+    interface Done {
+        void finished(ImportStore.Entry entry, String error);
+    }
+
+    /** A package listed on the TAK server. */
+    static final class ServerPackage {
+        String name;
+        String hash;
+        String submitter;
+        String submitted;
+        long size;
     }
 
     static void onFileShare(final Context context, String cot) {
@@ -82,34 +102,124 @@ final class DataPackages {
             }
             inFlight.add(dedupeKey);
         }
+        fetchAndImport(context, url, sha256, filename, name, "Data package from " + sender, size,
+                (entry, error) -> {
+                    if (entry != null) {
+                        Imports.announce("Data package received",
+                                "\"" + entry.name + "\" from " + sender + ": " + entry.count + " items added to the map.");
+                    } else {
+                        Imports.announce("Data package failed", "\"" + name + "\" from " + sender + ": " + error);
+                    }
+                }, dedupeKey);
+    }
+
+    /** Downloads a package listed on the server and imports it (replacing an earlier copy). */
+    static void importFromServer(Context context, ServerPackage p, Done done) {
+        String url = apiBase(context) + "/Marti/sync/content?hash=" + p.hash;
+        String key = p.hash.toLowerCase(Locale.US);
+        synchronized (inFlight) {
+            if (inFlight.contains(key)) {
+                done.finished(null, "already downloading");
+                return;
+            }
+            inFlight.add(key);
+        }
+        String origin = "Server" + (p.submitter.isEmpty() ? "" : ", uploaded by " + p.submitter);
+        fetchAndImport(context, url, key, p.name + ".zip", p.name, origin, p.size, done, key);
+    }
+
+    /**
+     * Downloads, verifies and imports on a background thread. {@code key} must already be
+     * in {@link #inFlight}; it is removed when finished.
+     */
+    private static void fetchAndImport(final Context context, final String url, final String sha256,
+                                       final String filename, final String name, final String origin,
+                                       long size, final Done done, final String key) {
         if (size > MAX_PACKAGE_BYTES) {
-            Imports.announce("Data package not imported",
-                    "\"" + name + "\" from " + sender + " is too large (" + (size >> 20) + " MB).");
-            done(dedupeKey);
+            done(key);
+            done.finished(null, "too large (" + (size >> 20) + " MB, limit " + (MAX_PACKAGE_BYTES >> 20) + " MB)");
             return;
         }
-
         new Thread(() -> {
             File tmp = new File(context.getCacheDir(), "package-" + System.nanoTime() + ".zip");
+            ImportStore.Entry entry = null;
+            String error = null;
             try {
                 download(context, url, tmp);
                 if (sha256 != null && !sha256.equals(Importer.sha256(tmp))) {
                     throw new IOException("download is corrupt (SHA-256 mismatch)");
                 }
-                ImportStore.Entry entry = Imports.importFile(tmp, filename, "Data package from " + sender);
-                remember(context, dedupeKey, entry.id);
-                Imports.announce("Data package received",
-                        "\"" + entry.name + "\" from " + sender + ": " + entry.count + " items added to the map.");
+                entry = Imports.importFile(tmp, filename, origin);
+                if (sha256 != null) remember(context, sha256, entry.id);
             } catch (IOException | RuntimeException e) {
                 Log.e(TAG, "Data package " + name + " failed", e);
-                Imports.announce("Data package failed",
-                        "\"" + name + "\" from " + sender + ": " + e.getMessage());
+                error = e.getMessage();
             } finally {
                 //noinspection ResultOfMethodCallIgnored
                 tmp.delete();
-                done(dedupeKey);
+                done(key);
             }
+            done.finished(entry, error);
         }, "DataPackageDownload").start();
+    }
+
+    /** Lists the data packages on the TAK server. Blocking; call off the main thread. */
+    static List<ServerPackage> queryServer(Context context) throws IOException {
+        String url = apiBase(context) + "/Marti/sync/search?keywords=missionpackage";
+        HttpURLConnection conn = open(context, url);
+        String body;
+        try {
+            int code = conn.getResponseCode();
+            if (code != 200) throw new IOException("server answered HTTP " + code);
+            try (InputStream in = conn.getInputStream()) {
+                java.io.ByteArrayOutputStream out = new java.io.ByteArrayOutputStream();
+                byte[] buf = new byte[16384];
+                int n;
+                while ((n = in.read(buf)) > 0) {
+                    out.write(buf, 0, n);
+                    if (out.size() > 10_000_000) throw new IOException("server list too large");
+                }
+                body = out.toString("UTF-8");
+            }
+        } finally {
+            conn.disconnect();
+        }
+        return parseServerList(body);
+    }
+
+    /** Parses /Marti/sync/search JSON: {"resultCount":n,"results":[{"Name","Hash",...}]}. */
+    static List<ServerPackage> parseServerList(String json) throws IOException {
+        List<ServerPackage> out = new ArrayList<>();
+        try {
+            org.json.JSONArray results = new org.json.JSONObject(json).optJSONArray("results");
+            if (results == null) return out;
+            for (int i = 0; i < results.length(); i++) {
+                org.json.JSONObject r = results.optJSONObject(i);
+                if (r == null) continue;
+                ServerPackage p = new ServerPackage();
+                p.hash = r.optString("Hash", r.optString("hash", ""));
+                if (p.hash.isEmpty()) continue;
+                p.name = r.optString("Name", r.optString("name", p.hash.substring(0, Math.min(8, p.hash.length()))));
+                p.submitter = r.optString("SubmissionUser", r.optString("CreatorUid", ""));
+                p.submitted = r.optString("SubmissionDateTime", "");
+                p.size = r.optLong("Size", r.optLong("size", 0));
+                out.add(p);
+            }
+        } catch (org.json.JSONException e) {
+            throw new IOException("unexpected answer from server: " + e.getMessage(), e);
+        }
+        return out;
+    }
+
+    /** True if this package (by SHA-256) was imported and that import still exists. */
+    static boolean isImported(Context context, String hash) {
+        return hash != null && alreadyReceived(context, hash.toLowerCase(Locale.US));
+    }
+
+    private static String apiBase(Context context) throws IllegalStateException {
+        String server = SettingsActivity.getTakServerAddress(context);
+        if (server == null || server.isEmpty()) throw new IllegalStateException("No TAK server configured");
+        return "https://" + server + ":" + API_PORT;
     }
 
     /**
@@ -130,18 +240,24 @@ final class DataPackages {
         }
     }
 
-    private static void downloadOnce(Context context, String url, File dest) throws IOException {
+    /** A connection that presents the TAK client certificate for https URLs. */
+    private static HttpURLConnection open(Context context, String url) throws IOException {
         HttpURLConnection conn = (HttpURLConnection) new URL(url).openConnection();
+        if (conn instanceof HttpsURLConnection) {
+            HttpsURLConnection https = (HttpsURLConnection) conn;
+            https.setSSLSocketFactory(mutualTls(context).getSocketFactory());
+            // Same as TAK Lite's own server API calls: the server certificate must chain
+            // to the TAK trust store, but the name it was issued for isn't checked.
+            https.setHostnameVerifier((host, session) -> true);
+        }
+        conn.setConnectTimeout(TIMEOUT_MS);
+        conn.setReadTimeout(TIMEOUT_MS);
+        return conn;
+    }
+
+    private static void downloadOnce(Context context, String url, File dest) throws IOException {
+        HttpURLConnection conn = open(context, url);
         try {
-            if (conn instanceof HttpsURLConnection) {
-                HttpsURLConnection https = (HttpsURLConnection) conn;
-                https.setSSLSocketFactory(mutualTls(context).getSocketFactory());
-                // Same as TAK Lite's own server API calls: the server certificate must chain
-                // to the TAK trust store, but the name it was issued for isn't checked.
-                https.setHostnameVerifier((host, session) -> true);
-            }
-            conn.setConnectTimeout(TIMEOUT_MS);
-            conn.setReadTimeout(TIMEOUT_MS);
             int code = conn.getResponseCode();
             if (code != 200) throw new IOException("server answered HTTP " + code);
             long length = conn.getContentLengthLong();
