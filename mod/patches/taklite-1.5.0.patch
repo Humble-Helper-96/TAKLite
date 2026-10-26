@@ -30,6 +30,52 @@ diff -ruN a/apktool.yml b/apktool.yml
  resourcesAreCompressed: false
  sharedLibrary: false
  sparseResources: false
+diff -ruN a/res/drawable/dialog_rounded_bg.xml b/res/drawable/dialog_rounded_bg.xml
+--- a/res/drawable/dialog_rounded_bg.xml
++++ b/res/drawable/dialog_rounded_bg.xml
+@@ -1,6 +1,6 @@
+ <?xml version="1.0" encoding="utf-8"?>
+-<shape android:shape="rectangle"
+-  xmlns:android="http://schemas.android.com/apk/res/android">
+-    <solid android:color="#ff2a2a2a" />
+-    <corners android:radius="16.0dip" />
+-</shape>
+\ No newline at end of file
++<shape android:shape="rectangle" xmlns:android="http://schemas.android.com/apk/res/android">
++    <solid android:color="@color/tp_surface_dialog" />
++    <stroke android:width="1.0dip" android:color="@color/tp_border" />
++    <corners android:radius="14.0dip" />
++</shape>
+diff -ruN a/res/drawable/dialog_rounded_bottom.xml b/res/drawable/dialog_rounded_bottom.xml
+--- a/res/drawable/dialog_rounded_bottom.xml
++++ b/res/drawable/dialog_rounded_bottom.xml
+@@ -1,6 +1,5 @@
+ <?xml version="1.0" encoding="utf-8"?>
+-<shape android:shape="rectangle"
+-  xmlns:android="http://schemas.android.com/apk/res/android">
+-    <solid android:color="#ff222222" />
+-    <corners android:bottomLeftRadius="16.0dip" android:bottomRightRadius="16.0dip" />
+-</shape>
+\ No newline at end of file
++<shape android:shape="rectangle" xmlns:android="http://schemas.android.com/apk/res/android">
++    <solid android:color="@android:color/transparent" />
++    <corners android:bottomLeftRadius="14.0dip" android:bottomRightRadius="14.0dip" />
++</shape>
+diff -ruN a/res/drawable/dialog_rounded_top.xml b/res/drawable/dialog_rounded_top.xml
+--- a/res/drawable/dialog_rounded_top.xml
++++ b/res/drawable/dialog_rounded_top.xml
+@@ -1,6 +1,5 @@
+ <?xml version="1.0" encoding="utf-8"?>
+-<shape android:shape="rectangle"
+-  xmlns:android="http://schemas.android.com/apk/res/android">
+-    <solid android:color="#ff222222" />
+-    <corners android:topLeftRadius="16.0dip" android:topRightRadius="16.0dip" />
+-</shape>
+\ No newline at end of file
++<shape android:shape="rectangle" xmlns:android="http://schemas.android.com/apk/res/android">
++    <solid android:color="@android:color/transparent" />
++    <corners android:topLeftRadius="14.0dip" android:topRightRadius="14.0dip" />
++</shape>
 diff -ruN a/res/drawable/ic_mod_data_package.xml b/res/drawable/ic_mod_data_package.xml
 --- a/res/drawable/ic_mod_data_package.xml
 +++ b/res/drawable/ic_mod_data_package.xml
@@ -40,6 +86,32 @@ diff -ruN a/res/drawable/ic_mod_data_package.xml b/res/drawable/ic_mod_data_pack
 +    <path android:strokeColor="#ffffffff" android:strokeWidth="1.8" android:strokeLineJoin="round" android:pathData="M9.5,3.5 L9.5,10.5 L12,9 L14.5,10.5 L14.5,3.5" />
 +    <path android:fillColor="#ffffffff" android:pathData="M6,15 L9,15 L9,17.2 L6,17.2 Z M10.2,15.6 L13.8,15.6 L13.8,16.7 L10.2,16.7 Z" />
 +</vector>
+diff -ruN a/res/drawable/spinner_background.xml b/res/drawable/spinner_background.xml
+--- a/res/drawable/spinner_background.xml
++++ b/res/drawable/spinner_background.xml
+@@ -3,9 +3,9 @@
+   xmlns:android="http://schemas.android.com/apk/res/android">
+     <item>
+         <shape android:shape="rectangle">
+-            <solid android:color="@color/background" />
+-            <corners android:radius="6.0dip" />
+-            <stroke android:width="1.0dip" android:color="#ff333333" />
++            <solid android:color="@color/tp_surface_field" />
++            <corners android:radius="8.0dip" />
++            <stroke android:width="1.0dip" android:color="@color/tp_border" />
+         </shape>
+     </item>
+     <item android:gravity="end|center" android:right="12.0dip">
+diff -ruN a/res/drawable/tp_field_bg.xml b/res/drawable/tp_field_bg.xml
+--- a/res/drawable/tp_field_bg.xml
++++ b/res/drawable/tp_field_bg.xml
+@@ -0,0 +1,6 @@
++<?xml version="1.0" encoding="utf-8"?>
++<shape android:shape="rectangle" xmlns:android="http://schemas.android.com/apk/res/android">
++    <solid android:color="@color/tp_surface_field" />
++    <stroke android:width="1.0dip" android:color="@color/tp_border" />
++    <corners android:radius="8.0dip" />
++</shape>
 diff -ruN a/res/drawable/tp_hud_capsule.xml b/res/drawable/tp_hud_capsule.xml
 --- a/res/drawable/tp_hud_capsule.xml
 +++ b/res/drawable/tp_hud_capsule.xml
@@ -122,20 +194,272 @@ diff -ruN a/res/layout/activity_main.xml b/res/layout/activity_main.xml
      <com.google.android.material.floatingactionbutton.FloatingActionButton android:id="@id/alertButton" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginBottom="16.0dip" android:src="@android:drawable/ic_dialog_alert" android:contentDescription="Emergency Alert" android:layout_marginStart="16.0dip" app:backgroundTint="#ffcc0000" app:layout_constraintBottom_toBottomOf="parent" app:layout_constraintStart_toStartOf="parent" app:tint="@android:color/white" />
  </androidx.constraintlayout.widget.ConstraintLayout>
 \ No newline at end of file
+diff -ruN a/res/layout/activity_onboarding.xml b/res/layout/activity_onboarding.xml
+--- a/res/layout/activity_onboarding.xml
++++ b/res/layout/activity_onboarding.xml
+@@ -7,7 +7,7 @@
+                 <ImageView android:layout_width="100.0dip" android:layout_height="100.0dip" android:layout_marginTop="48.0dip" android:src="@mipmap/ic_launcher" android:contentDescription="TAK Lite" />
+                 <TextView android:textSize="24.0sp" android:textStyle="bold" android:textColor="@color/text_primary" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="24.0dip" android:text="Connect to TAK Server" />
+                 <TextView android:textSize="14.0sp" android:textColor="@color/text_secondary" android:gravity="center" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="8.0dip" android:text="Scan your enrollment QR code to connect" />
+-                <Button android:textSize="16.0sp" android:textColor="@android:color/white" android:id="@id/scanServerQrButton" android:layout_width="240.0dip" android:layout_height="56.0dip" android:layout_marginTop="40.0dip" android:text="Scan QR Code" android:backgroundTint="#ff4caf50" />
++                <Button android:textSize="16.0sp" android:textColor="@android:color/white" android:id="@id/scanServerQrButton" android:layout_width="240.0dip" android:layout_height="56.0dip" android:layout_marginTop="40.0dip" android:text="Scan QR Code" android:backgroundTint="@color/tp_btn_primary" />
+                 <TextView android:textSize="14.0sp" android:textColor="@color/text_secondary" android:id="@id/enrollStatusText" android:visibility="gone" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="16.0dip" />
+                 <TextView android:textSize="14.0sp" android:textColor="@color/text_secondary" android:id="@id/manualToggle" android:padding="8.0dip" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="24.0dip" android:text="Enter manually" />
+                 <LinearLayout android:orientation="vertical" android:id="@id/manualSection" android:visibility="gone" android:layout_width="fill_parent" android:layout_height="wrap_content">
+@@ -17,10 +17,10 @@
+                     </LinearLayout>
+                     <EditText android:textSize="14.0sp" android:textColor="@color/text_primary" android:textColorHint="#ff666666" android:id="@id/manualUsername" android:background="@drawable/spinner_background" android:layout_width="fill_parent" android:layout_height="48.0dip" android:layout_marginTop="8.0dip" android:hint="Username" android:singleLine="true" android:inputType="text" android:paddingStart="12.0dip" android:paddingEnd="12.0dip" />
+                     <EditText android:textSize="14.0sp" android:textColor="@color/text_primary" android:textColorHint="#ff666666" android:id="@id/manualPassword" android:background="@drawable/spinner_background" android:layout_width="fill_parent" android:layout_height="48.0dip" android:layout_marginTop="8.0dip" android:hint="Password" android:singleLine="true" android:inputType="textPassword" android:paddingStart="12.0dip" android:paddingEnd="12.0dip" />
+-                    <Button android:textSize="14.0sp" android:textColor="@android:color/white" android:id="@id/manualConnectButton" android:layout_width="fill_parent" android:layout_height="48.0dip" android:layout_marginTop="12.0dip" android:text="Connect" android:backgroundTint="#ff4caf50" />
++                    <Button android:textSize="14.0sp" android:textColor="@android:color/white" android:id="@id/manualConnectButton" android:layout_width="fill_parent" android:layout_height="48.0dip" android:layout_marginTop="12.0dip" android:text="Connect" android:backgroundTint="@color/tp_btn_primary" />
+                 </LinearLayout>
+                 <View android:layout_width="0.0dip" android:layout_height="0.0dip" android:layout_weight="1.0" />
+-                <Button android:enabled="false" android:textSize="16.0sp" android:textColor="@android:color/white" android:id="@id/nextButton" android:layout_width="240.0dip" android:layout_height="48.0dip" android:layout_marginTop="24.0dip" android:text="Next" android:alpha="0.5" android:backgroundTint="@color/primary" />
++                <Button android:enabled="false" android:textSize="16.0sp" android:textColor="@android:color/white" android:id="@id/nextButton" android:layout_width="240.0dip" android:layout_height="48.0dip" android:layout_marginTop="24.0dip" android:text="Next" android:alpha="0.5" android:backgroundTint="@color/tp_btn_neutral" />
+                 <TextView android:textSize="14.0sp" android:textColor="@color/text_secondary" android:id="@id/skipButton" android:padding="8.0dip" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="16.0dip" android:layout_marginBottom="32.0dip" android:text="Skip" />
+             </LinearLayout>
+         </ScrollView>
+@@ -37,7 +37,7 @@
+                 <TextView android:textSize="13.0sp" android:textColor="@color/text_secondary" android:layout_width="fill_parent" android:layout_height="wrap_content" android:layout_marginTop="20.0dip" android:text="Role" />
+                 <Spinner android:id="@id/roleSpinner" android:background="@drawable/spinner_background" android:layout_width="fill_parent" android:layout_height="48.0dip" android:layout_marginTop="4.0dip" android:popupBackground="@color/surface" />
+                 <View android:layout_width="0.0dip" android:layout_height="0.0dip" android:layout_weight="1.0" />
+-                <Button android:textSize="16.0sp" android:textColor="@android:color/white" android:id="@id/doneButton" android:layout_width="240.0dip" android:layout_height="48.0dip" android:layout_marginTop="32.0dip" android:layout_marginBottom="32.0dip" android:text="Done" android:backgroundTint="#ff4caf50" />
++                <Button android:textSize="16.0sp" android:textColor="@android:color/white" android:id="@id/doneButton" android:layout_width="240.0dip" android:layout_height="48.0dip" android:layout_marginTop="32.0dip" android:layout_marginBottom="32.0dip" android:text="Done" android:backgroundTint="@color/tp_btn_primary" />
+             </LinearLayout>
+         </ScrollView>
+     </ViewFlipper>
 diff -ruN a/res/layout/activity_settings.xml b/res/layout/activity_settings.xml
 --- a/res/layout/activity_settings.xml
 +++ b/res/layout/activity_settings.xml
-@@ -27,6 +27,10 @@
-             <Button android:textSize="14.0sp" android:textColor="@android:color/white" android:id="@id/takAssignGroupsButton" android:visibility="gone" android:layout_width="fill_parent" android:layout_height="44.0dip" android:layout_marginBottom="4.0dip" android:text="Assign Selected Groups" android:backgroundTint="@color/primary" />
+@@ -1,32 +1,36 @@
+ <?xml version="1.0" encoding="utf-8"?>
+ <androidx.constraintlayout.widget.ConstraintLayout android:background="@color/background" android:layout_width="fill_parent" android:layout_height="fill_parent"
+   xmlns:android="http://schemas.android.com/apk/res/android" xmlns:app="http://schemas.android.com/apk/res-auto">
+-    <LinearLayout android:gravity="center_vertical" android:orientation="horizontal" android:id="@id/titleBar" android:background="@color/primary" android:padding="12.0dip" android:layout_width="fill_parent" android:layout_height="wrap_content" android:elevation="4.0dip" app:layout_constraintTop_toTopOf="parent">
++    <LinearLayout android:gravity="center_vertical" android:orientation="horizontal" android:id="@id/titleBar" android:background="@color/tp_surface_card" android:padding="12.0dip" android:layout_width="fill_parent" android:layout_height="wrap_content" android:elevation="4.0dip" app:layout_constraintTop_toTopOf="parent">
+         <ImageButton android:id="@id/backButton" android:background="?selectableItemBackgroundBorderless" android:layout_width="40.0dip" android:layout_height="40.0dip" android:src="@android:drawable/ic_menu_revert" android:contentDescription="Back" app:tint="@android:color/white" />
+         <TextView android:textSize="20.0sp" android:textStyle="bold" android:textColor="@android:color/white" android:layout_width="0.0dip" android:layout_height="wrap_content" android:text="@string/settings" android:layout_weight="1.0" android:layout_marginStart="8.0dip" />
+     </LinearLayout>
+     <ScrollView android:layout_width="fill_parent" android:layout_height="0.0dip" app:layout_constraintBottom_toBottomOf="parent" app:layout_constraintTop_toBottomOf="@id/titleBar">
+         <LinearLayout android:orientation="vertical" android:background="@color/surface" android:padding="16.0dip" android:layout_width="fill_parent" android:layout_height="wrap_content">
+             <TextView android:textSize="14.0sp" android:textStyle="bold" android:textColor="@color/text_primary" android:paddingBottom="4.0dip" android:layout_width="fill_parent" android:layout_height="wrap_content" android:text="Callsign" />
+-            <EditText android:textSize="14.0sp" android:textColor="@color/text_primary" android:textColorHint="@color/text_secondary" android:id="@id/takCallsign" android:background="@color/background" android:padding="12.0dip" android:layout_width="fill_parent" android:layout_height="48.0dip" android:layout_marginBottom="12.0dip" android:hint="Your callsign" android:inputType="text" />
++            <EditText android:textSize="14.0sp" android:textColor="@color/text_primary" android:textColorHint="@color/text_secondary" android:id="@id/takCallsign" android:background="@drawable/tp_field_bg" android:padding="12.0dip" android:layout_width="fill_parent" android:layout_height="48.0dip" android:layout_marginBottom="12.0dip" android:hint="Your callsign" android:inputType="text" />
+             <TextView android:textSize="14.0sp" android:textStyle="bold" android:textColor="@color/text_primary" android:paddingBottom="4.0dip" android:layout_width="fill_parent" android:layout_height="wrap_content" android:text="Phone Number" />
+-            <EditText android:textSize="14.0sp" android:textColor="@color/text_primary" android:textColorHint="@color/text_secondary" android:id="@id/takPhone" android:background="@color/background" android:padding="12.0dip" android:layout_width="fill_parent" android:layout_height="48.0dip" android:layout_marginBottom="12.0dip" android:hint="Your phone number" android:inputType="phone" />
++            <EditText android:textSize="14.0sp" android:textColor="@color/text_primary" android:textColorHint="@color/text_secondary" android:id="@id/takPhone" android:background="@drawable/tp_field_bg" android:padding="12.0dip" android:layout_width="fill_parent" android:layout_height="48.0dip" android:layout_marginBottom="12.0dip" android:hint="Your phone number" android:inputType="phone" />
+             <TextView android:textSize="14.0sp" android:textStyle="bold" android:textColor="@color/text_primary" android:paddingBottom="4.0dip" android:layout_width="fill_parent" android:layout_height="wrap_content" android:text="Team Color" />
+             <Spinner android:id="@id/takTeamSpinner" android:background="@drawable/spinner_background" android:layout_width="fill_parent" android:layout_height="48.0dip" android:layout_marginBottom="12.0dip" android:popupBackground="@color/surface" />
+             <TextView android:textSize="14.0sp" android:textStyle="bold" android:textColor="@color/text_primary" android:paddingBottom="4.0dip" android:layout_width="fill_parent" android:layout_height="wrap_content" android:text="Role" />
+             <Spinner android:id="@id/takRoleSpinner" android:background="@drawable/spinner_background" android:layout_width="fill_parent" android:layout_height="48.0dip" android:layout_marginBottom="16.0dip" android:popupBackground="@color/surface" />
+-            <View android:background="@color/background" android:layout_width="fill_parent" android:layout_height="1.0dip" android:layout_marginBottom="16.0dip" />
++            <View android:background="@color/tp_divider" android:layout_width="fill_parent" android:layout_height="1.0dip" android:layout_marginBottom="16.0dip" />
+             <TextView android:textSize="14.0sp" android:textStyle="bold" android:textColor="@color/text_primary" android:paddingBottom="4.0dip" android:layout_width="fill_parent" android:layout_height="wrap_content" android:text="Server Enrollment" />
+             <TextView android:textSize="12.0sp" android:textColor="@color/text_secondary" android:paddingBottom="8.0dip" android:layout_width="fill_parent" android:layout_height="wrap_content" android:text="Scan QR code to connect to a TAK server" />
+-            <Button android:textSize="16.0sp" android:textColor="@android:color/white" android:id="@id/takEnrollQrButton" android:layout_width="fill_parent" android:layout_height="52.0dip" android:layout_marginBottom="8.0dip" android:text="Scan Enrollment QR Code" android:backgroundTint="@color/primary" />
++            <Button android:textSize="16.0sp" android:textColor="@android:color/white" android:id="@id/takEnrollQrButton" android:layout_width="fill_parent" android:layout_height="52.0dip" android:layout_marginBottom="8.0dip" android:text="Scan Enrollment QR Code" android:backgroundTint="@color/tp_btn_neutral" />
+             <TextView android:textSize="12.0sp" android:textColor="@color/text_secondary" android:id="@id/takEnrollStatus" android:visibility="gone" android:layout_width="fill_parent" android:layout_height="wrap_content" android:layout_marginBottom="12.0dip" />
+             <TextView android:textSize="14.0sp" android:textStyle="bold" android:textColor="@color/text_primary" android:paddingBottom="4.0dip" android:layout_width="fill_parent" android:layout_height="wrap_content" android:text="Group Assignment" />
+             <TextView android:textSize="12.0sp" android:textColor="@color/text_secondary" android:paddingBottom="8.0dip" android:layout_width="fill_parent" android:layout_height="wrap_content" android:text="Fetch available groups from the server and assign this client" />
+-            <Button android:textSize="14.0sp" android:textColor="@android:color/white" android:id="@id/takFetchGroupsButton" android:layout_width="fill_parent" android:layout_height="44.0dip" android:layout_marginBottom="8.0dip" android:text="Fetch Groups" android:backgroundTint="@color/accent" />
++            <Button android:textSize="14.0sp" android:textColor="@android:color/white" android:id="@id/takFetchGroupsButton" android:layout_width="fill_parent" android:layout_height="44.0dip" android:layout_marginBottom="8.0dip" android:text="Fetch Groups" android:backgroundTint="@color/tp_btn_primary" />
+             <LinearLayout android:orientation="vertical" android:id="@id/takGroupCheckboxContainer" android:layout_width="fill_parent" android:layout_height="wrap_content" android:layout_marginBottom="4.0dip" />
+-            <Button android:textSize="14.0sp" android:textColor="@android:color/white" android:id="@id/takAssignGroupsButton" android:visibility="gone" android:layout_width="fill_parent" android:layout_height="44.0dip" android:layout_marginBottom="4.0dip" android:text="Assign Selected Groups" android:backgroundTint="@color/primary" />
++            <Button android:textSize="14.0sp" android:textColor="@android:color/white" android:id="@id/takAssignGroupsButton" android:visibility="gone" android:layout_width="fill_parent" android:layout_height="44.0dip" android:layout_marginBottom="4.0dip" android:text="Assign Selected Groups" android:backgroundTint="@color/tp_btn_neutral" />
              <TextView android:textSize="12.0sp" android:textColor="@color/text_secondary" android:id="@id/takGroupStatus" android:visibility="gone" android:layout_width="fill_parent" android:layout_height="wrap_content" android:layout_marginBottom="12.0dip" />
-             <View android:background="@color/background" android:layout_width="fill_parent" android:layout_height="1.0dip" android:layout_marginBottom="12.0dip" />
+-            <View android:background="@color/background" android:layout_width="fill_parent" android:layout_height="1.0dip" android:layout_marginBottom="12.0dip" />
++            <View android:background="@color/tp_divider" android:layout_width="fill_parent" android:layout_height="1.0dip" android:layout_marginBottom="12.0dip" />
 +            <TextView android:textSize="14.0sp" android:textStyle="bold" android:textColor="@color/text_primary" android:paddingBottom="4.0dip" android:layout_width="fill_parent" android:layout_height="wrap_content" android:text="Map Sources" />
 +            <TextView android:textSize="12.0sp" android:textColor="@color/text_secondary" android:paddingBottom="8.0dip" android:layout_width="fill_parent" android:layout_height="wrap_content" android:text="Add your own tile servers, e.g. TileServer GL" />
-+            <Button android:textSize="14.0sp" android:textColor="@android:color/white" android:tag="custom_map_sources_button" android:layout_width="fill_parent" android:layout_height="44.0dip" android:layout_marginBottom="12.0dip" android:text="Manage Map Sources" android:backgroundTint="@color/accent" />
-+            <View android:background="@color/background" android:layout_width="fill_parent" android:layout_height="1.0dip" android:layout_marginBottom="12.0dip" />
++            <Button android:textSize="14.0sp" android:textColor="@android:color/white" android:tag="custom_map_sources_button" android:layout_width="fill_parent" android:layout_height="44.0dip" android:layout_marginBottom="12.0dip" android:text="Manage Map Sources" android:backgroundTint="@color/tp_btn_primary" />
++            <View android:background="@color/tp_divider" android:layout_width="fill_parent" android:layout_height="1.0dip" android:layout_marginBottom="12.0dip" />
              <LinearLayout android:gravity="center_vertical" android:orientation="horizontal" android:id="@id/advancedHeader" android:background="?selectableItemBackground" android:layout_width="fill_parent" android:layout_height="44.0dip" android:layout_marginBottom="8.0dip" android:paddingStart="4.0dip" android:paddingEnd="4.0dip">
                  <TextView android:textSize="14.0sp" android:textStyle="bold" android:textColor="@color/text_secondary" android:id="@id/advancedHeaderText" android:layout_width="0.0dip" android:layout_height="wrap_content" android:text="Advanced Settings" android:layout_weight="1.0" />
                  <ImageView android:id="@id/advancedArrow" android:layout_width="24.0dip" android:layout_height="24.0dip" android:src="@android:drawable/arrow_down_float" android:contentDescription="Expand" app:tint="@color/text_secondary" />
+@@ -34,29 +38,29 @@
+             <LinearLayout android:orientation="vertical" android:id="@id/advancedContent" android:visibility="gone" android:layout_width="fill_parent" android:layout_height="wrap_content">
+                 <TextView android:textSize="14.0sp" android:textStyle="bold" android:textColor="@color/text_primary" android:paddingBottom="4.0dip" android:layout_width="fill_parent" android:layout_height="wrap_content" android:text="Server" />
+                 <LinearLayout android:orientation="horizontal" android:layout_width="fill_parent" android:layout_height="wrap_content" android:layout_marginBottom="12.0dip">
+-                    <EditText android:textSize="14.0sp" android:textColor="@color/text_primary" android:textColorHint="@color/text_secondary" android:id="@id/takServerAddress" android:background="@color/background" android:padding="12.0dip" android:layout_width="0.0dip" android:layout_height="48.0dip" android:hint="Server address" android:layout_weight="3.0" android:inputType="text" android:layout_marginEnd="8.0dip" />
+-                    <EditText android:textSize="14.0sp" android:textColor="@color/text_primary" android:textColorHint="@color/text_secondary" android:id="@id/takServerPort" android:background="@color/background" android:padding="12.0dip" android:layout_width="0.0dip" android:layout_height="48.0dip" android:hint="8089" android:layout_weight="1.0" android:inputType="number" />
++                    <EditText android:textSize="14.0sp" android:textColor="@color/text_primary" android:textColorHint="@color/text_secondary" android:id="@id/takServerAddress" android:background="@drawable/tp_field_bg" android:padding="12.0dip" android:layout_width="0.0dip" android:layout_height="48.0dip" android:hint="Server address" android:layout_weight="3.0" android:inputType="text" android:layout_marginEnd="8.0dip" />
++                    <EditText android:textSize="14.0sp" android:textColor="@color/text_primary" android:textColorHint="@color/text_secondary" android:id="@id/takServerPort" android:background="@drawable/tp_field_bg" android:padding="12.0dip" android:layout_width="0.0dip" android:layout_height="48.0dip" android:hint="8089" android:layout_weight="1.0" android:inputType="number" />
+                 </LinearLayout>
+                 <TextView android:textSize="14.0sp" android:textStyle="bold" android:textColor="@color/text_primary" android:paddingBottom="4.0dip" android:layout_width="fill_parent" android:layout_height="wrap_content" android:text="Manual Enrollment" />
+-                <EditText android:textSize="14.0sp" android:textColor="@color/text_primary" android:textColorHint="@color/text_secondary" android:id="@id/takEnrollUsername" android:background="@color/background" android:padding="12.0dip" android:layout_width="fill_parent" android:layout_height="48.0dip" android:layout_marginBottom="8.0dip" android:hint="TAK Username" android:inputType="text" />
+-                <EditText android:textSize="14.0sp" android:textColor="@color/text_primary" android:textColorHint="@color/text_secondary" android:id="@id/takEnrollPassword" android:background="@color/background" android:padding="12.0dip" android:layout_width="fill_parent" android:layout_height="48.0dip" android:layout_marginBottom="8.0dip" android:hint="TAK Password" android:inputType="textPassword" />
+-                <EditText android:textSize="14.0sp" android:textColor="@color/text_primary" android:textColorHint="@color/text_secondary" android:id="@id/takEnrollPort" android:background="@color/background" android:padding="12.0dip" android:layout_width="fill_parent" android:layout_height="48.0dip" android:layout_marginBottom="8.0dip" android:hint="Enrollment Port (default 8446)" android:inputType="number" />
+-                <Button android:textSize="14.0sp" android:textColor="@android:color/white" android:id="@id/takEnrollButton" android:layout_width="fill_parent" android:layout_height="44.0dip" android:layout_marginBottom="12.0dip" android:text="Enroll &amp; Download Certs" android:backgroundTint="@color/accent" />
++                <EditText android:textSize="14.0sp" android:textColor="@color/text_primary" android:textColorHint="@color/text_secondary" android:id="@id/takEnrollUsername" android:background="@drawable/tp_field_bg" android:padding="12.0dip" android:layout_width="fill_parent" android:layout_height="48.0dip" android:layout_marginBottom="8.0dip" android:hint="TAK Username" android:inputType="text" />
++                <EditText android:textSize="14.0sp" android:textColor="@color/text_primary" android:textColorHint="@color/text_secondary" android:id="@id/takEnrollPassword" android:background="@drawable/tp_field_bg" android:padding="12.0dip" android:layout_width="fill_parent" android:layout_height="48.0dip" android:layout_marginBottom="8.0dip" android:hint="TAK Password" android:inputType="textPassword" />
++                <EditText android:textSize="14.0sp" android:textColor="@color/text_primary" android:textColorHint="@color/text_secondary" android:id="@id/takEnrollPort" android:background="@drawable/tp_field_bg" android:padding="12.0dip" android:layout_width="fill_parent" android:layout_height="48.0dip" android:layout_marginBottom="8.0dip" android:hint="Enrollment Port (default 8446)" android:inputType="number" />
++                <Button android:textSize="14.0sp" android:textColor="@android:color/white" android:id="@id/takEnrollButton" android:layout_width="fill_parent" android:layout_height="44.0dip" android:layout_marginBottom="12.0dip" android:text="Enroll &amp; Download Certs" android:backgroundTint="@color/tp_btn_primary" />
+                 <TextView android:textSize="12.0sp" android:id="@id/certExpirationLabel" android:paddingBottom="12.0dip" android:visibility="gone" android:layout_width="fill_parent" android:layout_height="wrap_content" />
+                 <TextView android:textSize="14.0sp" android:textStyle="bold" android:textColor="@color/text_primary" android:paddingBottom="8.0dip" android:layout_width="fill_parent" android:layout_height="wrap_content" android:text="Manual Certificate Import" />
+                 <TextView android:textSize="13.0sp" android:textColor="@color/text_primary" android:paddingBottom="4.0dip" android:layout_width="fill_parent" android:layout_height="wrap_content" android:text="Trust Store (.p12)" />
+                 <LinearLayout android:gravity="center_vertical" android:orientation="horizontal" android:layout_width="fill_parent" android:layout_height="wrap_content" android:layout_marginBottom="12.0dip">
+-                    <Button android:textSize="12.0sp" android:textColor="@android:color/white" android:id="@id/takTrustStoreButton" android:layout_width="wrap_content" android:layout_height="40.0dip" android:text="Select File" android:layout_marginEnd="12.0dip" android:backgroundTint="@color/accent" />
++                    <Button android:textSize="12.0sp" android:textColor="@android:color/white" android:id="@id/takTrustStoreButton" android:layout_width="wrap_content" android:layout_height="40.0dip" android:text="Select File" android:layout_marginEnd="12.0dip" android:backgroundTint="@color/tp_btn_primary" />
+                     <TextView android:textSize="12.0sp" android:textColor="@color/text_secondary" android:ellipsize="middle" android:id="@id/takTrustStoreLabel" android:layout_width="0.0dip" android:layout_height="wrap_content" android:text="No file selected" android:singleLine="true" android:layout_weight="1.0" />
+                 </LinearLayout>
+                 <TextView android:textSize="13.0sp" android:textColor="@color/text_primary" android:paddingBottom="4.0dip" android:layout_width="fill_parent" android:layout_height="wrap_content" android:text="Client Certificate (.p12)" />
+                 <LinearLayout android:gravity="center_vertical" android:orientation="horizontal" android:layout_width="fill_parent" android:layout_height="wrap_content" android:layout_marginBottom="12.0dip">
+-                    <Button android:textSize="12.0sp" android:textColor="@android:color/white" android:id="@id/takClientCertButton" android:layout_width="wrap_content" android:layout_height="40.0dip" android:text="Select File" android:layout_marginEnd="12.0dip" android:backgroundTint="@color/accent" />
++                    <Button android:textSize="12.0sp" android:textColor="@android:color/white" android:id="@id/takClientCertButton" android:layout_width="wrap_content" android:layout_height="40.0dip" android:text="Select File" android:layout_marginEnd="12.0dip" android:backgroundTint="@color/tp_btn_primary" />
+                     <TextView android:textSize="12.0sp" android:textColor="@color/text_secondary" android:ellipsize="middle" android:id="@id/takClientCertLabel" android:layout_width="0.0dip" android:layout_height="wrap_content" android:text="No file selected" android:singleLine="true" android:layout_weight="1.0" />
+                 </LinearLayout>
+                 <TextView android:textSize="13.0sp" android:textColor="@color/text_primary" android:paddingBottom="4.0dip" android:layout_width="fill_parent" android:layout_height="wrap_content" android:text="Certificate Password" />
+-                <EditText android:textSize="14.0sp" android:textColor="@color/text_primary" android:textColorHint="@color/text_secondary" android:id="@id/takCertPassword" android:background="@color/background" android:padding="12.0dip" android:layout_width="fill_parent" android:layout_height="48.0dip" android:layout_marginBottom="16.0dip" android:hint="atakatak" android:inputType="textPassword" />
+-                <Button android:textSize="14.0sp" android:textColor="@android:color/white" android:id="@id/takTestConnectionButton" android:layout_width="fill_parent" android:layout_height="44.0dip" android:layout_marginBottom="8.0dip" android:text="Test Connection" android:backgroundTint="@color/accent" />
++                <EditText android:textSize="14.0sp" android:textColor="@color/text_primary" android:textColorHint="@color/text_secondary" android:id="@id/takCertPassword" android:background="@drawable/tp_field_bg" android:padding="12.0dip" android:layout_width="fill_parent" android:layout_height="48.0dip" android:layout_marginBottom="16.0dip" android:hint="atakatak" android:inputType="textPassword" />
++                <Button android:textSize="14.0sp" android:textColor="@android:color/white" android:id="@id/takTestConnectionButton" android:layout_width="fill_parent" android:layout_height="44.0dip" android:layout_marginBottom="8.0dip" android:text="Test Connection" android:backgroundTint="@color/tp_btn_primary" />
+             </LinearLayout>
+         </LinearLayout>
+     </ScrollView>
+diff -ruN a/res/layout/activity_track_history.xml b/res/layout/activity_track_history.xml
+--- a/res/layout/activity_track_history.xml
++++ b/res/layout/activity_track_history.xml
+@@ -1,13 +1,13 @@
+ <?xml version="1.0" encoding="utf-8"?>
+ <androidx.constraintlayout.widget.ConstraintLayout android:background="@color/background" android:layout_width="fill_parent" android:layout_height="fill_parent"
+   xmlns:android="http://schemas.android.com/apk/res/android" xmlns:app="http://schemas.android.com/apk/res-auto">
+-    <LinearLayout android:gravity="center_vertical" android:orientation="horizontal" android:id="@id/titleBar" android:background="@color/primary" android:padding="12.0dip" android:layout_width="fill_parent" android:layout_height="wrap_content" android:elevation="4.0dip" app:layout_constraintTop_toTopOf="parent">
++    <LinearLayout android:gravity="center_vertical" android:orientation="horizontal" android:id="@id/titleBar" android:background="@color/tp_surface_card" android:padding="12.0dip" android:layout_width="fill_parent" android:layout_height="wrap_content" android:elevation="4.0dip" app:layout_constraintTop_toTopOf="parent">
+         <ImageButton android:id="@id/backButton" android:background="?selectableItemBackgroundBorderless" android:layout_width="40.0dip" android:layout_height="40.0dip" android:src="@android:drawable/ic_menu_revert" android:contentDescription="Back" app:tint="@android:color/white" />
+         <TextView android:textSize="20.0sp" android:textStyle="bold" android:textColor="@android:color/white" android:layout_width="0.0dip" android:layout_height="wrap_content" android:text="Track History" android:layout_weight="1.0" android:layout_marginStart="8.0dip" />
+     </LinearLayout>
+     <TextView android:textSize="16.0sp" android:textColor="@color/text_secondary" android:id="@id/emptyState" android:visibility="gone" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="No tracks recorded yet" app:layout_constraintBottom_toTopOf="@id/bottomBar" app:layout_constraintEnd_toEndOf="parent" app:layout_constraintStart_toStartOf="parent" app:layout_constraintTop_toBottomOf="@id/titleBar" />
+     <ListView android:id="@id/trackList" android:background="@color/surface" android:layout_width="fill_parent" android:layout_height="0.0dip" android:divider="#ff333333" android:dividerHeight="1.0dip" app:layout_constraintBottom_toTopOf="@id/bottomBar" app:layout_constraintTop_toBottomOf="@id/titleBar" />
+-    <LinearLayout android:gravity="center" android:id="@id/bottomBar" android:background="@color/primary" android:padding="12.0dip" android:layout_width="fill_parent" android:layout_height="wrap_content" app:layout_constraintBottom_toBottomOf="parent">
++    <LinearLayout android:gravity="center" android:id="@id/bottomBar" android:background="@color/tp_surface_card" android:padding="12.0dip" android:layout_width="fill_parent" android:layout_height="wrap_content" app:layout_constraintBottom_toBottomOf="parent">
+         <TextView android:textSize="14.0sp" android:textStyle="bold" android:textColor="#ffff5555" android:id="@id/deleteAllButton" android:background="?selectableItemBackground" android:padding="10.0dip" android:focusable="true" android:clickable="true" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Delete All Tracks" />
+     </LinearLayout>
+ </androidx.constraintlayout.widget.ConstraintLayout>
+\ No newline at end of file
+diff -ruN a/res/layout/dialog_alert.xml b/res/layout/dialog_alert.xml
+--- a/res/layout/dialog_alert.xml
++++ b/res/layout/dialog_alert.xml
+@@ -10,7 +10,7 @@
+     </LinearLayout>
+     <TextView android:textSize="14.0sp" android:textColor="#ffcccccc" android:id="@id/alertCancelMessage" android:padding="16.0dip" android:visibility="gone" android:layout_width="fill_parent" android:layout_height="wrap_content" android:text="Cancel your active emergency alert?" />
+     <LinearLayout android:gravity="end" android:orientation="horizontal" android:background="@drawable/dialog_rounded_bottom" android:padding="12.0dip" android:layout_width="fill_parent" android:layout_height="wrap_content">
+-        <TextView android:textSize="14.0sp" android:textStyle="bold" android:textColor="#ffaaaaaa" android:id="@id/btnAlertCancel" android:background="?selectableItemBackground" android:padding="10.0dip" android:focusable="true" android:clickable="true" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="CANCEL" />
+-        <TextView android:textSize="14.0sp" android:textStyle="bold" android:textColor="#ffff5555" android:id="@id/btnAlertConfirm" android:background="?selectableItemBackground" android:padding="10.0dip" android:focusable="true" android:visibility="gone" android:clickable="true" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="CANCEL ALERT" android:layout_marginStart="8.0dip" />
++        <TextView android:textSize="14.0sp" android:textStyle="bold" android:textColor="@color/tp_accent" android:id="@id/btnAlertCancel" android:background="?selectableItemBackground" android:padding="10.0dip" android:focusable="true" android:clickable="true" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="CANCEL" />
++        <TextView android:textSize="14.0sp" android:textStyle="bold" android:textColor="@color/tp_btn_danger_dialog" android:id="@id/btnAlertConfirm" android:background="?selectableItemBackground" android:padding="10.0dip" android:focusable="true" android:visibility="gone" android:clickable="true" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="CANCEL ALERT" android:layout_marginStart="8.0dip" />
+     </LinearLayout>
+ </LinearLayout>
+\ No newline at end of file
+diff -ruN a/res/layout/dialog_confirm_delete.xml b/res/layout/dialog_confirm_delete.xml
+--- a/res/layout/dialog_confirm_delete.xml
++++ b/res/layout/dialog_confirm_delete.xml
+@@ -4,7 +4,7 @@
+     <TextView android:textSize="16.0sp" android:textStyle="bold" android:textColor="@android:color/white" android:background="@drawable/dialog_rounded_top" android:padding="16.0dip" android:layout_width="fill_parent" android:layout_height="wrap_content" android:text="Delete Marker" />
+     <TextView android:textSize="14.0sp" android:textColor="#ffcccccc" android:padding="16.0dip" android:layout_width="fill_parent" android:layout_height="wrap_content" android:text="Are you sure you want to delete this marker?" />
+     <LinearLayout android:gravity="end" android:orientation="horizontal" android:background="@drawable/dialog_rounded_bottom" android:padding="12.0dip" android:layout_width="fill_parent" android:layout_height="wrap_content">
+-        <TextView android:textSize="14.0sp" android:textStyle="bold" android:textColor="#ffaaaaaa" android:id="@id/btnCancelDelete" android:background="?selectableItemBackground" android:padding="10.0dip" android:focusable="true" android:clickable="true" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="CANCEL" />
+-        <TextView android:textSize="14.0sp" android:textStyle="bold" android:textColor="#ffff5555" android:id="@id/btnConfirmDelete" android:background="?selectableItemBackground" android:padding="10.0dip" android:focusable="true" android:clickable="true" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="DELETE" android:layout_marginStart="8.0dip" />
++        <TextView android:textSize="14.0sp" android:textStyle="bold" android:textColor="@color/tp_accent" android:id="@id/btnCancelDelete" android:background="?selectableItemBackground" android:padding="10.0dip" android:focusable="true" android:clickable="true" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="CANCEL" />
++        <TextView android:textSize="14.0sp" android:textStyle="bold" android:textColor="@color/tp_btn_danger_dialog" android:id="@id/btnConfirmDelete" android:background="?selectableItemBackground" android:padding="10.0dip" android:focusable="true" android:clickable="true" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="DELETE" android:layout_marginStart="8.0dip" />
+     </LinearLayout>
+ </LinearLayout>
+\ No newline at end of file
+diff -ruN a/res/layout/dialog_confirm_shutdown.xml b/res/layout/dialog_confirm_shutdown.xml
+--- a/res/layout/dialog_confirm_shutdown.xml
++++ b/res/layout/dialog_confirm_shutdown.xml
+@@ -4,7 +4,7 @@
+     <TextView android:textSize="16.0sp" android:textStyle="bold" android:textColor="@android:color/white" android:background="@drawable/dialog_rounded_top" android:padding="16.0dip" android:layout_width="fill_parent" android:layout_height="wrap_content" android:text="Shutdown TAK Lite" />
+     <TextView android:textSize="14.0sp" android:textColor="#ffcccccc" android:padding="16.0dip" android:layout_width="fill_parent" android:layout_height="wrap_content" android:text="Stop tracking and close the app?" />
+     <LinearLayout android:gravity="end" android:orientation="horizontal" android:background="@drawable/dialog_rounded_bottom" android:padding="12.0dip" android:layout_width="fill_parent" android:layout_height="wrap_content">
+-        <TextView android:textSize="14.0sp" android:textStyle="bold" android:textColor="#ffaaaaaa" android:id="@id/btnCancelShutdown" android:background="?selectableItemBackground" android:padding="10.0dip" android:focusable="true" android:clickable="true" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="CANCEL" />
+-        <TextView android:textSize="14.0sp" android:textStyle="bold" android:textColor="#ffff5555" android:id="@id/btnConfirmShutdown" android:background="?selectableItemBackground" android:padding="10.0dip" android:focusable="true" android:clickable="true" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="SHUTDOWN" android:layout_marginStart="8.0dip" />
++        <TextView android:textSize="14.0sp" android:textStyle="bold" android:textColor="@color/tp_accent" android:id="@id/btnCancelShutdown" android:background="?selectableItemBackground" android:padding="10.0dip" android:focusable="true" android:clickable="true" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="CANCEL" />
++        <TextView android:textSize="14.0sp" android:textStyle="bold" android:textColor="@color/tp_btn_danger_dialog" android:id="@id/btnConfirmShutdown" android:background="?selectableItemBackground" android:padding="10.0dip" android:focusable="true" android:clickable="true" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="SHUTDOWN" android:layout_marginStart="8.0dip" />
+     </LinearLayout>
+ </LinearLayout>
+\ No newline at end of file
+diff -ruN a/res/layout/dialog_drone_menu.xml b/res/layout/dialog_drone_menu.xml
+--- a/res/layout/dialog_drone_menu.xml
++++ b/res/layout/dialog_drone_menu.xml
+@@ -11,6 +11,6 @@
+         <TextView android:textSize="15.0sp" android:textColor="#ffcccccc" android:id="@id/btnDroneLocateOperator" android:background="?selectableItemBackground" android:padding="14.0dip" android:focusable="true" android:clickable="true" android:layout_width="fill_parent" android:layout_height="wrap_content" android:text="Locate Operator" />
+     </LinearLayout>
+     <LinearLayout android:gravity="end" android:orientation="horizontal" android:background="@drawable/dialog_rounded_bottom" android:padding="12.0dip" android:layout_width="fill_parent" android:layout_height="wrap_content">
+-        <TextView android:textSize="14.0sp" android:textStyle="bold" android:textColor="#ffaaaaaa" android:id="@id/btnDroneMenuClose" android:background="?selectableItemBackground" android:padding="10.0dip" android:focusable="true" android:clickable="true" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="CLOSE" />
++        <TextView android:textSize="14.0sp" android:textStyle="bold" android:textColor="@color/tp_accent" android:id="@id/btnDroneMenuClose" android:background="?selectableItemBackground" android:padding="10.0dip" android:focusable="true" android:clickable="true" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="CLOSE" />
+     </LinearLayout>
+ </LinearLayout>
+\ No newline at end of file
+diff -ruN a/res/layout/dialog_edit_marker.xml b/res/layout/dialog_edit_marker.xml
+--- a/res/layout/dialog_edit_marker.xml
++++ b/res/layout/dialog_edit_marker.xml
+@@ -4,13 +4,13 @@
+     <TextView android:textSize="16.0sp" android:textStyle="bold" android:textColor="@android:color/white" android:id="@id/editMarkerTitle" android:background="@drawable/dialog_rounded_top" android:padding="16.0dip" android:layout_width="fill_parent" android:layout_height="wrap_content" android:text="Edit Marker" />
+     <LinearLayout android:orientation="vertical" android:padding="16.0dip" android:layout_width="fill_parent" android:layout_height="wrap_content">
+         <TextView android:textSize="12.0sp" android:textColor="#ffaaaaaa" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginBottom="4.0dip" android:text="Name" />
+-        <EditText android:textColor="@android:color/white" android:textColorHint="#ff666666" android:id="@id/editMarkerName" android:background="#ff3a3a3a" android:padding="12.0dip" android:layout_width="fill_parent" android:layout_height="wrap_content" android:hint="Marker name" android:singleLine="true" android:inputType="text" />
++        <EditText android:textColor="@android:color/white" android:textColorHint="#ff666666" android:id="@id/editMarkerName" android:background="@drawable/tp_field_bg" android:padding="12.0dip" android:layout_width="fill_parent" android:layout_height="wrap_content" android:hint="Marker name" android:singleLine="true" android:inputType="text" />
+         <TextView android:textSize="12.0sp" android:textColor="#ffaaaaaa" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="14.0dip" android:layout_marginBottom="4.0dip" android:text="Remarks" />
+-        <EditText android:textColor="@android:color/white" android:textColorHint="#ff666666" android:gravity="top" android:id="@id/editMarkerRemarks" android:background="#ff3a3a3a" android:padding="12.0dip" android:layout_width="fill_parent" android:layout_height="wrap_content" android:hint="Add remarks..." android:minLines="3" android:inputType="textMultiLine" />
++        <EditText android:textColor="@android:color/white" android:textColorHint="#ff666666" android:gravity="top" android:id="@id/editMarkerRemarks" android:background="@drawable/tp_field_bg" android:padding="12.0dip" android:layout_width="fill_parent" android:layout_height="wrap_content" android:hint="Add remarks..." android:minLines="3" android:inputType="textMultiLine" />
+         <TextView android:textSize="11.0sp" android:textColor="#ff777777" android:id="@id/editMarkerCoords" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="10.0dip" />
+     </LinearLayout>
+     <LinearLayout android:gravity="end" android:orientation="horizontal" android:background="@drawable/dialog_rounded_bottom" android:padding="12.0dip" android:layout_width="fill_parent" android:layout_height="wrap_content">
+-        <TextView android:textSize="14.0sp" android:textStyle="bold" android:textColor="#ffaaaaaa" android:id="@id/btnCancel" android:background="?selectableItemBackground" android:padding="10.0dip" android:focusable="true" android:clickable="true" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="CANCEL" />
++        <TextView android:textSize="14.0sp" android:textStyle="bold" android:textColor="@color/tp_accent" android:id="@id/btnCancel" android:background="?selectableItemBackground" android:padding="10.0dip" android:focusable="true" android:clickable="true" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="CANCEL" />
+         <TextView android:textSize="14.0sp" android:textStyle="bold" android:textColor="@android:color/white" android:id="@id/btnSave" android:background="?selectableItemBackground" android:padding="10.0dip" android:focusable="true" android:clickable="true" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="SAVE" android:layout_marginStart="8.0dip" />
+         <TextView android:textSize="14.0sp" android:textStyle="bold" android:textColor="#ff4caf50" android:id="@id/btnSaveAndSend" android:background="?selectableItemBackground" android:padding="10.0dip" android:focusable="true" android:clickable="true" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="SEND" android:layout_marginStart="8.0dip" />
+     </LinearLayout>
+diff -ruN a/res/layout/dialog_export_format.xml b/res/layout/dialog_export_format.xml
+--- a/res/layout/dialog_export_format.xml
++++ b/res/layout/dialog_export_format.xml
+@@ -9,6 +9,6 @@
+         <TextView android:textSize="15.0sp" android:textColor="#ffcccccc" android:id="@id/exportCSV" android:background="?selectableItemBackground" android:padding="14.0dip" android:focusable="true" android:clickable="true" android:layout_width="fill_parent" android:layout_height="wrap_content" android:text="CSV (Spreadsheet)" />
+     </LinearLayout>
+     <LinearLayout android:gravity="end" android:orientation="horizontal" android:background="@drawable/dialog_rounded_bottom" android:padding="12.0dip" android:layout_width="fill_parent" android:layout_height="wrap_content">
+-        <TextView android:textSize="14.0sp" android:textStyle="bold" android:textColor="#ffaaaaaa" android:id="@id/btnCancelExport" android:background="?selectableItemBackground" android:padding="10.0dip" android:focusable="true" android:clickable="true" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="CANCEL" />
++        <TextView android:textSize="14.0sp" android:textStyle="bold" android:textColor="@color/tp_accent" android:id="@id/btnCancelExport" android:background="?selectableItemBackground" android:padding="10.0dip" android:focusable="true" android:clickable="true" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="CANCEL" />
+     </LinearLayout>
+ </LinearLayout>
+\ No newline at end of file
+diff -ruN a/res/layout/dialog_incoming_alert.xml b/res/layout/dialog_incoming_alert.xml
+--- a/res/layout/dialog_incoming_alert.xml
++++ b/res/layout/dialog_incoming_alert.xml
+@@ -10,7 +10,7 @@
+         <TextView android:textSize="15.0sp" android:textColor="#ffcccccc" android:gravity="center" android:id="@id/incomingAlertType" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="6.0dip" android:text="Alert Type" />
+     </LinearLayout>
+     <LinearLayout android:orientation="horizontal" android:background="@drawable/dialog_rounded_bottom" android:padding="12.0dip" android:layout_width="fill_parent" android:layout_height="wrap_content">
+-        <TextView android:textSize="14.0sp" android:textStyle="bold" android:textColor="#ffaaaaaa" android:gravity="center" android:id="@id/btnIncomingAlertDismiss" android:background="?selectableItemBackground" android:padding="12.0dip" android:focusable="true" android:clickable="true" android:layout_width="0.0dip" android:layout_height="wrap_content" android:text="DISMISS" android:layout_weight="1.0" />
++        <TextView android:textSize="14.0sp" android:textStyle="bold" android:textColor="@color/tp_accent" android:gravity="center" android:id="@id/btnIncomingAlertDismiss" android:background="?selectableItemBackground" android:padding="12.0dip" android:focusable="true" android:clickable="true" android:layout_width="0.0dip" android:layout_height="wrap_content" android:text="DISMISS" android:layout_weight="1.0" />
+         <TextView android:textSize="14.0sp" android:textStyle="bold" android:textColor="#ffff4444" android:gravity="center" android:id="@id/btnIncomingAlertLocate" android:background="?selectableItemBackground" android:padding="12.0dip" android:focusable="true" android:clickable="true" android:layout_width="0.0dip" android:layout_height="wrap_content" android:text="LOCATE" android:layout_weight="1.0" />
+     </LinearLayout>
+ </LinearLayout>
+\ No newline at end of file
+diff -ruN a/res/layout/dialog_track_options.xml b/res/layout/dialog_track_options.xml
+--- a/res/layout/dialog_track_options.xml
++++ b/res/layout/dialog_track_options.xml
+@@ -8,6 +8,6 @@
+         <TextView android:textSize="15.0sp" android:textColor="#ffff5555" android:id="@id/optionDelete" android:background="?selectableItemBackground" android:padding="14.0dip" android:focusable="true" android:clickable="true" android:layout_width="fill_parent" android:layout_height="wrap_content" android:text="Delete Track" />
+     </LinearLayout>
+     <LinearLayout android:gravity="end" android:orientation="horizontal" android:background="@drawable/dialog_rounded_bottom" android:padding="12.0dip" android:layout_width="fill_parent" android:layout_height="wrap_content">
+-        <TextView android:textSize="14.0sp" android:textStyle="bold" android:textColor="#ffaaaaaa" android:id="@id/btnClose" android:background="?selectableItemBackground" android:padding="10.0dip" android:focusable="true" android:clickable="true" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="CLOSE" />
++        <TextView android:textSize="14.0sp" android:textStyle="bold" android:textColor="@color/tp_accent" android:id="@id/btnClose" android:background="?selectableItemBackground" android:padding="10.0dip" android:focusable="true" android:clickable="true" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="CLOSE" />
+     </LinearLayout>
+ </LinearLayout>
+\ No newline at end of file
+diff -ruN a/res/layout/dialog_video_player.xml b/res/layout/dialog_video_player.xml
+--- a/res/layout/dialog_video_player.xml
++++ b/res/layout/dialog_video_player.xml
+@@ -3,7 +3,7 @@
+   xmlns:android="http://schemas.android.com/apk/res/android" xmlns:app="http://schemas.android.com/apk/res-auto">
+     <LinearLayout android:gravity="center_vertical" android:orientation="horizontal" android:background="@drawable/dialog_rounded_top" android:padding="12.0dip" android:layout_width="fill_parent" android:layout_height="wrap_content">
+         <TextView android:textSize="15.0sp" android:textStyle="bold" android:textColor="@android:color/white" android:ellipsize="end" android:id="@id/videoTitle" android:layout_width="0.0dip" android:layout_height="wrap_content" android:text="Drone Feed" android:singleLine="true" android:layout_weight="1.0" />
+-        <TextView android:textSize="13.0sp" android:textStyle="bold" android:textColor="#ffaaaaaa" android:id="@id/btnVideoClose" android:background="?selectableItemBackground" android:padding="8.0dip" android:focusable="true" android:clickable="true" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="CLOSE" />
++        <TextView android:textSize="13.0sp" android:textStyle="bold" android:textColor="@color/tp_accent" android:id="@id/btnVideoClose" android:background="?selectableItemBackground" android:padding="8.0dip" android:focusable="true" android:clickable="true" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="CLOSE" />
+     </LinearLayout>
+     <androidx.media3.ui.PlayerView android:id="@id/videoPlayerView" android:layout_width="fill_parent" android:layout_height="0.0dip" android:minHeight="220.0dip" android:layout_weight="1.0" app:resize_mode="fit" app:show_buffering="always" app:show_timeout="1500" app:use_controller="true" />
+ </LinearLayout>
+\ No newline at end of file
 diff -ruN a/res/values/ids.xml b/res/values/ids.xml
 --- a/res/values/ids.xml
 +++ b/res/values/ids.xml
@@ -148,17 +472,19 @@ diff -ruN a/res/values/ids.xml b/res/values/ids.xml
 diff -ruN a/res/values/styles.xml b/res/values/styles.xml
 --- a/res/values/styles.xml
 +++ b/res/values/styles.xml
-@@ -31,8 +31,8 @@
+@@ -31,9 +31,9 @@
          <item name="android:textColorSecondary">@color/text_secondary</item>
          <item name="android:windowBackground">@color/background</item>
          <item name="android:fitsSystemWindows">true</item>
 -        <item name="android:statusBarColor">@color/primary</item>
 -        <item name="android:navigationBarColor">@color/primary</item>
+-        <item name="colorAccent">@color/accent</item>
 +        <item name="android:statusBarColor">@color/tp_bg_flight</item>
 +        <item name="android:navigationBarColor">@color/tp_bg_flight</item>
-         <item name="colorAccent">@color/accent</item>
++        <item name="colorAccent">@color/tp_accent</item>
          <item name="colorPrimary">@color/primary</item>
          <item name="colorPrimaryDark">@color/primary_dark</item>
+     </style>
 diff -ruN a/res/values/takpilot_colors.xml b/res/values/takpilot_colors.xml
 --- a/res/values/takpilot_colors.xml
 +++ b/res/values/takpilot_colors.xml
