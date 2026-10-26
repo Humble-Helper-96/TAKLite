@@ -1,6 +1,7 @@
-# TAK Lite: custom map sources
+# TAK Lite: custom maps and data import
 
-This adds your own raster map sources to TAK Lite 1.5.0, built for
+This adds your own raster map sources and data import (TAK data packages,
+KML, KMZ, GPX, CoT) to TAK Lite 1.5.0. Map sources are built for
 [TileServer GL](https://github.com/maptiler/tileserver-gl) but working with any
 XYZ tile server, for example:
 
@@ -39,6 +40,42 @@ no cache headers). Stale tiles are refreshed when the server can be reached.
   full, the oldest tiles are removed down to 5/6 of the limit. The limit is
   capped at 95% of the phone's free space. A lower limit takes effect the next
   time the map opens.
+
+## Imported data: data packages, KML, KMZ, GPX, CoT
+
+- **Data packages sent over TAK**: when an ATAK, iTAK or WinTAK user sends you
+  a data package, TAK Lite downloads it from the TAK server with your client
+  certificate, checks its SHA-256 and adds its contents to the map. You get a
+  notification, plus a toast if the map is on screen. If the package names a
+  server address the phone can't reach, it retries with the server configured
+  in TAK Lite. A re-sent package replaces the earlier copy; it's skipped while
+  that copy still exists. The limit is 200 MB.
+- **Files**: Settings → Imported Data → Manage → **Import File**, or open or
+  share a `.kml`, `.kmz`, `.gpx`, `.cot` or data package `.zip` to TAK Lite
+  from a file manager, email or chat app.
+- **What's drawn**:
+  - CoT drawings with vertices (freehand, rectangles, routes) as lines, or as
+    areas when closed or filled.
+  - Circles and ellipses as areas.
+  - CoT markers with TAK Lite's MIL-STD-2525 or iconset symbols.
+  - Photos attached to markers, shown when you tap them.
+  - KML Placemarks: points, lines, polygons, MultiGeometry and gx:Track, with
+    their Style/StyleMap colours and widths.
+  - GPX waypoints, routes and tracks, with Garmin, OsmAnd or GPS Track Editor
+    colours.
+- **Tap** any imported item for its name, notes, length and photo.
+- **Manage** (Settings → Manage Imported Data, or long-press the layers button
+  → Imported data): zoom to, hide/show or delete each import.
+
+Imports are converted once and kept in the app's private storage. They are
+drawn under markers and teammates.
+
+Not handled: KML ground overlays, network links and custom icon images; map
+tile packages (MBTiles, SQLite) inside data packages; sending data packages
+from TAK Lite; the "received" acknowledgement ATAK can send back to the
+sender. ATAK exports each drawing to KML twice (the shape plus a label point
+called "… center"); the label point is skipped. Polygon fills are kept
+translucent so they don't hide the map.
 
 ### Notes
 
@@ -83,9 +120,10 @@ with your TAK server again), then install the APK.
 
 | Path | What it is |
 |---|---|
-| `src/com/taklite/client/mod/` | The feature, in Java: source storage, the osmdroid tile source and dialogs (`CustomMapSources`), area download (`AreaDownloader`) and cache size (`TileCache`) |
-| `patches/taklite-1.5.0.patch` | Changes to the decoded app: hooks in `MainActivity` (map-type cycling; `onCreate` before and after the map is created; `onResume`; a new `modSetMapType`) and `SettingsActivity.onCreate`, the Settings button, `usesCleartextTraffic`, and the version name |
-| `stubs/` | A compile-time stand-in for `MainActivity`; it is not packaged |
+| `src/com/taklite/client/mod/` | Map sources, in Java: source storage, the osmdroid tile source and dialogs (`CustomMapSources`), area download (`AreaDownloader`) and cache size (`TileCache`) |
+| `src/com/taklite/client/mod/imports/` | Imported data: parsers (`CotShapes`, `KmlParser`, `GpxParser`, `Importer` for zips and data packages), storage (`ImportStore`), map layers and dialogs (`ImportedLayers`), data package downloads (`DataPackages`) and `ImportActivity` |
+| `patches/taklite-1.5.0.patch` | Changes to the decoded app: hooks in `MainActivity` (map-type cycling; `onCreate` before and after the map is created; `onResume`; new `modSetMapType`, `modMarkerIcon`, `modStopFollowing`), `SettingsActivity.onCreate`, `TakManager.onCotReceived` and `TakLocationService.onCreate`; the Settings buttons; the `ImportActivity` manifest entry; `usesCleartextTraffic`; and the version name |
+| `stubs/` | Compile-time stand-ins for `MainActivity` and `SettingsActivity`; they are not packaged |
 | `tools/SignApk.java` | Zip-aligns, signs and verifies with apksig |
 
 The stock code is otherwise unchanged. Custom sources are stored as JSON in

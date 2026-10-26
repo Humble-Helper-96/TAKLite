@@ -1,12 +1,14 @@
 #!/usr/bin/env bash
-# Builds TAK Lite 1.5.0 with custom map sources (TileServer GL etc.).
+# Builds TAK Lite 1.5.0 with custom map sources (TileServer GL etc.), offline
+# map download and import of TAK data packages, KML, KMZ, GPX and CoT.
 #
 # Upstream no longer publishes TAK Lite's source, so this starts from the
 # official release APK, verifies its checksum, and adds the feature on top:
 #   1. decode the APK with apktool
-#   2. apply patches/taklite-1.5.0.patch (small hooks in MainActivity and
-#      SettingsActivity, a Settings button, cleartext HTTP for LAN servers)
-#   3. compile src/ (the feature itself, plain Java) into an extra classes3.dex
+#   2. apply patches/taklite-1.5.0.patch (small hooks in MainActivity,
+#      SettingsActivity, TakManager and TakLocationService, Settings buttons,
+#      the import activity, cleartext HTTP for LAN servers)
+#   3. compile src/ (the features themselves, plain Java) into an extra classes3.dex
 #   4. rebuild, zip-align and sign with your own key
 #
 # Needs: bash, curl, unzip, python3, patch, and a JDK 17+ (java, javac, keytool).
@@ -79,7 +81,7 @@ java -jar "$TOOLS/apktool.jar" d -f -o "$WORK/decoded" "$WORK/$APK_NAME"
 log "Applying patches"
 patch -p1 --forward -d "$WORK/decoded" < "$MOD/patches/taklite-1.5.0.patch"
 
-log "Compiling the custom map sources code"
+log "Compiling the mod"
 rm -rf "$WORK/classes" "$WORK/stubs" "$WORK/dex"
 mkdir -p "$WORK/classes" "$WORK/stubs" "$WORK/dex"
 CP="$ANDROID_JAR:$TOOLS/osmdroid.jar"

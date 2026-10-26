@@ -14,11 +14,12 @@
 
 ---
 
-## This fork: custom map sources
+## This fork: custom maps and data import
 
 This fork adds your own map sources, such as TileServer GL
-(`https://host.com/styles/mapName/512/{z}/{x}/{y}.png`), to TAK Lite 1.5.0.
-Upstream no longer publishes the app's source, so the feature is built on top
+(`https://host.com/styles/mapName/512/{z}/{x}/{y}.png`), offline map download,
+and import of TAK data packages, KML, KMZ and GPX to TAK Lite 1.5.0.
+Upstream no longer publishes the app's source, so the features are built on top
 of the official release APK. See [mod/README.md](mod/README.md) for how to use
 and build it.
 

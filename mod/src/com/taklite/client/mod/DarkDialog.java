@@ -24,22 +24,22 @@ import android.widget.TextView;
  * Builds dialogs that match TAK Lite's own dark, rounded dialog layouts
  * (dialog_edit_marker.xml etc.) without needing new XML resources.
  */
-final class DarkDialog {
+public final class DarkDialog {
 
-    static final int COLOR_LABEL = 0xFFAAAAAA;
-    static final int COLOR_HINT = 0xFF666666;
-    static final int COLOR_FIELD = 0xFF3A3A3A;
-    static final int COLOR_ACCENT = 0xFF4CAF50;
-    static final int COLOR_PRIMARY = 0xFF2A2A2A;
-    static final int COLOR_DANGER = 0xFFF44336;
-    static final int COLOR_SECONDARY = 0xFFB0B0B0;
+    public static final int COLOR_LABEL = 0xFFAAAAAA;
+    public static final int COLOR_HINT = 0xFF666666;
+    public static final int COLOR_FIELD = 0xFF3A3A3A;
+    public static final int COLOR_ACCENT = 0xFF4CAF50;
+    public static final int COLOR_PRIMARY = 0xFF2A2A2A;
+    public static final int COLOR_DANGER = 0xFFF44336;
+    public static final int COLOR_SECONDARY = 0xFFB0B0B0;
 
-    final Context context;
-    final Dialog dialog;
-    final LinearLayout content;
+    public final Context context;
+    public final Dialog dialog;
+    public final LinearLayout content;
     private final LinearLayout buttonBar;
 
-    DarkDialog(Context context, String title) {
+    public DarkDialog(Context context, String title) {
         this.context = context;
         dialog = new Dialog(context);
         dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
@@ -76,7 +76,7 @@ final class DarkDialog {
         dialog.setContentView(root);
     }
 
-    void show() {
+    public void show() {
         dialog.show();
         Window window = dialog.getWindow();
         if (window != null) {
@@ -87,12 +87,12 @@ final class DarkDialog {
         }
     }
 
-    void dismiss() {
+    public void dismiss() {
         dialog.dismiss();
     }
 
     /** Adds a text button to the bottom bar, in the style of the app's CANCEL / SAVE actions. */
-    TextView addAction(String label, int color, View.OnClickListener listener) {
+    public TextView addAction(String label, int color, View.OnClickListener listener) {
         TextView action = new TextView(context);
         action.setText(label);
         action.setTextSize(TypedValue.COMPLEX_UNIT_SP, 14);
@@ -111,11 +111,11 @@ final class DarkDialog {
     }
 
     /** Pushes the actions added after this call to the right, leaving earlier ones on the left. */
-    void addActionSpacer() {
+    public void addActionSpacer() {
         buttonBar.addView(new View(context), new LinearLayout.LayoutParams(0, 1, 1f));
     }
 
-    TextView addLabel(String text) {
+    public TextView addLabel(String text) {
         TextView label = new TextView(context);
         label.setText(text);
         label.setTextSize(TypedValue.COMPLEX_UNIT_SP, 12);
@@ -127,7 +127,7 @@ final class DarkDialog {
         return label;
     }
 
-    TextView addText(String text) {
+    public TextView addText(String text) {
         TextView view = new TextView(context);
         view.setText(text);
         view.setTextSize(TypedValue.COMPLEX_UNIT_SP, 13);
@@ -138,7 +138,7 @@ final class DarkDialog {
         return view;
     }
 
-    EditText addField(String label, String hint, String value, int inputType) {
+    public EditText addField(String label, String hint, String value, int inputType) {
         addLabel(label);
         EditText field = new EditText(context);
         field.setTextColor(Color.WHITE);
@@ -153,7 +153,7 @@ final class DarkDialog {
         return field;
     }
 
-    Button addButton(String label, int tint, View.OnClickListener listener) {
+    public Button addButton(String label, int tint, View.OnClickListener listener) {
         Button button = new Button(context);
         button.setText(label);
         button.setTextColor(Color.WHITE);
@@ -168,7 +168,7 @@ final class DarkDialog {
     }
 
     /** A tappable two-line row (title + subtitle) for lists. */
-    LinearLayout addRow(String title, String subtitle, int titleColor, View.OnClickListener listener) {
+    public LinearLayout addRow(String title, String subtitle, int titleColor, View.OnClickListener listener) {
         LinearLayout row = new LinearLayout(context);
         row.setOrientation(LinearLayout.VERTICAL);
         row.setPadding(dp(8), dp(10), dp(8), dp(10));
@@ -197,7 +197,7 @@ final class DarkDialog {
         return row;
     }
 
-    void addDivider() {
+    public void addDivider() {
         View line = new View(context);
         line.setBackgroundColor(0xFF000000);
         LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, dp(1));
@@ -206,16 +206,16 @@ final class DarkDialog {
         content.addView(line, lp);
     }
 
-    int dp(int value) {
+    public int dp(int value) {
         return dp(context, value);
     }
 
-    static int dp(Context context, int value) {
+    public static int dp(Context context, int value) {
         return Math.round(TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, value,
                 context.getResources().getDisplayMetrics()));
     }
 
-    static LinearLayout.LayoutParams matchWrap() {
+    public static LinearLayout.LayoutParams matchWrap() {
         return new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,
                 ViewGroup.LayoutParams.WRAP_CONTENT);
     }

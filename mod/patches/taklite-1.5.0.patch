@@ -10,6 +10,14 @@ diff -ruN a/AndroidManifest.xml b/AndroidManifest.xml
          <activity android:configChanges="keyboardHidden|orientation|screenSize" android:exported="true" android:launchMode="singleTask" android:name="com.taklite.client.MainActivity" android:screenOrientation="unspecified">
              <intent-filter>
                  <action android:name="android.intent.action.MAIN"/>
+@@ -37,6 +37,7 @@
+         <activity android:configChanges="keyboardHidden|orientation|screenSize" android:exported="false" android:name="com.taklite.client.SettingsActivity" android:parentActivityName="com.taklite.client.MainActivity" android:screenOrientation="unspecified"/>
+         <activity android:configChanges="keyboardHidden|orientation|screenSize" android:exported="false" android:name="com.taklite.client.TrackHistoryActivity" android:parentActivityName="com.taklite.client.MainActivity" android:screenOrientation="unspecified"/>
+         <service android:enabled="true" android:exported="false" android:foregroundServiceType="location" android:name="com.taklite.client.tak.TakLocationService"/>
++        <activity android:exported="true" android:excludeFromRecents="true" android:label="Import to TAK Lite" android:name="com.taklite.client.mod.imports.ImportActivity" android:theme="@android:style/Theme.Translucent.NoTitleBar"><intent-filter><action android:name="android.intent.action.VIEW"/><category android:name="android.intent.category.DEFAULT"/><data android:scheme="content"/><data android:mimeType="application/vnd.google-earth.kml+xml"/><data android:mimeType="application/vnd.google-earth.kmz"/><data android:mimeType="application/gpx+xml"/><data android:mimeType="application/zip"/><data android:mimeType="application/x-zip-compressed"/><data android:mimeType="application/octet-stream"/><data android:mimeType="application/xml"/><data android:mimeType="text/xml"/></intent-filter><intent-filter><action android:name="android.intent.action.SEND"/><category android:name="android.intent.category.DEFAULT"/><data android:mimeType="application/vnd.google-earth.kml+xml"/><data android:mimeType="application/vnd.google-earth.kmz"/><data android:mimeType="application/gpx+xml"/><data android:mimeType="application/zip"/><data android:mimeType="application/x-zip-compressed"/><data android:mimeType="application/octet-stream"/><data android:mimeType="application/xml"/><data android:mimeType="text/xml"/></intent-filter></activity>
+         <activity android:clearTaskOnLaunch="true" android:name="com.journeyapps.barcodescanner.CaptureActivity" android:screenOrientation="sensorLandscape" android:stateNotNeeded="true" android:theme="@style/zxing_CaptureTheme" android:windowSoftInputMode="stateAlwaysHidden"/>
+         <provider android:authorities="com.taklite.client.androidx-startup" android:exported="false" android:name="androidx.startup.InitializationProvider">
+             <meta-data android:name="androidx.emoji2.text.EmojiCompatInitializer" android:value="androidx.startup"/>
 diff -ruN a/apktool.yml b/apktool.yml
 --- a/apktool.yml
 +++ b/apktool.yml
@@ -25,13 +33,16 @@ diff -ruN a/apktool.yml b/apktool.yml
 diff -ruN a/res/layout/activity_settings.xml b/res/layout/activity_settings.xml
 --- a/res/layout/activity_settings.xml
 +++ b/res/layout/activity_settings.xml
-@@ -27,6 +27,10 @@
+@@ -27,6 +27,13 @@
              <Button android:textSize="14.0sp" android:textColor="@android:color/white" android:id="@id/takAssignGroupsButton" android:visibility="gone" android:layout_width="fill_parent" android:layout_height="44.0dip" android:layout_marginBottom="4.0dip" android:text="Assign Selected Groups" android:backgroundTint="@color/primary" />
              <TextView android:textSize="12.0sp" android:textColor="@color/text_secondary" android:id="@id/takGroupStatus" android:visibility="gone" android:layout_width="fill_parent" android:layout_height="wrap_content" android:layout_marginBottom="12.0dip" />
              <View android:background="@color/background" android:layout_width="fill_parent" android:layout_height="1.0dip" android:layout_marginBottom="12.0dip" />
 +            <TextView android:textSize="14.0sp" android:textStyle="bold" android:textColor="@color/text_primary" android:paddingBottom="4.0dip" android:layout_width="fill_parent" android:layout_height="wrap_content" android:text="Map Sources" />
 +            <TextView android:textSize="12.0sp" android:textColor="@color/text_secondary" android:paddingBottom="8.0dip" android:layout_width="fill_parent" android:layout_height="wrap_content" android:text="Add your own tile servers, e.g. TileServer GL" />
 +            <Button android:textSize="14.0sp" android:textColor="@android:color/white" android:tag="custom_map_sources_button" android:layout_width="fill_parent" android:layout_height="44.0dip" android:layout_marginBottom="12.0dip" android:text="Manage Map Sources" android:backgroundTint="@color/accent" />
++            <TextView android:textSize="14.0sp" android:textStyle="bold" android:textColor="@color/text_primary" android:paddingBottom="4.0dip" android:layout_width="fill_parent" android:layout_height="wrap_content" android:text="Imported Data" />
++            <TextView android:textSize="12.0sp" android:textColor="@color/text_secondary" android:paddingBottom="8.0dip" android:layout_width="fill_parent" android:layout_height="wrap_content" android:text="Data packages, KML, KMZ, GPX and CoT files" />
++            <Button android:textSize="14.0sp" android:textColor="@android:color/white" android:tag="imported_data_button" android:layout_width="fill_parent" android:layout_height="44.0dip" android:layout_marginBottom="12.0dip" android:text="Manage Imported Data" android:backgroundTint="@color/accent" />
 +            <View android:background="@color/background" android:layout_width="fill_parent" android:layout_height="1.0dip" android:layout_marginBottom="12.0dip" />
              <LinearLayout android:gravity="center_vertical" android:orientation="horizontal" android:id="@id/advancedHeader" android:background="?selectableItemBackground" android:layout_width="fill_parent" android:layout_height="44.0dip" android:layout_marginBottom="8.0dip" android:paddingStart="4.0dip" android:paddingEnd="4.0dip">
                  <TextView android:textSize="14.0sp" android:textStyle="bold" android:textColor="@color/text_secondary" android:id="@id/advancedHeaderText" android:layout_width="0.0dip" android:layout_height="wrap_content" android:text="Advanced Settings" android:layout_weight="1.0" />
@@ -61,10 +72,45 @@ diff -ruN a/smali_classes2/com/taklite/client/MainActivity.smali b/smali_classes
      const/4 v0, 0x1
  
      if-eq p1, v0, :cond_2
-@@ -2998,6 +3013,61 @@
+@@ -2998,6 +3013,96 @@
      return-object v0
  .end method
  
++.method public modMarkerIcon(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Landroid/graphics/drawable/Drawable;
++    .locals 6
++
++    move-object v0, p0
++
++    move-object v1, p1
++
++    const-string v2, "White"
++
++    const/4 v3, 0x0
++
++    move-object v4, p2
++
++    move-object v5, p3
++
++    invoke-direct/range {v0 .. v5}, Lcom/taklite/client/MainActivity;->createTakMarkerIcon(Ljava/lang/String;Ljava/lang/String;ZLjava/lang/String;Ljava/lang/String;)Landroid/graphics/drawable/Drawable;
++
++    move-result-object v0
++
++    return-object v0
++.end method
++
++.method public modStopFollowing()V
++    .locals 1
++
++    iget-boolean v0, p0, Lcom/taklite/client/MainActivity;->gpsLocked:Z
++
++    if-eqz v0, :mod_not_following
++
++    invoke-direct {p0}, Lcom/taklite/client/MainActivity;->toggleGpsLock()V
++
++    :mod_not_following
++    return-void
++.end method
++
 +.method public modSetMapType(IZ)V
 +    .locals 4
 +
@@ -123,7 +169,7 @@ diff -ruN a/smali_classes2/com/taklite/client/MainActivity.smali b/smali_classes
  .method private cycleMapType()V
      .locals 4
  
-@@ -3006,7 +3076,11 @@
+@@ -3006,7 +3111,11 @@
      add-int/lit8 v0, v0, 0x1
  
      .line 1806
@@ -136,7 +182,7 @@ diff -ruN a/smali_classes2/com/taklite/client/MainActivity.smali b/smali_classes
  
      iput v0, p0, Lcom/taklite/client/MainActivity;->currentMapType:I
  
-@@ -9232,6 +9306,8 @@
+@@ -9232,6 +9341,8 @@
  
      invoke-interface {v1, v2}, Lorg/osmdroid/config/IConfigurationProvider;->setUserAgentValue(Ljava/lang/String;)V
  
@@ -145,7 +191,7 @@ diff -ruN a/smali_classes2/com/taklite/client/MainActivity.smali b/smali_classes
      .line 146
      sget v1, Lcom/taklite/client/R$layout;->activity_main:I
  
-@@ -9624,6 +9700,8 @@
+@@ -9624,6 +9735,8 @@
      invoke-virtual {v0, p1}, Landroid/app/NotificationManager;->createNotificationChannel(Landroid/app/NotificationChannel;)V
  
      :cond_4
@@ -154,7 +200,7 @@ diff -ruN a/smali_classes2/com/taklite/client/MainActivity.smali b/smali_classes
      return-void
  .end method
  
-@@ -9768,6 +9846,8 @@
+@@ -9768,6 +9881,8 @@
      .line 260
      invoke-virtual {v1}, Lorg/osmdroid/views/MapView;->onResume()V
  
@@ -174,4 +220,28 @@ diff -ruN a/smali_classes2/com/taklite/client/SettingsActivity.smali b/smali_cla
 +
      return-void
  .end method
+ 
+diff -ruN a/smali_classes2/com/taklite/client/tak/TakLocationService.smali b/smali_classes2/com/taklite/client/tak/TakLocationService.smali
+--- a/smali_classes2/com/taklite/client/tak/TakLocationService.smali
++++ b/smali_classes2/com/taklite/client/tak/TakLocationService.smali
+@@ -1923,6 +1923,8 @@
+     .line 97
+     invoke-super {p0}, Landroid/app/Service;->onCreate()V
+ 
++    invoke-static {p0}, Lcom/taklite/client/mod/imports/Imports;->init(Landroid/content/Context;)V
++
+     sput-object p0, Lcom/taklite/client/tak/TakLocationService;->instance:Lcom/taklite/client/tak/TakLocationService;
+ 
+     .line 99
+diff -ruN a/smali_classes2/com/taklite/client/tak/TakManager.smali b/smali_classes2/com/taklite/client/tak/TakManager.smali
+--- a/smali_classes2/com/taklite/client/tak/TakManager.smali
++++ b/smali_classes2/com/taklite/client/tak/TakManager.smali
+@@ -1482,6 +1482,8 @@
+ .method public onCotReceived(Ljava/lang/String;)V
+     .locals 3
+ 
++    invoke-static {p1}, Lcom/taklite/client/mod/imports/Imports;->onCotReceived(Ljava/lang/String;)V
++
+     .line 190
+     new-instance v0, Ljava/lang/StringBuilder;
  
