@@ -2,8 +2,13 @@ package com.taklite.client.mod;
 
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.database.sqlite.SQLiteDatabase;
 import android.graphics.Color;
+import android.os.Handler;
+import android.os.Looper;
 import android.preference.PreferenceManager;
+import android.util.Log;
+import android.widget.Toast;
 
 import org.osmdroid.config.Configuration;
 import org.osmdroid.config.IConfigurationProvider;
@@ -82,6 +87,58 @@ final class TileCache {
                     : String.format(Locale.US, "%.1f GB", gb);
         }
         return Math.max(0, Math.round(bytes / (double) MB)) + " MB";
+    }
+
+    /** Confirms, then deletes every cached tile (all maps) and reopens via {@code next}. */
+    static void confirmClear(final Context context, final Runnable next) {
+        if (AreaDownloader.isRunning()) {
+            Toast.makeText(context, "Wait for the map download to finish, or cancel it, first.",
+                    Toast.LENGTH_LONG).show();
+            next.run();
+            return;
+        }
+        final DarkDialog d = new DarkDialog(context, "Clear Offline Cache?");
+        d.addText("Deletes all " + formatSize(usedBytes(context)) + " of saved map tiles, for every "
+                + "map. Areas you downloaded for offline use will need downloading again. Tiles are "
+                + "saved again as you use the map.");
+        d.addAction("CANCEL", v -> {
+            d.dismiss();
+            next.run();
+        });
+        d.addDestructiveAction("CLEAR", v -> {
+            d.dismiss();
+            final Context app = context.getApplicationContext();
+            final long before = usedBytes(context);
+            Toast.makeText(context, "Clearing the map cache\u2026", Toast.LENGTH_SHORT).show();
+            new Thread(() -> {
+                String message;
+                try {
+                    new Cleaner().clearAll();
+                    message = "Map cache cleared: freed " + formatSize(Math.max(0, before - usedBytes(app))) + ".";
+                } catch (RuntimeException e) {
+                    Log.e("TileCache", "Could not clear the map cache", e);
+                    message = "Could not clear the map cache: " + e.getMessage();
+                }
+                final String result = message;
+                new Handler(Looper.getMainLooper()).post(() -> {
+                    Toast.makeText(app, result, Toast.LENGTH_LONG).show();
+                    next.run();
+                });
+            }, "ClearTileCache").start();
+        });
+        d.show();
+    }
+
+    /**
+     * osmdroid's purgeCache() only deletes rows, so the file keeps its size. VACUUM
+     * afterwards gives the space back. Uses osmdroid's own (shared) database connection.
+     */
+    private static final class Cleaner extends SqlTileWriter {
+        void clearAll() {
+            if (!purgeCache()) throw new IllegalStateException("tile database is not available");
+            SQLiteDatabase db = getDb();
+            if (db != null && db.isOpen()) db.execSQL("VACUUM");
+        }
     }
 
     static void showLimitPicker(final Context context, final Runnable next) {

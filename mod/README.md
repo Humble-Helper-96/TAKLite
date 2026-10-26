@@ -40,11 +40,17 @@ no cache headers). Stale tiles are refreshed when the server can be reached.
   Keep the app open while it runs; the screen stays on. Built-in maps can't
   be downloaded because their providers' usage policies don't allow bulk
   downloads.
+  Downloads stop at street level: standard zoom 18, about 0.6 m per pixel.
+  For 512 px TileServer GL tiles that is their zoom 17, which has the same
+  detail. Zoom in further and the map enlarges those tiles, offline too.
 - **Cache size**: Settings → Map Sources → Manage → **Cache size** (300 MB to
   16 GB; the default is 600 MB). The cache is shared by all maps. When it's
   full, the oldest tiles are removed down to 5/6 of the limit. The limit is
   capped at 95% of the phone's free space. A lower limit takes effect the next
   time the map opens.
+- **Clear Cache**: Settings → Map Sources → Manage → **Clear Cache** deletes
+  every saved tile for all maps, after a confirmation, and gives the space
+  back to the phone. It is refused while an area download is running.
 
 ## Imported data: data packages, KML, KMZ, GPX, CoT
 
