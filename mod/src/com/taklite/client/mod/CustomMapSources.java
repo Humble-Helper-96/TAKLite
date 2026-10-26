@@ -276,7 +276,7 @@ public final class CustomMapSources {
             String name = custom ? source.name : BUILT_IN_NAMES[i];
             String subtitle = custom ? hostOf(source.url) : null;
             d.addRow(i == selected ? name + "  ✓" : name, subtitle,
-                    i == selected ? DarkDialog.COLOR_ACCENT : Color.WHITE, v -> {
+                    i == selected ? Tak.STATE_GO : Color.WHITE, v -> {
                         d.dismiss();
                         activity.modSetMapType(type, true);
                     });
@@ -288,7 +288,7 @@ public final class CustomMapSources {
         final View mapView = mapViewId == 0 ? null : activity.findViewById(mapViewId);
         if (selectedIndex >= 0 && selectedIndex < sources.size() && mapView instanceof MapView) {
             final Source source = sources.get(selectedIndex);
-            d.addButton("Download visible area for offline", DarkDialog.COLOR_ACCENT, v -> {
+            d.addButton("Download visible area for offline", Tak.BTN_PRIMARY, v -> {
                 d.dismiss();
                 AreaDownloader.show(activity, (MapView) mapView, source);
             });
@@ -299,12 +299,12 @@ public final class CustomMapSources {
                     + "(The built-in maps' providers don't allow bulk downloads.)");
         }
 
-        d.addAction("MANAGE SOURCES", DarkDialog.COLOR_ACCENT, v -> {
+        d.addAction("MANAGE SOURCES", v -> {
             d.dismiss();
             showManager(activity, () -> refreshMainMap(activity));
         });
         d.addActionSpacer();
-        d.addAction("CLOSE", DarkDialog.COLOR_LABEL, v -> d.dismiss());
+        d.addAction("CLOSE", v -> d.dismiss());
         d.show();
     }
 
@@ -334,12 +334,12 @@ public final class CustomMapSources {
             });
         }
         d.addDivider();
-        d.addButton("Add Map Source", DarkDialog.COLOR_ACCENT, v -> {
+        d.addButton("Add Map Source", Tak.BTN_PRIMARY, v -> {
             d.dialog.setOnDismissListener(null);
             d.dismiss();
             showEditor(context, -1, () -> showManager(context, onClose));
         });
-        d.addButton("Import from TileServer GL", DarkDialog.COLOR_FIELD, v -> {
+        d.addButton("Import from TileServer GL", Tak.BTN_NEUTRAL, v -> {
             d.dialog.setOnDismissListener(null);
             d.dismiss();
             showImport(context, () -> showManager(context, onClose));
@@ -350,12 +350,12 @@ public final class CustomMapSources {
         d.addText(TileCache.summary(context) + " To save an area ahead of time, long-press the "
                 + "map layers button and choose \"Download visible area\".");
         d.addButton("Cache size: " + TileCache.formatSize(TileCache.limitMb(context) * 1024L * 1024L),
-                DarkDialog.COLOR_FIELD, v -> {
+                Tak.BTN_NEUTRAL, v -> {
                     d.dialog.setOnDismissListener(null);
                     d.dismiss();
                     TileCache.showLimitPicker(context, () -> showManager(context, onClose));
                 });
-        d.addAction("CLOSE", DarkDialog.COLOR_LABEL, v -> d.dismiss());
+        d.addAction("CLOSE", v -> d.dismiss());
         d.show();
     }
 
@@ -381,32 +381,32 @@ public final class CustomMapSources {
         status.setVisibility(View.GONE);
 
         if (existing != null) {
-            d.addAction("DELETE", DarkDialog.COLOR_DANGER, v -> {
+            d.addDestructiveAction("DELETE", v -> {
                 delete(context, sources, index);
                 d.dismiss();
             });
             d.addActionSpacer();
         }
-        d.addAction("TEST", DarkDialog.COLOR_LABEL, v -> {
+        d.addAction("TEST", v -> {
             Source s = new Source();
             String error = readForm(s, name, url, minZoom, maxZoom, tileSize);
             status.setVisibility(View.VISIBLE);
             if (error != null) {
-                status.setTextColor(DarkDialog.COLOR_DANGER);
+                status.setTextColor(Tak.STATE_DANGER);
                 status.setText(error);
                 return;
             }
-            status.setTextColor(DarkDialog.COLOR_LABEL);
+            status.setTextColor(Tak.TEXT_SECONDARY);
             status.setText("Testing…");
             testTile(context, s, status);
         });
-        d.addAction("CANCEL", DarkDialog.COLOR_LABEL, v -> d.dismiss());
-        d.addAction("SAVE", Color.WHITE, v -> {
+        d.addAction("CANCEL", v -> d.dismiss());
+        d.addAction("SAVE", v -> {
             Source s = new Source();
             String error = readForm(s, name, url, minZoom, maxZoom, tileSize);
             if (error != null) {
                 status.setVisibility(View.VISIBLE);
-                status.setTextColor(DarkDialog.COLOR_DANGER);
+                status.setTextColor(Tak.STATE_DANGER);
                 status.setText(error);
                 return;
             }
@@ -434,7 +434,7 @@ public final class CustomMapSources {
         final CheckBox large = new CheckBox(context);
         large.setText("512 px tiles (sharper text, recommended)");
         large.setTextColor(Color.WHITE);
-        large.setButtonTintList(ColorStateList.valueOf(DarkDialog.COLOR_ACCENT));
+        large.setButtonTintList(ColorStateList.valueOf(Tak.ACCENT));
         large.setChecked(true);
         d.content.addView(large, DarkDialog.matchWrap());
         final TextView status = d.addLabel("");
@@ -448,16 +448,16 @@ public final class CustomMapSources {
         final String[] base = new String[1];
         final Handler main = new Handler(Looper.getMainLooper());
 
-        d.addAction("FETCH STYLES", DarkDialog.COLOR_ACCENT, v -> {
+        d.addAction("FETCH STYLES", v -> {
             final String baseUrl = normalizeServer(server.getText().toString());
             if (baseUrl == null) {
                 status.setVisibility(View.VISIBLE);
-                status.setTextColor(DarkDialog.COLOR_DANGER);
+                status.setTextColor(Tak.STATE_DANGER);
                 status.setText("Enter the server address, e.g. http://192.168.1.10:8080");
                 return;
             }
             status.setVisibility(View.VISIBLE);
-            status.setTextColor(DarkDialog.COLOR_LABEL);
+            status.setTextColor(Tak.TEXT_SECONDARY);
             status.setText("Fetching " + baseUrl + "/styles.json…");
             styleList.removeAllViews();
             boxes.clear();
@@ -483,18 +483,18 @@ public final class CustomMapSources {
                 main.post(() -> {
                     if (!d.dialog.isShowing()) return;
                     if (finalError != null) {
-                        status.setTextColor(DarkDialog.COLOR_DANGER);
+                        status.setTextColor(Tak.STATE_DANGER);
                         status.setText(finalError);
                         return;
                     }
                     base[0] = baseUrl;
-                    status.setTextColor(DarkDialog.COLOR_LABEL);
+                    status.setTextColor(Tak.TEXT_SECONDARY);
                     status.setText("Select styles to add:");
                     for (String[] style : found) {
                         CheckBox box = new CheckBox(context);
                         box.setText(style[1].equals(style[0]) ? style[1] : style[1] + " (" + style[0] + ")");
                         box.setTextColor(Color.WHITE);
-                        box.setButtonTintList(ColorStateList.valueOf(DarkDialog.COLOR_ACCENT));
+                        box.setButtonTintList(ColorStateList.valueOf(Tak.ACCENT));
                         box.setChecked(true);
                         styleList.addView(box, DarkDialog.matchWrap());
                         boxes.add(box);
@@ -504,11 +504,11 @@ public final class CustomMapSources {
             }).start();
         });
         d.addActionSpacer();
-        d.addAction("CANCEL", DarkDialog.COLOR_LABEL, v -> d.dismiss());
-        d.addAction("ADD", Color.WHITE, v -> {
+        d.addAction("CANCEL", v -> d.dismiss());
+        d.addAction("ADD", v -> {
             if (base[0] == null || boxes.isEmpty()) {
                 status.setVisibility(View.VISIBLE);
-                status.setTextColor(DarkDialog.COLOR_DANGER);
+                status.setTextColor(Tak.STATE_DANGER);
                 status.setText("Fetch the server's styles first.");
                 return;
             }
@@ -596,7 +596,7 @@ public final class CustomMapSources {
             final String finalMessage = message + "\n" + tileUrl;
             final boolean finalOk = ok;
             main.post(() -> {
-                status.setTextColor(finalOk ? DarkDialog.COLOR_ACCENT : DarkDialog.COLOR_DANGER);
+                status.setTextColor(finalOk ? Tak.STATE_GO : Tak.STATE_DANGER);
                 status.setText(finalMessage);
             });
         }).start();

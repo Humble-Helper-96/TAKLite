@@ -87,7 +87,7 @@ final class AreaDownloader {
                         + "\"To zoom\".", tiles, MAX_TILES);
             }
             if (error != null) {
-                estimate.setTextColor(DarkDialog.COLOR_DANGER);
+                estimate.setTextColor(Tak.STATE_DANGER);
                 estimate.setText(error);
                 download[0].setEnabled(false);
                 download[0].setAlpha(0.4f);
@@ -99,9 +99,9 @@ final class AreaDownloader {
             if (bytes > TileCache.maxBytes() - TileCache.usedBytes(context)) {
                 text += "\nThat may not fit in the offline cache (" + TileCache.formatSize(TileCache.maxBytes())
                         + "); older tiles would be removed. You can raise it in Settings → Map Sources.";
-                estimate.setTextColor(0xFFFFC107);
+                estimate.setTextColor(Tak.STATE_CAUTION);
             } else {
-                estimate.setTextColor(DarkDialog.COLOR_LABEL);
+                estimate.setTextColor(Tak.TEXT_SECONDARY);
             }
             estimate.setText(text);
             download[0].setEnabled(true);
@@ -122,8 +122,8 @@ final class AreaDownloader {
             }
         };
 
-        d.addAction("CANCEL", DarkDialog.COLOR_LABEL, v -> d.dismiss());
-        download[0] = d.addAction("DOWNLOAD", DarkDialog.COLOR_ACCENT, v -> {
+        d.addAction("CANCEL", v -> d.dismiss());
+        download[0] = d.addAction("DOWNLOAD", v -> {
             int[] range = readRange(from, to, source);
             if (range == null) return;
             d.dismiss();
@@ -223,19 +223,19 @@ final class AreaDownloader {
         d.dialog.setCancelable(false);
         final ProgressBar bar = new ProgressBar(context, null, android.R.attr.progressBarStyleHorizontal);
         bar.setMax(1000);
-        bar.setProgressTintList(ColorStateList.valueOf(DarkDialog.COLOR_ACCENT));
+        bar.setProgressTintList(ColorStateList.valueOf(Tak.ACCENT));
         d.content.addView(bar, DarkDialog.matchWrap());
         final TextView status = d.addLabel("Starting…");
         status.setTextColor(android.graphics.Color.WHITE);
         d.addText("Keep TAK Lite open until it finishes; the screen stays on meanwhile.");
 
         final ExecutorService pool = Executors.newFixedThreadPool(THREADS);
-        final TextView cancel = d.addAction("CANCEL", DarkDialog.COLOR_DANGER, v -> {
+        final TextView cancel = d.addDestructiveAction("CANCEL", v -> {
             synchronized (cancelled) {
                 cancelled[0] = true;
             }
         });
-        final TextView close = d.addAction("CLOSE", DarkDialog.COLOR_LABEL, v -> d.dismiss());
+        final TextView close = d.addAction("CLOSE", v -> d.dismiss());
         close.setVisibility(View.GONE);
         d.show();
         Window window = d.dialog.getWindow();
@@ -301,12 +301,12 @@ final class AreaDownloader {
                 if (unreachable[0]) {
                     headline = "Stopped: the map server isn't answering. Check the connection and "
                             + "use TEST in the source's settings.";
-                    status.setTextColor(DarkDialog.COLOR_DANGER);
+                    status.setTextColor(Tak.STATE_DANGER);
                 } else if (cancelled[0]) {
                     headline = "Cancelled. Tiles saved so far are kept.";
                 } else {
                     headline = failed.get() == 0 ? "Done." : "Done, but some tiles failed. Run it again to retry them.";
-                    status.setTextColor(failed.get() == 0 ? DarkDialog.COLOR_ACCENT : 0xFFFFC107);
+                    status.setTextColor(failed.get() == 0 ? Tak.STATE_GO : Tak.STATE_CAUTION);
                 }
                 long grown = TileCache.usedBytes(context) - cacheBefore;
                 status.setText(headline + "\n" + counts + "\nCache: " + TileCache.formatSize(TileCache.usedBytes(context))

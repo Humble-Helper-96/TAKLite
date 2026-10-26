@@ -97,14 +97,14 @@ final class TileCache {
                     ? "More than this phone has free; limited to " + formatSize((long) (available * 0.95))
                     : null;
             d.addRow(mb == current ? title + "  ✓" : title, subtitle,
-                    mb == current ? DarkDialog.COLOR_ACCENT : Color.WHITE, v -> {
+                    mb == current ? Tak.STATE_GO : Color.WHITE, v -> {
                         context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
                                 .edit().putInt(KEY_LIMIT_MB, mb).apply();
                         apply(context);
                         d.dismiss();
                     });
         }
-        d.addAction("CANCEL", DarkDialog.COLOR_LABEL, v -> d.dismiss());
+        d.addAction("CANCEL", v -> d.dismiss());
         d.show();
     }
 }

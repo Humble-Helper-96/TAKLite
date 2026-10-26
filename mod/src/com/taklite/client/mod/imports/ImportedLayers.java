@@ -22,6 +22,8 @@ import android.widget.Toast;
 
 import com.taklite.client.MainActivity;
 import com.taklite.client.mod.DarkDialog;
+import com.taklite.client.mod.HudText;
+import com.taklite.client.mod.Tak;
 
 import org.osmdroid.util.BoundingBox;
 import org.osmdroid.util.GeoPoint;
@@ -188,7 +190,7 @@ final class ImportedLayers {
         return dotIcon(activity, label, f.pointColor);
     }
 
-    /** Coloured dot with a label underneath, in the style of TAK Lite's teammate markers. */
+    /** Coloured dot with an outlined label underneath, in the style of TAK Lite's teammate markers. */
     private static Drawable dotIcon(Context context, String label, int color) {
         float d = context.getResources().getDisplayMetrics().density;
         Paint text = new Paint(Paint.ANTI_ALIAS_FLAG);
@@ -214,12 +216,9 @@ final class ImportedLayers {
         ring.setColor(0xFF000000);
         c.drawCircle(w / 2f, dot / 2f, dot / 2f - d, ring);
         if (hasLabel) {
-            float top = dot + pad;
-            Paint bg = new Paint(Paint.ANTI_ALIAS_FLAG);
-            bg.setColor(Color.argb(140, 0, 0, 0));
+            // Outlined text, no box: the same treatment as TAK Lite's own markers (see HudText).
             float left = (w - labelW) / 2f;
-            c.drawRoundRect(left, top, left + labelW, top + labelH, pad, pad, bg);
-            c.drawText(label, left + pad, top + pad / 2f - fm.ascent, text);
+            HudText.drawOutlined(c, label, left + pad, dot + pad + pad / 2f - fm.ascent, text);
         }
         return new BitmapDrawable(context.getResources(), bmp);
     }
@@ -245,7 +244,7 @@ final class ImportedLayers {
             d.addText(String.format(Locale.US, "%.5f, %.5f", f.lat(0), f.lon(0)));
         }
         d.addLabel("From \"" + entry.name + "\" (" + entry.origin + ")");
-        d.addAction("CLOSE", DarkDialog.COLOR_LABEL, v -> d.dismiss());
+        d.addAction("CLOSE", v -> d.dismiss());
         d.show();
     }
 
@@ -287,15 +286,15 @@ final class ImportedLayers {
             addEntryRow(context, d, e);
         }
         d.addDivider();
-        d.addButton("Download from Server", DarkDialog.COLOR_ACCENT, v -> {
+        d.addButton("Download from Server", Tak.BTN_PRIMARY, v -> {
             d.dismiss();
             showServerPackages(context);
         });
-        d.addButton("Import File (KML, KMZ, GPX, CoT, .zip)", DarkDialog.COLOR_FIELD, v -> {
+        d.addButton("Import File (KML, KMZ, GPX, CoT, .zip)", Tak.BTN_NEUTRAL, v -> {
             d.dismiss();
             context.startActivity(new Intent(context, ImportActivity.class));
         });
-        d.addAction("CLOSE", DarkDialog.COLOR_LABEL, v -> d.dismiss());
+        d.addAction("CLOSE", v -> d.dismiss());
         d.show();
     }
 
@@ -307,7 +306,7 @@ final class ImportedLayers {
 
         final android.widget.CheckBox box = new android.widget.CheckBox(context);
         box.setChecked(e.visible);
-        box.setButtonTintList(android.content.res.ColorStateList.valueOf(DarkDialog.COLOR_ACCENT));
+        box.setButtonTintList(android.content.res.ColorStateList.valueOf(Tak.ACCENT));
         box.setContentDescription("Show " + e.name + " on the map");
         box.setOnCheckedChangeListener((b, checked) -> {
             try {
@@ -331,7 +330,7 @@ final class ImportedLayers {
 
         android.widget.ImageButton delete = new android.widget.ImageButton(context);
         delete.setImageResource(android.R.drawable.ic_menu_delete);
-        delete.setImageTintList(android.content.res.ColorStateList.valueOf(DarkDialog.COLOR_DANGER));
+        delete.setImageTintList(android.content.res.ColorStateList.valueOf(Tak.BTN_DANGER_DIALOG));
         delete.setBackgroundColor(Color.TRANSPARENT);
         delete.setContentDescription("Delete " + e.name);
         delete.setOnClickListener(v -> {
@@ -349,7 +348,7 @@ final class ImportedLayers {
         final LinearLayout list = new LinearLayout(context);
         list.setOrientation(LinearLayout.VERTICAL);
         d.content.addView(list, DarkDialog.matchWrap());
-        d.addAction("BACK", DarkDialog.COLOR_LABEL, v -> {
+        d.addAction("BACK", v -> {
             d.dismiss();
             showManager(context);
         });
@@ -370,7 +369,7 @@ final class ImportedLayers {
             main.post(() -> {
                 if (!d.dialog.isShowing()) return;
                 if (packages == null) {
-                    status.setTextColor(DarkDialog.COLOR_DANGER);
+                    status.setTextColor(Tak.STATE_DANGER);
                     status.setText("Could not get the list: " + failure);
                     return;
                 }
@@ -384,7 +383,7 @@ final class ImportedLayers {
                     if (have) sub.append(" \u00b7 on this phone");
                     final android.widget.TextView[] title = new android.widget.TextView[1];
                     LinearLayout row = DarkDialog.row(context, have ? p.name + "  \u2713" : p.name, sub.toString(),
-                            have ? DarkDialog.COLOR_ACCENT : Color.WHITE, v -> download(context, p, title[0]));
+                            have ? Tak.STATE_GO : Color.WHITE, v -> download(context, p, title[0]));
                     title[0] = (android.widget.TextView) row.getChildAt(0);
                     list.addView(row, DarkDialog.matchWrap());
                 }
@@ -395,18 +394,18 @@ final class ImportedLayers {
     private static void download(final Context context, final DataPackages.ServerPackage p,
                                  final android.widget.TextView title) {
         title.setText(p.name + "  (downloading\u2026)");
-        title.setTextColor(DarkDialog.COLOR_LABEL);
+        title.setTextColor(Tak.TEXT_SECONDARY);
         final Handler main = new Handler(Looper.getMainLooper());
         try {
             DataPackages.importFromServer(context, p, (entry, error) -> main.post(() -> {
                 if (entry != null) {
                     title.setText(p.name + "  \u2713");
-                    title.setTextColor(DarkDialog.COLOR_ACCENT);
+                    title.setTextColor(Tak.STATE_GO);
                     Toast.makeText(context, "\"" + entry.name + "\": " + entry.count + " items added to the map.",
                             Toast.LENGTH_LONG).show();
                 } else {
                     title.setText(p.name + "  (failed)");
-                    title.setTextColor(DarkDialog.COLOR_DANGER);
+                    title.setTextColor(Tak.STATE_DANGER);
                     Toast.makeText(context, "Could not download " + p.name + ": " + error, Toast.LENGTH_LONG).show();
                 }
             }));
@@ -426,7 +425,7 @@ final class ImportedLayers {
         d.addText(e.origin + "\n" + e.count + " items, imported "
                 + DateFormat.getMediumDateFormat(context).format(new Date(e.importedAt)) + " "
                 + DateFormat.getTimeFormat(context).format(new Date(e.importedAt)));
-        d.addButton("Zoom To", DarkDialog.COLOR_ACCENT, v -> {
+        d.addButton("Zoom To", Tak.BTN_PRIMARY, v -> {
             d.dismiss();
             try {
                 if (!e.visible) Imports.setVisible(e.id, true);
@@ -442,7 +441,7 @@ final class ImportedLayers {
                 if (context instanceof Activity) ((Activity) context).finish();
             }
         });
-        d.addButton(e.visible ? "Hide on Map" : "Show on Map", DarkDialog.COLOR_FIELD, v -> {
+        d.addButton(e.visible ? "Hide on Map" : "Show on Map", Tak.BTN_NEUTRAL, v -> {
             try {
                 Imports.setVisible(e.id, !e.visible);
             } catch (IOException ex) {
@@ -451,12 +450,12 @@ final class ImportedLayers {
             d.dismiss();
             showManager(context);
         });
-        d.addAction("DELETE", DarkDialog.COLOR_DANGER, v -> {
+        d.addDestructiveAction("DELETE", v -> {
             d.dismiss();
             confirmDelete(context, e, () -> showEntry(context, e));
         });
         d.addActionSpacer();
-        d.addAction("BACK", DarkDialog.COLOR_LABEL, v -> {
+        d.addAction("BACK", v -> {
             d.dismiss();
             showManager(context);
         });
@@ -467,11 +466,11 @@ final class ImportedLayers {
     private static void confirmDelete(final Context context, final ImportStore.Entry e, final Runnable back) {
         final DarkDialog d = new DarkDialog(context, "Delete \"" + e.name + "\"?");
         d.addText("Removes its " + e.count + " items from the map and this phone.");
-        d.addAction("CANCEL", DarkDialog.COLOR_LABEL, v -> {
+        d.addAction("CANCEL", v -> {
             d.dismiss();
             back.run();
         });
-        d.addAction("DELETE", DarkDialog.COLOR_DANGER, v -> {
+        d.addDestructiveAction("DELETE", v -> {
             try {
                 Imports.delete(e.id);
             } catch (IOException ex) {

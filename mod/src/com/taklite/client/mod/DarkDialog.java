@@ -6,6 +6,9 @@ import android.content.res.ColorStateList;
 import android.graphics.Color;
 import android.graphics.Typeface;
 import android.graphics.drawable.ColorDrawable;
+import android.graphics.drawable.Drawable;
+import android.graphics.drawable.GradientDrawable;
+import android.graphics.drawable.RippleDrawable;
 import android.text.InputType;
 import android.text.TextUtils;
 import android.util.TypedValue;
@@ -21,18 +24,13 @@ import android.widget.ScrollView;
 import android.widget.TextView;
 
 /**
- * Builds dialogs that match TAK Lite's own dark, rounded dialog layouts
- * (dialog_edit_marker.xml etc.) without needing new XML resources.
+ * Dialogs in the TAKPilot2 style (spec section 6): a dialog surface with a
+ * hairline border, actions in the one accent colour (destructive ones in red),
+ * and full-width buttons that carry a colour role (go, neutral, info, danger).
  */
 public final class DarkDialog {
 
-    public static final int COLOR_LABEL = 0xFFAAAAAA;
-    public static final int COLOR_HINT = 0xFF666666;
-    public static final int COLOR_FIELD = 0xFF3A3A3A;
-    public static final int COLOR_ACCENT = 0xFF4CAF50;
-    public static final int COLOR_PRIMARY = 0xFF2A2A2A;
-    public static final int COLOR_DANGER = 0xFFF44336;
-    public static final int COLOR_SECONDARY = 0xFFB0B0B0;
+    private static final int RADIUS_DP = 12;
 
     public final Context context;
     public final Dialog dialog;
@@ -46,22 +44,22 @@ public final class DarkDialog {
 
         LinearLayout root = new LinearLayout(context);
         root.setOrientation(LinearLayout.VERTICAL);
-        setBackground(root, "dialog_rounded_bg", COLOR_PRIMARY);
+        root.setBackground(rounded(Tak.SURFACE_DIALOG, Tak.BORDER, dp(RADIUS_DP)));
 
         TextView titleView = new TextView(context);
         titleView.setText(title);
-        titleView.setTextSize(TypedValue.COMPLEX_UNIT_SP, 16);
+        titleView.setTextSize(TypedValue.COMPLEX_UNIT_SP, 18);
         titleView.setTypeface(Typeface.DEFAULT_BOLD);
-        titleView.setTextColor(Color.WHITE);
-        titleView.setPadding(dp(16), dp(16), dp(16), dp(16));
-        setBackground(titleView, "dialog_rounded_top", COLOR_PRIMARY);
+        titleView.setTextColor(Tak.TEXT_PRIMARY);
+        titleView.setPadding(dp(20), dp(18), dp(20), dp(6));
         root.addView(titleView, matchWrap());
 
         ScrollView scroll = new ScrollView(context);
         content = new LinearLayout(context);
         content.setOrientation(LinearLayout.VERTICAL);
-        content.setPadding(dp(16), dp(16), dp(16), dp(16));
+        content.setPadding(dp(20), dp(10), dp(20), dp(10));
         scroll.addView(content, matchWrap());
+        // Weighted so a long list scrolls and the action bar stays on screen.
         LinearLayout.LayoutParams scrollParams =
                 new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, 0, 1f);
         root.addView(scroll, scrollParams);
@@ -69,8 +67,7 @@ public final class DarkDialog {
         buttonBar = new LinearLayout(context);
         buttonBar.setOrientation(LinearLayout.HORIZONTAL);
         buttonBar.setGravity(Gravity.END | Gravity.CENTER_VERTICAL);
-        buttonBar.setPadding(dp(12), dp(12), dp(12), dp(12));
-        setBackground(buttonBar, "dialog_rounded_bottom", COLOR_PRIMARY);
+        buttonBar.setPadding(dp(12), dp(4), dp(12), dp(10));
         root.addView(buttonBar, matchWrap());
 
         dialog.setContentView(root);
@@ -91,21 +88,30 @@ public final class DarkDialog {
         dialog.dismiss();
     }
 
-    /** Adds a text button to the bottom bar, in the style of the app's CANCEL / SAVE actions. */
-    public TextView addAction(String label, int color, View.OnClickListener listener) {
+    /** A text action in the bottom bar, in the accent colour. */
+    public TextView addAction(String label, View.OnClickListener listener) {
+        return addAction(label, Tak.ACCENT, listener);
+    }
+
+    /** A destructive text action (delete, stop), in the dialog danger red. */
+    public TextView addDestructiveAction(String label, View.OnClickListener listener) {
+        return addAction(label, Tak.BTN_DANGER_DIALOG, listener);
+    }
+
+    private TextView addAction(String label, int color, View.OnClickListener listener) {
         TextView action = new TextView(context);
         action.setText(label);
         action.setTextSize(TypedValue.COMPLEX_UNIT_SP, 14);
         action.setTypeface(Typeface.DEFAULT_BOLD);
         action.setTextColor(color);
-        action.setPadding(dp(10), dp(10), dp(10), dp(10));
+        action.setPadding(dp(12), dp(10), dp(12), dp(10));
         action.setClickable(true);
         action.setFocusable(true);
         action.setBackgroundResource(selectableBackground(context));
         action.setOnClickListener(listener);
         LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
                 ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
-        lp.setMarginStart(dp(4));
+        lp.setMarginStart(dp(2));
         buttonBar.addView(action, lp);
         return action;
     }
@@ -119,7 +125,7 @@ public final class DarkDialog {
         TextView label = new TextView(context);
         label.setText(text);
         label.setTextSize(TypedValue.COMPLEX_UNIT_SP, 12);
-        label.setTextColor(COLOR_LABEL);
+        label.setTextColor(Tak.TEXT_TERTIARY);
         LinearLayout.LayoutParams lp = matchWrap();
         lp.topMargin = content.getChildCount() == 0 ? 0 : dp(14);
         lp.bottomMargin = dp(4);
@@ -130,8 +136,8 @@ public final class DarkDialog {
     public TextView addText(String text) {
         TextView view = new TextView(context);
         view.setText(text);
-        view.setTextSize(TypedValue.COMPLEX_UNIT_SP, 13);
-        view.setTextColor(COLOR_SECONDARY);
+        view.setTextSize(TypedValue.COMPLEX_UNIT_SP, 14);
+        view.setTextColor(Tak.TEXT_SECONDARY);
         LinearLayout.LayoutParams lp = matchWrap();
         lp.bottomMargin = dp(8);
         content.addView(view, lp);
@@ -141,9 +147,9 @@ public final class DarkDialog {
     public EditText addField(String label, String hint, String value, int inputType) {
         addLabel(label);
         EditText field = new EditText(context);
-        field.setTextColor(Color.WHITE);
-        field.setHintTextColor(COLOR_HINT);
-        field.setBackgroundColor(COLOR_FIELD);
+        field.setTextColor(Tak.TEXT_PRIMARY);
+        field.setHintTextColor(Tak.TEXT_HINT);
+        field.setBackground(rounded(Tak.SURFACE_FIELD, Tak.BORDER, dp(6)));
         field.setPadding(dp(12), dp(12), dp(12), dp(12));
         field.setHint(hint);
         field.setInputType(inputType);
@@ -153,16 +159,21 @@ public final class DarkDialog {
         return field;
     }
 
-    public Button addButton(String label, int tint, View.OnClickListener listener) {
+    /** A full-width button; {@code role} is one of the Tak.BTN_* colours. */
+    public Button addButton(String label, int role, View.OnClickListener listener) {
         Button button = new Button(context);
         button.setText(label);
-        button.setTextColor(Color.WHITE);
+        button.setTextColor(Tak.TEXT_PRIMARY);
+        button.setTextSize(TypedValue.COMPLEX_UNIT_SP, 14);
+        button.setTypeface(Typeface.DEFAULT_BOLD);
         button.setAllCaps(false);
-        button.setBackgroundTintList(ColorStateList.valueOf(tint));
+        button.setStateListAnimator(null);
+        button.setBackground(new RippleDrawable(ColorStateList.valueOf(0x33FFFFFF),
+                rounded(role, 0, dp(8)), null));
         button.setOnClickListener(listener);
         LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT, dp(48));
-        lp.topMargin = dp(6);
+                ViewGroup.LayoutParams.MATCH_PARENT, dp(46));
+        lp.topMargin = dp(8);
         content.addView(button, lp);
         return button;
     }
@@ -196,7 +207,7 @@ public final class DarkDialog {
             TextView sub = new TextView(context);
             sub.setText(subtitle);
             sub.setTextSize(TypedValue.COMPLEX_UNIT_SP, 12);
-            sub.setTextColor(COLOR_LABEL);
+            sub.setTextColor(Tak.TEXT_TERTIARY);
             sub.setSingleLine(true);
             sub.setEllipsize(TextUtils.TruncateAt.MIDDLE);
             row.addView(sub, matchWrap());
@@ -206,9 +217,9 @@ public final class DarkDialog {
 
     public void addDivider() {
         View line = new View(context);
-        line.setBackgroundColor(0xFF000000);
+        line.setBackgroundColor(Tak.DIVIDER);
         LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, dp(1));
-        lp.topMargin = dp(8);
+        lp.topMargin = dp(10);
         lp.bottomMargin = dp(8);
         content.addView(line, lp);
     }
@@ -227,19 +238,18 @@ public final class DarkDialog {
                 ViewGroup.LayoutParams.WRAP_CONTENT);
     }
 
+    /** Rounded fill with an optional 1dp border ({@code stroke} 0 for none). */
+    private Drawable rounded(int fill, int stroke, int radius) {
+        GradientDrawable d = new GradientDrawable();
+        d.setColor(fill);
+        d.setCornerRadius(radius);
+        if (stroke != 0) d.setStroke(Math.max(1, dp(1)), stroke);
+        return d;
+    }
+
     private static int selectableBackground(Context context) {
         TypedValue tv = new TypedValue();
         context.getTheme().resolveAttribute(android.R.attr.selectableItemBackground, tv, true);
         return tv.resourceId;
-    }
-
-    /** Uses one of TAK Lite's own dialog drawables when present, else a flat color. */
-    private void setBackground(View view, String drawableName, int fallbackColor) {
-        int id = context.getResources().getIdentifier(drawableName, "drawable", context.getPackageName());
-        if (id != 0) {
-            view.setBackgroundResource(id);
-        } else {
-            view.setBackgroundColor(fallbackColor);
-        }
     }
 }
