@@ -62,6 +62,22 @@ from this device's TAK uid and the marker, so a re-send (Send, Edit → Send, or
 a move) updates the same marker. A marker last sent by an older build will
 make one more copy the first time, then update.
 
+## Markers from other TAK clients
+
+Stock TAK Lite decides from the first message it gets for an item whether it is
+a map marker or a person: only items carrying an icon (`<usericon>`) become
+markers. Some clients, TAK Aware among them, send a new marker without one, so
+those markers turned up as people: plain team dots in the team list, with no
+delete. The mod now looks at the CoT itself. An atom type (`a-...`) with no
+client identity (`<takv>` / `<__group>`, which position reports carry) that was
+placed by hand (`how="h-..."`), is kept (`<archive/>`) or has an icon is a
+marker. Such markers show up as deletable markers with their type's
+MIL-STD-2525 symbol. Entries already listed as people by an older build go away
+when they expire or when the app restarts.
+
+For troubleshooting, `adb logcat -s RemoteMarkers MarkerIds` shows how each
+incoming item was classified and the full CoT of each marker sent.
+
 ## Imported data: data packages, KML, KMZ, GPX, CoT
 
 Everything lives under the **Data Packages** button on the map's top bar (the
@@ -148,10 +164,10 @@ with your TAK server again), then install the APK.
 
 | Path | What it is |
 |---|---|
-| `src/com/taklite/client/mod/` | Map sources, in Java: source storage, the osmdroid tile source and dialogs (`CustomMapSources`), area download (`AreaDownloader`) and cache size (`TileCache`) |
+| `src/com/taklite/client/mod/` | Map sources, in Java: source storage, the osmdroid tile source and dialogs (`CustomMapSources`), area download (`AreaDownloader`) and cache size (`TileCache`); marker move (`MarkerMove`), stable marker uids (`MarkerIds`) and classification of received markers (`RemoteMarkers`) |
 | `src/com/taklite/client/mod/imports/` | Imported data: parsers (`CotShapes`, `KmlParser`, `GpxParser`, `Importer` for zips and data packages), storage (`ImportStore`), map layers and dialogs (`ImportedLayers`), data package downloads (`DataPackages`) and `ImportActivity` |
-| `patches/taklite-1.5.0.patch` | Changes to the decoded app: hooks in `MainActivity` (map-type cycling; `onCreate` before and after the map is created; `onResume`; `showRadialMenu`; the marker sends; new `modSetMapType`, `modMarkerIcon`, `modStopFollowing`, `modDismissRadialMenu`, `modSaveDroppedMarkers`), `RadialMenuView` (a fourth slice), the marker uid in `TakManager.sendMarker`, `SettingsActivity.onCreate`, `TakManager.onCotReceived` and `TakLocationService.onCreate`; the Settings button, the toolbar Data Packages button and its icon; the `ImportActivity` manifest entry; `usesCleartextTraffic`; and the version name |
-| `stubs/` | Compile-time stand-ins for `MainActivity` and `SettingsActivity`; they are not packaged |
+| `patches/taklite-1.5.0.patch` | Changes to the decoded app: hooks in `MainActivity` (map-type cycling; `onCreate` before and after the map is created; `onResume`; `showRadialMenu`; the marker sends; new `modSetMapType`, `modMarkerIcon`, `modStopFollowing`, `modDismissRadialMenu`, `modSaveDroppedMarkers`), `RadialMenuView` (a fourth slice), the marker uid in `TakManager.sendMarker`, `SettingsActivity.onCreate`, `TakManager.onCotReceived` and `processCoT` (remote marker classification), and `TakLocationService.onCreate`; the Settings button, the toolbar Data Packages button and its icon; the `ImportActivity` manifest entry; `usesCleartextTraffic`; and the version name |
+| `stubs/` | Compile-time stand-ins for the stock classes the mod calls (`MainActivity`, `SettingsActivity`, `TakManager`, `TakUser` and others); they are not packaged |
 | `tools/SignApk.java` | Zip-aligns, signs and verifies with apksig |
 
 The stock code is otherwise unchanged. Custom sources are stored as JSON in

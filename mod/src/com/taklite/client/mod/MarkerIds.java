@@ -38,6 +38,11 @@ public final class MarkerIds {
         return stableUid(deviceUid, key);
     }
 
+    /** Hook: TakManager.sendMarker, with the CoT about to go out (debug log only). */
+    public static void logOutgoing(String cot) {
+        android.util.Log.d("MarkerIds", "Marker CoT: " + cot);
+    }
+
     /** Same device and marker key, same uid; different devices never collide. */
     static String stableUid(String deviceUid, String markerKey) {
         String seed = (deviceUid == null ? "" : deviceUid) + "|" + markerKey;
