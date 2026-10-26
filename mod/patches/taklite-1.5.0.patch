@@ -40,17 +40,88 @@ diff -ruN a/res/drawable/ic_mod_data_package.xml b/res/drawable/ic_mod_data_pack
 +    <path android:strokeColor="#ffffffff" android:strokeWidth="1.8" android:strokeLineJoin="round" android:pathData="M9.5,3.5 L9.5,10.5 L12,9 L14.5,10.5 L14.5,3.5" />
 +    <path android:fillColor="#ffffffff" android:pathData="M6,15 L9,15 L9,17.2 L6,17.2 Z M10.2,15.6 L13.8,15.6 L13.8,16.7 L10.2,16.7 Z" />
 +</vector>
+diff -ruN a/res/drawable/tp_hud_capsule.xml b/res/drawable/tp_hud_capsule.xml
+--- a/res/drawable/tp_hud_capsule.xml
++++ b/res/drawable/tp_hud_capsule.xml
+@@ -0,0 +1,5 @@
++<?xml version="1.0" encoding="utf-8"?>
++<shape android:shape="rectangle" xmlns:android="http://schemas.android.com/apk/res/android">
++    <solid android:color="@color/tp_hud_capsule" />
++    <corners android:radius="22.0dip" />
++</shape>
+diff -ruN a/res/drawable/tp_hud_capsule_column.xml b/res/drawable/tp_hud_capsule_column.xml
+--- a/res/drawable/tp_hud_capsule_column.xml
++++ b/res/drawable/tp_hud_capsule_column.xml
+@@ -0,0 +1,5 @@
++<?xml version="1.0" encoding="utf-8"?>
++<shape android:shape="rectangle" xmlns:android="http://schemas.android.com/apk/res/android">
++    <solid android:color="@color/tp_hud_capsule" />
++    <corners android:radius="28.0dip" />
++</shape>
+diff -ruN a/res/drawable/zoom_bar_bg.xml b/res/drawable/zoom_bar_bg.xml
+--- a/res/drawable/zoom_bar_bg.xml
++++ b/res/drawable/zoom_bar_bg.xml
+@@ -1,6 +1,5 @@
+ <?xml version="1.0" encoding="utf-8"?>
+-<shape android:shape="rectangle"
+-  xmlns:android="http://schemas.android.com/apk/res/android">
+-    <solid android:color="#ff2a2a2a" />
+-    <corners android:radius="8.0dip" />
+-</shape>
+\ No newline at end of file
++<shape android:shape="rectangle" xmlns:android="http://schemas.android.com/apk/res/android">
++    <solid android:color="@color/tp_hud_capsule" />
++    <corners android:radius="18.0dip" />
++</shape>
 diff -ruN a/res/layout/activity_main.xml b/res/layout/activity_main.xml
 --- a/res/layout/activity_main.xml
 +++ b/res/layout/activity_main.xml
-@@ -5,6 +5,7 @@
-         <TextView android:textSize="20.0sp" android:textStyle="bold" android:textColor="@android:color/white" android:layout_width="0.0dip" android:layout_height="wrap_content" android:text="@string/app_name" android:layout_weight="1.0" />
-         <View android:id="@id/connectionStatusDot" android:background="@drawable/status_dot_red" android:layout_width="10.0dip" android:layout_height="10.0dip" android:layout_marginEnd="6.0dip" />
-         <TextView android:textSize="12.0sp" android:textColor="@color/text_secondary" android:id="@id/connectionStatusText" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/disconnected" android:layout_marginEnd="12.0dip" />
-+        <ImageButton android:tag="data_packages_button" android:background="?selectableItemBackgroundBorderless" android:padding="5.0dip" android:layout_width="40.0dip" android:layout_height="40.0dip" android:src="@drawable/ic_mod_data_package" android:scaleType="fitCenter" android:contentDescription="Data Packages" android:layout_marginEnd="4.0dip" app:tint="@color/text_secondary" />
-         <ImageButton android:id="@id/settingsButton" android:background="?selectableItemBackgroundBorderless" android:layout_width="40.0dip" android:layout_height="40.0dip" android:src="@android:drawable/ic_menu_manage" android:contentDescription="@string/settings" app:tint="@android:color/white" />
-         <ImageButton android:id="@id/shutdownButton" android:background="?selectableItemBackgroundBorderless" android:layout_width="40.0dip" android:layout_height="40.0dip" android:src="@android:drawable/ic_lock_power_off" android:contentDescription="Shutdown" android:layout_marginStart="4.0dip" app:tint="#ffff5555" />
+@@ -1,22 +1,29 @@
+ <?xml version="1.0" encoding="utf-8"?>
+ <androidx.constraintlayout.widget.ConstraintLayout android:layout_width="fill_parent" android:layout_height="fill_parent"
+   xmlns:android="http://schemas.android.com/apk/res/android" xmlns:app="http://schemas.android.com/apk/res-auto">
+-    <LinearLayout android:gravity="center_vertical" android:orientation="horizontal" android:id="@id/toolbar" android:background="@color/primary" android:padding="12.0dip" android:layout_width="fill_parent" android:layout_height="wrap_content" android:elevation="4.0dip" app:layout_constraintTop_toTopOf="parent">
+-        <TextView android:textSize="20.0sp" android:textStyle="bold" android:textColor="@android:color/white" android:layout_width="0.0dip" android:layout_height="wrap_content" android:text="@string/app_name" android:layout_weight="1.0" />
+-        <View android:id="@id/connectionStatusDot" android:background="@drawable/status_dot_red" android:layout_width="10.0dip" android:layout_height="10.0dip" android:layout_marginEnd="6.0dip" />
+-        <TextView android:textSize="12.0sp" android:textColor="@color/text_secondary" android:id="@id/connectionStatusText" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/disconnected" android:layout_marginEnd="12.0dip" />
+-        <ImageButton android:id="@id/settingsButton" android:background="?selectableItemBackgroundBorderless" android:layout_width="40.0dip" android:layout_height="40.0dip" android:src="@android:drawable/ic_menu_manage" android:contentDescription="@string/settings" app:tint="@android:color/white" />
+-        <ImageButton android:id="@id/shutdownButton" android:background="?selectableItemBackgroundBorderless" android:layout_width="40.0dip" android:layout_height="40.0dip" android:src="@android:drawable/ic_lock_power_off" android:contentDescription="Shutdown" android:layout_marginStart="4.0dip" app:tint="#ffff5555" />
++    <LinearLayout android:gravity="center_vertical" android:orientation="horizontal" android:id="@id/toolbar" android:background="@android:color/transparent" android:paddingLeft="8.0dip" android:paddingTop="8.0dip" android:paddingRight="8.0dip" android:layout_width="fill_parent" android:layout_height="wrap_content" android:elevation="4.0dip" app:layout_constraintTop_toTopOf="parent">
++        <LinearLayout android:gravity="center_vertical" android:orientation="horizontal" android:background="@drawable/tp_hud_capsule" android:paddingLeft="16.0dip" android:paddingRight="16.0dip" android:layout_width="wrap_content" android:layout_height="wrap_content" android:minHeight="44.0dip">
++            <TextView android:textSize="16.0sp" android:textStyle="bold" android:textColor="@android:color/white" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/app_name" android:layout_marginEnd="12.0dip" />
++            <View android:id="@id/connectionStatusDot" android:background="@drawable/status_dot_red" android:layout_width="10.0dip" android:layout_height="10.0dip" android:layout_marginEnd="6.0dip" />
++            <TextView android:textSize="12.0sp" android:textColor="@color/text_secondary" android:id="@id/connectionStatusText" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/disconnected" />
++        </LinearLayout>
++        <View android:layout_width="0.0dip" android:layout_height="1.0dip" android:layout_weight="1.0" />
++        <LinearLayout android:gravity="center_vertical" android:orientation="horizontal" android:background="@drawable/tp_hud_capsule" android:paddingLeft="8.0dip" android:paddingRight="8.0dip" android:layout_width="wrap_content" android:layout_height="wrap_content" android:minHeight="44.0dip">
++            <ImageButton android:tag="data_packages_button" android:background="?selectableItemBackgroundBorderless" android:padding="5.0dip" android:layout_width="40.0dip" android:layout_height="40.0dip" android:src="@drawable/ic_mod_data_package" android:scaleType="fitCenter" android:contentDescription="Data Packages" android:tint="@color/tak_aware_gold" app:tint="@color/tak_aware_gold" />
++            <ImageButton android:id="@id/settingsButton" android:background="?selectableItemBackgroundBorderless" android:layout_width="40.0dip" android:layout_height="40.0dip" android:src="@android:drawable/ic_menu_manage" android:contentDescription="@string/settings" android:layout_marginStart="2.0dip" android:tint="@color/tak_aware_gold" app:tint="@color/tak_aware_gold" />
++            <ImageButton android:id="@id/shutdownButton" android:background="?selectableItemBackgroundBorderless" android:layout_width="40.0dip" android:layout_height="40.0dip" android:src="@android:drawable/ic_lock_power_off" android:contentDescription="Shutdown" android:layout_marginStart="2.0dip" android:tint="@color/tp_btn_danger_dialog" app:tint="@color/tp_btn_danger_dialog" />
++        </LinearLayout>
      </LinearLayout>
+-    <org.osmdroid.views.MapView android:id="@id/mapView" android:layout_width="fill_parent" android:layout_height="0.0dip" app:layout_constraintBottom_toBottomOf="parent" app:layout_constraintTop_toBottomOf="@id/toolbar" />
+-    <com.google.android.material.floatingactionbutton.FloatingActionButton android:id="@id/trackHistoryButton" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginBottom="8.0dip" android:contentDescription="@string/track_history" android:layout_marginEnd="16.0dip" app:backgroundTint="@color/primary" app:layout_constraintBottom_toTopOf="@id/dropMarkerButton" app:layout_constraintEnd_toEndOf="parent" app:srcCompat="@drawable/ic_track_route" app:tint="@null" />
+-    <com.google.android.material.floatingactionbutton.FloatingActionButton android:id="@id/dropMarkerButton" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginBottom="8.0dip" android:contentDescription="Drop Marker" android:layout_marginEnd="16.0dip" app:backgroundTint="@color/primary" app:layout_constraintBottom_toTopOf="@id/centerOnMeButton" app:layout_constraintEnd_toEndOf="parent" app:srcCompat="@android:drawable/ic_input_add" app:tint="@android:color/white" />
+-    <com.google.android.material.floatingactionbutton.FloatingActionButton android:id="@id/centerOnMeButton" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginBottom="8.0dip" android:contentDescription="Center on Me" android:layout_marginEnd="16.0dip" app:backgroundTint="@color/primary" app:layout_constraintBottom_toTopOf="@id/mapTypeButton" app:layout_constraintEnd_toEndOf="parent" app:srcCompat="@drawable/ic_my_location" app:tint="@null" />
+-    <com.google.android.material.floatingactionbutton.FloatingActionButton android:id="@id/mapTypeButton" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginBottom="16.0dip" android:contentDescription="Map Type" android:layout_marginEnd="16.0dip" app:backgroundTint="@color/primary" app:layout_constraintBottom_toBottomOf="parent" app:layout_constraintEnd_toEndOf="parent" app:srcCompat="@drawable/ic_map_type" app:tint="@null" />
+-    <LinearLayout android:orientation="horizontal" android:background="@drawable/zoom_bar_bg" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginBottom="16.0dip" android:elevation="4.0dip" app:layout_constraintBottom_toBottomOf="parent" app:layout_constraintEnd_toEndOf="parent" app:layout_constraintStart_toStartOf="parent">
+-        <ImageButton android:id="@id/zoomOutButton" android:background="?selectableItemBackgroundBorderless" android:padding="8.0dip" android:layout_width="40.0dip" android:layout_height="36.0dip" android:src="@drawable/ic_zoom_out" android:scaleType="centerInside" android:contentDescription="Zoom Out" />
+-        <View android:background="#ff444444" android:layout_width="1.0dip" android:layout_height="fill_parent" />
+-        <ImageButton android:id="@id/zoomInButton" android:background="?selectableItemBackgroundBorderless" android:padding="8.0dip" android:layout_width="40.0dip" android:layout_height="36.0dip" android:src="@drawable/ic_zoom_in" android:scaleType="centerInside" android:contentDescription="Zoom In" />
++    <org.osmdroid.views.MapView android:id="@id/mapView" android:layout_width="fill_parent" android:layout_height="0.0dip" app:layout_constraintBottom_toBottomOf="parent" app:layout_constraintTop_toTopOf="parent" />
++    <View android:id="@id/modButtonColumn" android:background="@drawable/tp_hud_capsule_column" android:layout_width="56.0dip" android:layout_height="0.0dip" android:layout_marginEnd="12.0dip" app:layout_constraintBottom_toBottomOf="@id/mapTypeButton" app:layout_constraintEnd_toEndOf="parent" app:layout_constraintTop_toTopOf="@id/trackHistoryButton" />
++    <com.google.android.material.floatingactionbutton.FloatingActionButton android:id="@id/trackHistoryButton" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginBottom="8.0dip" android:contentDescription="@string/track_history" android:layout_marginEnd="16.0dip" app:fabCustomSize="48.0dip" app:borderWidth="0.0dip" app:elevation="0.0dip" app:pressedTranslationZ="0.0dip" app:hoveredFocusedTranslationZ="0.0dip" app:backgroundTint="@android:color/transparent" app:layout_constraintBottom_toTopOf="@id/dropMarkerButton" app:layout_constraintEnd_toEndOf="parent" app:srcCompat="@drawable/ic_track_route" app:tint="@color/tak_aware_gold" />
++    <com.google.android.material.floatingactionbutton.FloatingActionButton android:id="@id/dropMarkerButton" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginBottom="8.0dip" android:contentDescription="Drop Marker" android:layout_marginEnd="16.0dip" app:fabCustomSize="48.0dip" app:borderWidth="0.0dip" app:elevation="0.0dip" app:pressedTranslationZ="0.0dip" app:hoveredFocusedTranslationZ="0.0dip" app:backgroundTint="@android:color/transparent" app:layout_constraintBottom_toTopOf="@id/centerOnMeButton" app:layout_constraintEnd_toEndOf="parent" app:srcCompat="@android:drawable/ic_input_add" app:tint="@color/tak_aware_gold" />
++    <com.google.android.material.floatingactionbutton.FloatingActionButton android:id="@id/centerOnMeButton" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginBottom="8.0dip" android:contentDescription="Center on Me" android:layout_marginEnd="16.0dip" app:fabCustomSize="48.0dip" app:borderWidth="0.0dip" app:elevation="0.0dip" app:pressedTranslationZ="0.0dip" app:hoveredFocusedTranslationZ="0.0dip" app:backgroundTint="@android:color/transparent" app:layout_constraintBottom_toTopOf="@id/mapTypeButton" app:layout_constraintEnd_toEndOf="parent" app:srcCompat="@drawable/ic_my_location" app:tint="@color/tak_aware_gold" />
++    <com.google.android.material.floatingactionbutton.FloatingActionButton android:id="@id/mapTypeButton" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginBottom="16.0dip" android:contentDescription="Map Type" android:layout_marginEnd="16.0dip" app:fabCustomSize="48.0dip" app:borderWidth="0.0dip" app:elevation="0.0dip" app:pressedTranslationZ="0.0dip" app:hoveredFocusedTranslationZ="0.0dip" app:backgroundTint="@android:color/transparent" app:layout_constraintBottom_toBottomOf="parent" app:layout_constraintEnd_toEndOf="parent" app:srcCompat="@drawable/ic_map_type" app:tint="@color/tak_aware_gold" />
++    <LinearLayout android:orientation="horizontal" android:background="@drawable/zoom_bar_bg" android:paddingLeft="6.0dip" android:paddingRight="6.0dip" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginBottom="16.0dip" app:layout_constraintBottom_toBottomOf="parent" app:layout_constraintEnd_toEndOf="parent" app:layout_constraintStart_toStartOf="parent">
++        <ImageButton android:id="@id/zoomOutButton" android:background="?selectableItemBackgroundBorderless" android:padding="8.0dip" android:layout_width="40.0dip" android:layout_height="36.0dip" android:src="@drawable/ic_zoom_out" android:scaleType="centerInside" android:tint="@color/tak_aware_gold" android:contentDescription="Zoom Out" />
++        <View android:background="@color/tp_divider" android:layout_width="1.0dip" android:layout_height="fill_parent" />
++        <ImageButton android:id="@id/zoomInButton" android:background="?selectableItemBackgroundBorderless" android:padding="8.0dip" android:layout_width="40.0dip" android:layout_height="36.0dip" android:src="@drawable/ic_zoom_in" android:scaleType="centerInside" android:tint="@color/tak_aware_gold" android:contentDescription="Zoom In" />
+     </LinearLayout>
+     <com.google.android.material.floatingactionbutton.FloatingActionButton android:id="@id/alertButton" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginBottom="16.0dip" android:src="@android:drawable/ic_dialog_alert" android:contentDescription="Emergency Alert" android:layout_marginStart="16.0dip" app:backgroundTint="#ffcc0000" app:layout_constraintBottom_toBottomOf="parent" app:layout_constraintStart_toStartOf="parent" app:tint="@android:color/white" />
+ </androidx.constraintlayout.widget.ConstraintLayout>
+\ No newline at end of file
 diff -ruN a/res/layout/activity_settings.xml b/res/layout/activity_settings.xml
 --- a/res/layout/activity_settings.xml
 +++ b/res/layout/activity_settings.xml
@@ -65,6 +136,55 @@ diff -ruN a/res/layout/activity_settings.xml b/res/layout/activity_settings.xml
              <LinearLayout android:gravity="center_vertical" android:orientation="horizontal" android:id="@id/advancedHeader" android:background="?selectableItemBackground" android:layout_width="fill_parent" android:layout_height="44.0dip" android:layout_marginBottom="8.0dip" android:paddingStart="4.0dip" android:paddingEnd="4.0dip">
                  <TextView android:textSize="14.0sp" android:textStyle="bold" android:textColor="@color/text_secondary" android:id="@id/advancedHeaderText" android:layout_width="0.0dip" android:layout_height="wrap_content" android:text="Advanced Settings" android:layout_weight="1.0" />
                  <ImageView android:id="@id/advancedArrow" android:layout_width="24.0dip" android:layout_height="24.0dip" android:src="@android:drawable/arrow_down_float" android:contentDescription="Expand" app:tint="@color/text_secondary" />
+diff -ruN a/res/values/ids.xml b/res/values/ids.xml
+--- a/res/values/ids.xml
++++ b/res/values/ids.xml
+@@ -441,4 +441,5 @@
+     <item type="id" name="zxing_prewiew_size_ready" />
+     <item type="id" name="zxing_status_view" />
+     <item type="id" name="zxing_viewfinder_view" />
++    <item type="id" name="modButtonColumn" />
+ </resources>
+diff -ruN a/res/values/styles.xml b/res/values/styles.xml
+--- a/res/values/styles.xml
++++ b/res/values/styles.xml
+@@ -31,8 +31,8 @@
+         <item name="android:textColorSecondary">@color/text_secondary</item>
+         <item name="android:windowBackground">@color/background</item>
+         <item name="android:fitsSystemWindows">true</item>
+-        <item name="android:statusBarColor">@color/primary</item>
+-        <item name="android:navigationBarColor">@color/primary</item>
++        <item name="android:statusBarColor">@color/tp_bg_flight</item>
++        <item name="android:navigationBarColor">@color/tp_bg_flight</item>
+         <item name="colorAccent">@color/accent</item>
+         <item name="colorPrimary">@color/primary</item>
+         <item name="colorPrimaryDark">@color/primary_dark</item>
+diff -ruN a/res/values/takpilot_colors.xml b/res/values/takpilot_colors.xml
+--- a/res/values/takpilot_colors.xml
++++ b/res/values/takpilot_colors.xml
+@@ -0,0 +1,22 @@
++<?xml version="1.0" encoding="utf-8"?>
++<!-- TAKPilot2 UI spec colour tokens (section 6.1); values must match the spec.
++     tak_aware_gold is TAK Aware's map-control icon colour, estimated from screenshots. -->
++<resources>
++    <color name="tp_bg_flight">#ff000000</color>
++    <color name="tp_bg_screen">#ff1a1a1a</color>
++    <color name="tp_surface_card">#ff1a1b1e</color>
++    <color name="tp_surface_field">#ff2a2a2a</color>
++    <color name="tp_surface_dialog">#ff202020</color>
++    <color name="tp_border">#ff333333</color>
++    <color name="tp_divider">#33ffffff</color>
++    <color name="tp_text_secondary">#ffb0b0b0</color>
++    <color name="tp_accent">#ff9ac4ff</color>
++    <color name="tp_btn_primary">#ff2e7d32</color>
++    <color name="tp_btn_info">#ff1565c0</color>
++    <color name="tp_btn_neutral">#ff37474f</color>
++    <color name="tp_btn_danger">#ffb71c1c</color>
++    <color name="tp_btn_danger_dialog">#ffef5350</color>
++    <color name="tp_state_go">#ff4caf50</color>
++    <color name="tp_hud_capsule">#b3000000</color>
++    <color name="tak_aware_gold">#ffe6b400</color>
++</resources>
 diff -ruN a/smali_classes2/com/taklite/client/MainActivity.smali b/smali_classes2/com/taklite/client/MainActivity.smali
 --- a/smali_classes2/com/taklite/client/MainActivity.smali
 +++ b/smali_classes2/com/taklite/client/MainActivity.smali
@@ -90,6 +210,51 @@ diff -ruN a/smali_classes2/com/taklite/client/MainActivity.smali b/smali_classes
      const/4 v0, 0x1
  
      if-eq p1, v0, :cond_2
+@@ -1484,7 +1499,7 @@
+     move-object/from16 v17, v3
+ 
+     .line 1459
+-    invoke-virtual/range {v10 .. v17}, Landroid/graphics/Canvas;->drawRoundRect(FFFFFFLandroid/graphics/Paint;)V
++    invoke-static/range {v10 .. v17}, Lcom/taklite/client/mod/MapLabel;->background(Landroid/graphics/Canvas;FFFFFFLandroid/graphics/Paint;)V
+ 
+     int-to-float v3, v8
+ 
+@@ -1901,7 +1916,7 @@
+     move-object/from16 v18, v2
+ 
+     .line 974
+-    invoke-virtual/range {v11 .. v18}, Landroid/graphics/Canvas;->drawRoundRect(FFFFFFLandroid/graphics/Paint;)V
++    invoke-static/range {v11 .. v18}, Lcom/taklite/client/mod/MapLabel;->background(Landroid/graphics/Canvas;FFFFFFLandroid/graphics/Paint;)V
+ 
+     int-to-float v2, v5
+ 
+@@ -2323,7 +2338,7 @@
+     move-object/from16 v19, v4
+ 
+     .line 1793
+-    invoke-virtual/range {v12 .. v19}, Landroid/graphics/Canvas;->drawRoundRect(FFFFFFLandroid/graphics/Paint;)V
++    invoke-static/range {v12 .. v19}, Lcom/taklite/client/mod/MapLabel;->background(Landroid/graphics/Canvas;FFFFFFLandroid/graphics/Paint;)V
+ 
+     int-to-float v4, v8
+ 
+@@ -2772,7 +2787,7 @@
+     move-object/from16 v18, v5
+ 
+     .line 672
+-    invoke-virtual/range {v11 .. v18}, Landroid/graphics/Canvas;->drawRoundRect(FFFFFFLandroid/graphics/Paint;)V
++    invoke-static/range {v11 .. v18}, Lcom/taklite/client/mod/MapLabel;->background(Landroid/graphics/Canvas;FFFFFFLandroid/graphics/Paint;)V
+ 
+     int-to-float v0, v0
+ 
+@@ -2966,7 +2981,7 @@
+     move-object/from16 v18, v3
+ 
+     .line 702
+-    invoke-virtual/range {v11 .. v18}, Landroid/graphics/Canvas;->drawRoundRect(FFFFFFLandroid/graphics/Paint;)V
++    invoke-static/range {v11 .. v18}, Lcom/taklite/client/mod/MapLabel;->background(Landroid/graphics/Canvas;FFFFFFLandroid/graphics/Paint;)V
+ 
+     int-to-float v3, v6
+ 
 @@ -2998,6 +3013,96 @@
      return-object v0
  .end method

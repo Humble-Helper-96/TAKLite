@@ -1,9 +1,10 @@
 package com.taklite.client.mod;
 
 /**
- * Colour tokens from the TAKPilot2 UI specification (section 6.1), so this app
- * reads as part of the same kit as TAKPilot and TAK Aware. Names follow the
- * spec's {@code tp_*} tokens; values must stay identical to it.
+ * Colour tokens from the TAKPilot2 UI specification (section 6.1), plus TAK
+ * Aware's icon gold, so this app reads as part of the same kit as TAKPilot and
+ * TAK Aware. Names follow the spec's {@code tp_*} tokens; values must stay
+ * identical to it.
  */
 public final class Tak {
 
@@ -38,7 +39,8 @@ public final class Tak {
 
     // Map chrome
     public static final int HUD_CAPSULE = 0xB3000000;     // tp_hud_capsule (TAK Aware's overlay fill)
-    public static final int HUD_OUTLINE = 0xFF000000;     // tp_hud_outline
+    /** TAK Aware's map-control icon gold. Estimated from screenshots; not in the TAKPilot spec. */
+    public static final int AWARE_GOLD = 0xFFE6B400;
 
     private Tak() {
     }

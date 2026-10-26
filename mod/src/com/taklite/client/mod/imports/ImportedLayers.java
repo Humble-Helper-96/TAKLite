@@ -22,7 +22,7 @@ import android.widget.Toast;
 
 import com.taklite.client.MainActivity;
 import com.taklite.client.mod.DarkDialog;
-import com.taklite.client.mod.HudText;
+import com.taklite.client.mod.MapLabel;
 import com.taklite.client.mod.Tak;
 
 import org.osmdroid.util.BoundingBox;
@@ -190,7 +190,7 @@ final class ImportedLayers {
         return dotIcon(activity, label, f.pointColor);
     }
 
-    /** Coloured dot with an outlined label underneath, in the style of TAK Lite's teammate markers. */
+    /** Coloured dot with a label underneath, in the style of TAK Lite's teammate markers. */
     private static Drawable dotIcon(Context context, String label, int color) {
         float d = context.getResources().getDisplayMetrics().density;
         Paint text = new Paint(Paint.ANTI_ALIAS_FLAG);
@@ -216,9 +216,10 @@ final class ImportedLayers {
         ring.setColor(0xFF000000);
         c.drawCircle(w / 2f, dot / 2f, dot / 2f - d, ring);
         if (hasLabel) {
-            // Outlined text, no box: the same treatment as TAK Lite's own markers (see HudText).
+            float top = dot + pad;
             float left = (w - labelW) / 2f;
-            HudText.drawOutlined(c, label, left + pad, dot + pad + pad / 2f - fm.ascent, text);
+            MapLabel.background(c, left, top, left + labelW, top + labelH, pad, pad, null);
+            c.drawText(label, left + pad, top + pad / 2f - fm.ascent, text);
         }
         return new BitmapDrawable(context.getResources(), bmp);
     }
