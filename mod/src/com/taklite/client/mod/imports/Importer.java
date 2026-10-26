@@ -114,7 +114,7 @@ final class Importer {
             String name = param(config, "name");
             String uid = param(config, "uid");
             if (name != null && !name.isEmpty()) {
-                result.name = name.toLowerCase(Locale.US).endsWith(".zip") ? stripExtension(name) : name;
+                result.name = hasFileExtension(name) ? stripExtension(name) : name;
             }
             if (uid != null && !uid.isEmpty()) result.key = "package:" + uid;
         }
@@ -325,6 +325,12 @@ final class Importer {
             if (name.equals(p.attr("name"))) return p.attr("value");
         }
         return null;
+    }
+
+    /** Package names are often just the file name they were made from ("Trails.kml", "Trails.zip"). */
+    private static boolean hasFileExtension(String name) {
+        String lower = name.toLowerCase(Locale.US);
+        return lower.endsWith(".zip") || isGeoFile(lower);
     }
 
     static boolean isGeoFile(String name) {
