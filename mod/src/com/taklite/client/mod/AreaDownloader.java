@@ -50,9 +50,31 @@ final class AreaDownloader {
     private static final long BYTES_PER_512_TILE = 50 * 1024;
     private static final long BYTES_PER_256_TILE = 20 * 1024;
 
+    /**
+     * Downloads stop at street-level detail: standard web zoom 18 (about 0.6 m per pixel).
+     * Closer than that, the map enlarges these tiles (osmdroid approximates missing zooms
+     * from cached lower ones, offline too), so deeper levels cost 4x the tiles each for
+     * little gain.
+     */
+    static final int MAX_STANDARD_ZOOM = 18;
+
     private static volatile boolean running;
 
     private AreaDownloader() {
+    }
+
+    static boolean isRunning() {
+        return running;
+    }
+
+    /**
+     * Highest zoom to download for this source. A 512 px tile at zoom z carries the
+     * detail of a 256 px tile at z + 1, so 512 px sources stop one level lower.
+     */
+    static int maxDownloadZoom(CustomMapSources.Source source) {
+        int extra = 0;
+        for (int size = source.tileSize; size > 256; size /= 2) extra++;
+        return Math.max(source.minZoom, Math.min(source.maxZoom, MAX_STANDARD_ZOOM - extra));
     }
 
     static void show(final Context context, final MapView mapView, final CustomMapSources.Source source) {
@@ -63,23 +85,27 @@ final class AreaDownloader {
         }
         final BoundingBox area = mapView.getBoundingBox();
         int currentZoom = (int) Math.floor(mapView.getZoomLevelDouble());
+        final int maxZoom = maxDownloadZoom(source);
 
         final DarkDialog d = new DarkDialog(context, "Download Area for Offline");
         d.addText("Saves \"" + source.name + "\" for the area on screen, so it keeps working "
                 + "without the server. You are at zoom " + currentZoom + "; each extra zoom "
-                + "level needs about 4× the tiles.");
+                + "level needs about 4× the tiles. Downloads go up to zoom " + maxZoom
+                + (maxZoom < MAX_STANDARD_ZOOM ? " (street level; the same detail as zoom "
+                + MAX_STANDARD_ZOOM + " on standard 256 px maps)" : " (street level)")
+                + "; zoom in further and the map enlarges those tiles, offline too.");
         final EditText from = d.addField("From zoom", null, String.valueOf(source.minZoom),
                 InputType.TYPE_CLASS_NUMBER);
         final EditText to = d.addField("To zoom", null,
-                String.valueOf(Math.max(source.minZoom, Math.min(source.maxZoom, currentZoom + 2))),
+                String.valueOf(Math.max(source.minZoom, Math.min(maxZoom, currentZoom + 2))),
                 InputType.TYPE_CLASS_NUMBER);
         final TextView estimate = d.addLabel("");
 
         final TextView[] download = new TextView[1];
         final Runnable update = () -> {
-            int[] range = readRange(from, to, source);
+            int[] range = readRange(from, to, source.minZoom, maxZoom);
             String error = range == null
-                    ? "Zoom levels must be between " + source.minZoom + " and " + source.maxZoom
+                    ? "Zoom levels must be between " + source.minZoom + " and " + maxZoom
                     : null;
             long tiles = range == null ? 0 : countTiles(area, range[0], range[1]);
             if (error == null && tiles > MAX_TILES) {
@@ -124,7 +150,7 @@ final class AreaDownloader {
 
         d.addAction("CANCEL", DarkDialog.COLOR_LABEL, v -> d.dismiss());
         download[0] = d.addAction("DOWNLOAD", DarkDialog.COLOR_ACCENT, v -> {
-            int[] range = readRange(from, to, source);
+            int[] range = readRange(from, to, source.minZoom, maxZoom);
             if (range == null) return;
             d.dismiss();
             start(context, mapView, source, area, range[0], range[1]);
@@ -135,12 +161,12 @@ final class AreaDownloader {
         d.show();
     }
 
-    /** Returns {from, to} or null when out of the source's zoom range. */
-    private static int[] readRange(EditText from, EditText to, CustomMapSources.Source source) {
+    /** Returns {from, to} or null when outside {@code minZoom..maxZoom}. */
+    private static int[] readRange(EditText from, EditText to, int minZoom, int maxZoom) {
         try {
             int a = Integer.parseInt(from.getText().toString().trim());
             int b = Integer.parseInt(to.getText().toString().trim());
-            if (a < source.minZoom || b > source.maxZoom || a > b) return null;
+            if (a < minZoom || b > maxZoom || a > b) return null;
             return new int[]{a, b};
         } catch (NumberFormatException e) {
             return null;

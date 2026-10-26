@@ -355,6 +355,11 @@ public final class CustomMapSources {
                     d.dismiss();
                     TileCache.showLimitPicker(context, () -> showManager(context, onClose));
                 });
+        d.addButton("Clear Cache", DarkDialog.COLOR_DANGER, v -> {
+            d.dialog.setOnDismissListener(null);
+            d.dismiss();
+            TileCache.confirmClear(context, () -> showManager(context, onClose));
+        });
         d.addAction("CLOSE", DarkDialog.COLOR_LABEL, v -> d.dismiss());
         d.show();
     }
