@@ -1,0 +1,168 @@
+diff -ruN a/AndroidManifest.xml b/AndroidManifest.xml
+--- a/AndroidManifest.xml
++++ b/AndroidManifest.xml
+@@ -25,7 +25,7 @@
+     <uses-feature android:name="android.hardware.screen.landscape" android:required="false"/>
+     <permission android:name="com.taklite.client.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION" android:protectionLevel="signature"/>
+     <uses-permission android:name="com.taklite.client.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION"/>
+-    <application android:allowBackup="false" android:appComponentFactory="androidx.core.app.CoreComponentFactory" android:dataExtractionRules="@xml/data_extraction_rules" android:extractNativeLibs="false" android:fullBackupContent="false" android:icon="@mipmap/ic_launcher" android:label="@string/app_name" android:roundIcon="@mipmap/ic_launcher_round" android:supportsRtl="true" android:theme="@style/AppTheme">
++    <application android:usesCleartextTraffic="true" android:allowBackup="false" android:appComponentFactory="androidx.core.app.CoreComponentFactory" android:dataExtractionRules="@xml/data_extraction_rules" android:extractNativeLibs="false" android:fullBackupContent="false" android:icon="@mipmap/ic_launcher" android:label="@string/app_name" android:roundIcon="@mipmap/ic_launcher_round" android:supportsRtl="true" android:theme="@style/AppTheme">
+         <activity android:configChanges="keyboardHidden|orientation|screenSize" android:exported="true" android:launchMode="singleTask" android:name="com.taklite.client.MainActivity" android:screenOrientation="unspecified">
+             <intent-filter>
+                 <action android:name="android.intent.action.MAIN"/>
+diff -ruN a/apktool.yml b/apktool.yml
+--- a/apktool.yml
++++ b/apktool.yml
+@@ -13,7 +13,7 @@
+   renameManifestPackage: null
+ versionInfo:
+   versionCode: 29
+-  versionName: 1.5.0
++  versionName: 1.5.0-custommaps
+ resourcesAreCompressed: false
+ sharedLibrary: false
+ sparseResources: false
+diff -ruN a/res/layout/activity_settings.xml b/res/layout/activity_settings.xml
+--- a/res/layout/activity_settings.xml
++++ b/res/layout/activity_settings.xml
+@@ -27,6 +27,10 @@
+             <Button android:textSize="14.0sp" android:textColor="@android:color/white" android:id="@id/takAssignGroupsButton" android:visibility="gone" android:layout_width="fill_parent" android:layout_height="44.0dip" android:layout_marginBottom="4.0dip" android:text="Assign Selected Groups" android:backgroundTint="@color/primary" />
+             <TextView android:textSize="12.0sp" android:textColor="@color/text_secondary" android:id="@id/takGroupStatus" android:visibility="gone" android:layout_width="fill_parent" android:layout_height="wrap_content" android:layout_marginBottom="12.0dip" />
+             <View android:background="@color/background" android:layout_width="fill_parent" android:layout_height="1.0dip" android:layout_marginBottom="12.0dip" />
++            <TextView android:textSize="14.0sp" android:textStyle="bold" android:textColor="@color/text_primary" android:paddingBottom="4.0dip" android:layout_width="fill_parent" android:layout_height="wrap_content" android:text="Map Sources" />
++            <TextView android:textSize="12.0sp" android:textColor="@color/text_secondary" android:paddingBottom="8.0dip" android:layout_width="fill_parent" android:layout_height="wrap_content" android:text="Add your own tile servers, e.g. TileServer GL" />
++            <Button android:textSize="14.0sp" android:textColor="@android:color/white" android:tag="custom_map_sources_button" android:layout_width="fill_parent" android:layout_height="44.0dip" android:layout_marginBottom="12.0dip" android:text="Manage Map Sources" android:backgroundTint="@color/accent" />
++            <View android:background="@color/background" android:layout_width="fill_parent" android:layout_height="1.0dip" android:layout_marginBottom="12.0dip" />
+             <LinearLayout android:gravity="center_vertical" android:orientation="horizontal" android:id="@id/advancedHeader" android:background="?selectableItemBackground" android:layout_width="fill_parent" android:layout_height="44.0dip" android:layout_marginBottom="8.0dip" android:paddingStart="4.0dip" android:paddingEnd="4.0dip">
+                 <TextView android:textSize="14.0sp" android:textStyle="bold" android:textColor="@color/text_secondary" android:id="@id/advancedHeaderText" android:layout_width="0.0dip" android:layout_height="wrap_content" android:text="Advanced Settings" android:layout_weight="1.0" />
+                 <ImageView android:id="@id/advancedArrow" android:layout_width="24.0dip" android:layout_height="24.0dip" android:src="@android:drawable/arrow_down_float" android:contentDescription="Expand" app:tint="@color/text_secondary" />
+diff -ruN a/smali_classes2/com/taklite/client/MainActivity.smali b/smali_classes2/com/taklite/client/MainActivity.smali
+--- a/smali_classes2/com/taklite/client/MainActivity.smali
++++ b/smali_classes2/com/taklite/client/MainActivity.smali
+@@ -444,6 +444,21 @@
+ .method private applyMapType(I)Ljava/lang/String;
+     .locals 2
+ 
++    iget-object v0, p0, Lcom/taklite/client/MainActivity;->mapView:Lorg/osmdroid/views/MapView;
++
++    invoke-static {p0, v0, p1}, Lcom/taklite/client/mod/CustomMapSources;->applyMapType(Landroid/content/Context;Lorg/osmdroid/views/MapView;I)Ljava/lang/String;
++
++    move-result-object v0
++
++    if-eqz v0, :mod_builtin_map
++
++    const/4 v1, 0x0
++
++    invoke-direct {p0, v1}, Lcom/taklite/client/MainActivity;->applyDarkFilter(Z)V
++
++    return-object v0
++
++    :mod_builtin_map
+     const/4 v0, 0x1
+ 
+     if-eq p1, v0, :cond_2
+@@ -2998,6 +3013,61 @@
+     return-object v0
+ .end method
+ 
++.method public modSetMapType(IZ)V
++    .locals 4
++
++    iput p1, p0, Lcom/taklite/client/MainActivity;->currentMapType:I
++
++    const-string v0, "TAKLitePrefs"
++
++    const/4 v1, 0x0
++
++    invoke-virtual {p0, v0, v1}, Lcom/taklite/client/MainActivity;->getSharedPreferences(Ljava/lang/String;I)Landroid/content/SharedPreferences;
++
++    move-result-object v0
++
++    invoke-interface {v0}, Landroid/content/SharedPreferences;->edit()Landroid/content/SharedPreferences$Editor;
++
++    move-result-object v0
++
++    const-string v2, "map_type"
++
++    invoke-interface {v0, v2, p1}, Landroid/content/SharedPreferences$Editor;->putInt(Ljava/lang/String;I)Landroid/content/SharedPreferences$Editor;
++
++    move-result-object v0
++
++    invoke-interface {v0}, Landroid/content/SharedPreferences$Editor;->apply()V
++
++    invoke-direct {p0, p1}, Lcom/taklite/client/MainActivity;->applyMapType(I)Ljava/lang/String;
++
++    move-result-object v0
++
++    if-eqz p2, :mod_quiet
++
++    new-instance v2, Ljava/lang/StringBuilder;
++
++    const-string v3, "Map: "
++
++    invoke-direct {v2, v3}, Ljava/lang/StringBuilder;-><init>(Ljava/lang/String;)V
++
++    invoke-virtual {v2, v0}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
++
++    move-result-object v0
++
++    invoke-virtual {v0}, Ljava/lang/StringBuilder;->toString()Ljava/lang/String;
++
++    move-result-object v0
++
++    invoke-static {p0, v0, v1}, Landroid/widget/Toast;->makeText(Landroid/content/Context;Ljava/lang/CharSequence;I)Landroid/widget/Toast;
++
++    move-result-object v0
++
++    invoke-virtual {v0}, Landroid/widget/Toast;->show()V
++
++    :mod_quiet
++    return-void
++.end method
++
+ .method private cycleMapType()V
+     .locals 4
+ 
+@@ -3006,7 +3076,11 @@
+     add-int/lit8 v0, v0, 0x1
+ 
+     .line 1806
+-    rem-int/lit8 v0, v0, 0x4
++    invoke-static {p0}, Lcom/taklite/client/mod/CustomMapSources;->getMapTypeCount(Landroid/content/Context;)I
++
++    move-result v1
++
++    rem-int v0, v0, v1
+ 
+     iput v0, p0, Lcom/taklite/client/MainActivity;->currentMapType:I
+ 
+@@ -9624,6 +9698,8 @@
+     invoke-virtual {v0, p1}, Landroid/app/NotificationManager;->createNotificationChannel(Landroid/app/NotificationChannel;)V
+ 
+     :cond_4
++    invoke-static {p0}, Lcom/taklite/client/mod/CustomMapSources;->onMainActivityCreated(Lcom/taklite/client/MainActivity;)V
++
+     return-void
+ .end method
+ 
+@@ -9768,6 +9844,8 @@
+     .line 260
+     invoke-virtual {v1}, Lorg/osmdroid/views/MapView;->onResume()V
+ 
++    invoke-static {p0}, Lcom/taklite/client/mod/CustomMapSources;->onMainActivityResumed(Lcom/taklite/client/MainActivity;)V
++
+     :cond_0
+     iget-object v1, p0, Lcom/taklite/client/MainActivity;->videoPlayer:Landroidx/media3/exoplayer/ExoPlayer;
+ 
+diff -ruN a/smali_classes2/com/taklite/client/SettingsActivity.smali b/smali_classes2/com/taklite/client/SettingsActivity.smali
+--- a/smali_classes2/com/taklite/client/SettingsActivity.smali
++++ b/smali_classes2/com/taklite/client/SettingsActivity.smali
+@@ -6155,6 +6155,8 @@
+     .line 155
+     invoke-direct {p0}, Lcom/taklite/client/SettingsActivity;->setupTakSettings()V
+ 
++    invoke-static {p0}, Lcom/taklite/client/mod/CustomMapSources;->onSettingsCreated(Landroid/app/Activity;)V
++
+     return-void
+ .end method
+ 

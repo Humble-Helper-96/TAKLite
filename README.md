@@ -14,6 +14,16 @@
 
 ---
 
+## This fork: custom map sources
+
+This fork adds your own map sources, such as TileServer GL
+(`https://host.com/styles/mapName/512/{z}/{x}/{y}.png`), to TAK Lite 1.5.0.
+Upstream no longer publishes the app's source, so the feature is built on top
+of the official release APK. See [mod/README.md](mod/README.md) for how to use
+and build it.
+
+---
+
 ## About
 
 TAK Lite is a minimalist [TAK](https://tak.gov) client that connects to TAK servers over TLS, shares your position with teammates, and displays everyone on a real-time map. It's designed to be simple and fast — no bloat, just the essentials.
