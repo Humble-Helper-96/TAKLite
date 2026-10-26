@@ -20,4 +20,14 @@ public class MainActivity extends android.app.Activity {
     public void modStopFollowing() {
         throw new UnsupportedOperationException("stub");
     }
+
+    /** Closes the marker / user radial menu if one is open. */
+    public void modDismissRadialMenu() {
+        throw new UnsupportedOperationException("stub");
+    }
+
+    /** Persists the dropped markers (stock saveDroppedMarkers). */
+    public void modSaveDroppedMarkers() {
+        throw new UnsupportedOperationException("stub");
+    }
 }

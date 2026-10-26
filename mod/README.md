@@ -52,6 +52,21 @@ no cache headers). Stale tiles are refreshed when the server can be reached.
   every saved tile for all maps, after a confirmation, and gives the space
   back to the phone. It is refused while an area download is running.
 
+## Moving a marker
+
+Tap one of your dropped markers. The radial menu now has a fourth slice at the
+bottom, **Move** (a circle with an arrow). Tap it, then tap the map where the
+marker should go; the ✕ on the hint bar cancels. The new position is saved.
+If the marker had already been sent to TAK, it is sent again straight away so
+teammates see it move. If you're offline, you get a reminder to send it later.
+Markers received from other users can't be moved.
+
+Stock TAK Lite sends a marker under a new random uid each time, so every
+re-send added another copy on teammates' maps. Markers now keep one uid, made
+from this device's TAK uid and the marker, so a re-send (Send, Edit → Send, or
+a move) updates the same marker. A marker last sent by an older build will
+make one more copy the first time, then update.
+
 ## Imported data: data packages, KML, KMZ, GPX, CoT
 
 Everything lives under the **Data Packages** button on the map's top bar (the
@@ -140,7 +155,7 @@ with your TAK server again), then install the APK.
 |---|---|
 | `src/com/taklite/client/mod/` | Map sources, in Java: source storage, the osmdroid tile source and dialogs (`CustomMapSources`), area download (`AreaDownloader`) and cache size (`TileCache`) |
 | `src/com/taklite/client/mod/imports/` | Imported data: parsers (`CotShapes`, `KmlParser`, `GpxParser`, `Importer` for zips and data packages), storage (`ImportStore`), map layers and dialogs (`ImportedLayers`), data package downloads (`DataPackages`) and `ImportActivity` |
-| `patches/taklite-1.5.0.patch` | Changes to the decoded app: hooks in `MainActivity` (map-type cycling; `onCreate` before and after the map is created; `onResume`; new `modSetMapType`, `modMarkerIcon`, `modStopFollowing`), `SettingsActivity.onCreate`, `TakManager.onCotReceived` and `TakLocationService.onCreate`; the Settings button, the toolbar Data Packages button and its icon; the `ImportActivity` manifest entry; `usesCleartextTraffic`; and the version name |
+| `patches/taklite-1.5.0.patch` | Changes to the decoded app: hooks in `MainActivity` (map-type cycling; `onCreate` before and after the map is created; `onResume`; `showRadialMenu`; the marker sends; new `modSetMapType`, `modMarkerIcon`, `modStopFollowing`, `modDismissRadialMenu`, `modSaveDroppedMarkers`), `RadialMenuView` (a fourth slice), the marker uid in `TakManager.sendMarker`, `SettingsActivity.onCreate`, `TakManager.onCotReceived` and `TakLocationService.onCreate`; the Settings button, the toolbar Data Packages button and its icon; the `ImportActivity` manifest entry; `usesCleartextTraffic`; and the version name |
 | `stubs/` | Compile-time stand-ins for `MainActivity` and `SettingsActivity`; they are not packaged |
 | `tools/SignApk.java` | Zip-aligns, signs and verifies with apksig |
 
