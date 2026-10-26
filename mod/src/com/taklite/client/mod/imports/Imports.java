@@ -93,6 +93,7 @@ public final class Imports {
         File staging = store.newStagingDir();
         try {
             Importer.Result result = Importer.read(file, displayName, staging);
+            for (String note : result.skippedNotes) Log.i(TAG, displayName + ": skipped " + note);
             ImportStore.Entry entry = store.add(result, origin, staging);
             changed();
             return entry;

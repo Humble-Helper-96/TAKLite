@@ -13,9 +13,11 @@ import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 import java.util.zip.ZipInputStream;
@@ -43,6 +45,13 @@ final class Importer {
         String key;
         final List<Feature> features = new ArrayList<>();
         int skipped;
+        /** "file: reason" for each file left out, for logs and error messages. */
+        final List<String> skippedNotes = new ArrayList<>();
+
+        void skip(String file, String reason) {
+            skipped++;
+            skippedNotes.add(file + " (" + reason + ")");
+        }
     }
 
     private long totalRead;
@@ -69,8 +78,16 @@ final class Importer {
             }
         }
         if (result.features.isEmpty()) {
-            throw new IOException("No map items found in " + displayName
-                    + (result.skipped > 0 ? " (" + result.skipped + " unsupported files)" : ""));
+            StringBuilder msg = new StringBuilder("No map items found in " + displayName);
+            if (!result.skippedNotes.isEmpty()) {
+                msg.append(". Skipped: ");
+                for (int i = 0; i < result.skippedNotes.size() && i < 5; i++) {
+                    if (i > 0) msg.append("; ");
+                    msg.append(result.skippedNotes.get(i));
+                }
+                if (result.skippedNotes.size() > 5) msg.append("; and ").append(result.skippedNotes.size() - 5).append(" more");
+            }
+            throw new IOException(msg.toString());
         }
         return result;
     }
@@ -84,17 +101,7 @@ final class Importer {
         }
         if (manifest == null) {
             // KMZ or a plain zip: take every file we understand.
-            for (Enumeration<? extends ZipEntry> e = zip.entries(); e.hasMoreElements(); ) {
-                ZipEntry entry = e.nextElement();
-                if (entry.isDirectory()) continue;
-                if (isGeoFile(entry.getName())) {
-                    try (InputStream in = open(zip, entry)) {
-                        readDocument(in, entry.getName(), result);
-                    }
-                } else {
-                    result.skipped++;
-                }
-            }
+            scanAll(zip, result, new HashSet<String>());
             return;
         }
 
@@ -106,32 +113,31 @@ final class Importer {
         if (config != null) {
             String name = param(config, "name");
             String uid = param(config, "uid");
-            if (name != null && !name.isEmpty()) result.name = name;
+            if (name != null && !name.isEmpty()) {
+                result.name = name.toLowerCase(Locale.US).endsWith(".zip") ? stripExtension(name) : name;
+            }
             if (uid != null && !uid.isEmpty()) result.key = "package:" + uid;
         }
 
         Map<String, Feature> byUid = new HashMap<>();
         List<String[]> attachments = new ArrayList<>(); // {zipEntry, owner uid}
+        Set<String> tried = new HashSet<>();
         XmlNode contents = root.child("Contents");
         List<XmlNode> items = contents == null ? new ArrayList<XmlNode>() : contents.children("Content");
         for (XmlNode content : items) {
             if ("true".equalsIgnoreCase(content.attr("ignore"))) continue;
-            String entryName = content.attr("zipEntry");
-            ZipEntry entry = entryName == null ? null : zip.getEntry(entryName);
+            String listed = content.attr("zipEntry");
+            ZipEntry entry = listed == null ? null : findEntry(zip, listed);
             if (entry == null || entry.isDirectory()) {
-                result.skipped++;
+                result.skip(String.valueOf(listed), "listed in manifest but not in the zip");
                 continue;
             }
+            String entryName = entry.getName();
             String lower = entryName.toLowerCase(Locale.US);
-            if (lower.endsWith(".cot") || lower.endsWith(".xml") || lower.endsWith(".kml")
-                    || lower.endsWith(".kmz") || lower.endsWith(".gpx")) {
+            if (isGeoFile(lower) || lower.endsWith(".xml") || (!isImage(lower) && looksLikeXml(zip, entry))) {
+                tried.add(entryName);
                 int before = result.features.size();
-                try (InputStream in = open(zip, entry)) {
-                    readDocument(in, entryName, result);
-                } catch (IOException e) {
-                    result.skipped++;
-                    continue;
-                }
+                readEntry(zip, entry, result);
                 for (int i = before; i < result.features.size(); i++) {
                     Feature f = result.features.get(i);
                     if (f.uid != null) byUid.put(f.uid, f);
@@ -139,15 +145,22 @@ final class Importer {
             } else if (isImage(lower) && param(content, "uid") != null) {
                 attachments.add(new String[]{entryName, param(content, "uid")});
             } else {
-                result.skipped++;
+                tried.add(entryName);
+                result.skip(entryName, "unsupported file type");
             }
+        }
+
+        if (result.features.isEmpty()) {
+            // The manifest led nowhere (paths that don't match, unusual names): look at
+            // every file in the zip instead, as for a KMZ.
+            scanAll(zip, result, tried);
         }
 
         int n = 0;
         for (String[] a : attachments) {
             Feature owner = byUid.get(a[1]);
             if (owner == null || owner.kind != Feature.POINT || owner.image != null) {
-                result.skipped++;
+                result.skip(a[0], "photo for an item that isn't a marker in this package");
                 continue;
             }
             String ext = a[0].substring(a[0].lastIndexOf('.')).toLowerCase(Locale.US);
@@ -160,6 +173,72 @@ final class Importer {
                 copy(in, out);
             }
             owner.image = stored;
+        }
+    }
+
+    /**
+     * Reads every file in the zip that is, or looks like, KML/KMZ/GPX/CoT, except
+     * the manifest and files in {@code tried}.
+     */
+    private void scanAll(ZipFile zip, Result result, Set<String> tried) throws IOException {
+        for (Enumeration<? extends ZipEntry> e = zip.entries(); e.hasMoreElements(); ) {
+            ZipEntry entry = e.nextElement();
+            String name = entry.getName();
+            if (entry.isDirectory() || tried.contains(name) || name.equalsIgnoreCase("MANIFEST/manifest.xml")) continue;
+            String lower = name.toLowerCase(Locale.US);
+            if (isGeoFile(lower) || lower.endsWith(".xml") || looksLikeXml(zip, entry)) {
+                readEntry(zip, entry, result);
+            } else if (!isImage(lower)) {
+                result.skip(name, "unsupported file type");
+            }
+        }
+    }
+
+    /** Reads one zip entry, recording (not throwing) why it couldn't be used. */
+    private void readEntry(ZipFile zip, ZipEntry entry, Result result) throws IOException {
+        int before = result.features.size();
+        int skippedBefore = result.skipped;
+        try (InputStream in = open(zip, entry)) {
+            readDocument(in, entry.getName(), result);
+        } catch (IOException e) {
+            if (totalRead > MAX_TOTAL_BYTES) throw e;
+            result.skip(entry.getName(), "could not read: " + e.getMessage());
+            return;
+        }
+        if (result.features.size() == before && result.skipped == skippedBefore) {
+            result.skip(entry.getName(), "contains nothing drawable");
+        }
+    }
+
+    /** Entry by the manifest's path, tolerating "\\", "./", a leading "/" and letter case. */
+    private static ZipEntry findEntry(ZipFile zip, String path) {
+        ZipEntry exact = zip.getEntry(path);
+        if (exact != null) return exact;
+        String wanted = normalize(path);
+        for (Enumeration<? extends ZipEntry> e = zip.entries(); e.hasMoreElements(); ) {
+            ZipEntry entry = e.nextElement();
+            if (normalize(entry.getName()).equals(wanted)) return entry;
+        }
+        return null;
+    }
+
+    private static String normalize(String path) {
+        String p = path.replace('\\', '/');
+        while (p.startsWith("./") || p.startsWith("/")) p = p.substring(p.startsWith("./") ? 2 : 1);
+        return p.toLowerCase(Locale.US);
+    }
+
+    /** For files without a telling extension: does it start like an XML document? */
+    private boolean looksLikeXml(ZipFile zip, ZipEntry entry) {
+        try (InputStream in = zip.getInputStream(entry)) {
+            byte[] head = new byte[256];
+            int n = in.read(head);
+            if (n <= 0) return false;
+            String start = new String(head, 0, n, java.nio.charset.StandardCharsets.ISO_8859_1).trim();
+            if (start.startsWith("\u00ef\u00bb\u00bf")) start = start.substring(3); // UTF-8 BOM
+            return start.startsWith("<");
+        } catch (IOException e) {
+            return false;
         }
     }
 
@@ -189,11 +268,11 @@ final class Importer {
             case "event": {
                 Feature f = CotShapes.toFeature(root);
                 if (f != null) result.features.add(f);
-                else result.skipped++;
+                else result.skip(name, "CoT " + root.attr("type") + " has nothing to draw");
                 break;
             }
             default:
-                result.skipped++;
+                result.skip(name, "<" + root.name + "> is not KML, GPX or CoT");
         }
     }
 

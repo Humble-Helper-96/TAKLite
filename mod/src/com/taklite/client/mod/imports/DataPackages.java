@@ -125,7 +125,9 @@ final class DataPackages {
             inFlight.add(key);
         }
         String origin = "Server" + (p.submitter.isEmpty() ? "" : ", uploaded by " + p.submitter);
-        fetchAndImport(context, url, key, p.name + ".zip", p.name, origin, p.size, done, key);
+        // Server names usually already end in .zip ("Trails.zip"); don't make it "Trails.zip.zip".
+        String filename = p.name.toLowerCase(Locale.US).endsWith(".zip") ? p.name : p.name + ".zip";
+        fetchAndImport(context, url, key, filename, Importer.stripExtension(p.name), origin, p.size, done, key);
     }
 
     /**
@@ -146,10 +148,12 @@ final class DataPackages {
             String error = null;
             try {
                 download(context, url, tmp);
+                Log.i(TAG, "Downloaded " + filename + ": " + tmp.length() + " bytes");
                 if (sha256 != null && !sha256.equals(Importer.sha256(tmp))) {
                     throw new IOException("download is corrupt (SHA-256 mismatch)");
                 }
                 entry = Imports.importFile(tmp, filename, origin);
+                Log.i(TAG, "Imported " + filename + " as \"" + entry.name + "\": " + entry.count + " items");
                 if (sha256 != null) remember(context, sha256, entry.id);
             } catch (IOException | RuntimeException e) {
                 Log.e(TAG, "Data package " + name + " failed", e);
