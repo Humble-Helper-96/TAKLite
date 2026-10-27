@@ -73,6 +73,12 @@ no cache headers). Stale tiles are refreshed when the server can be reached.
   the map for users who don't use alerts. While an alert sent from this phone
   is active (for example from the volume-key panic), the button shows anyway,
   so the alert can be cancelled.
+- **Send Marker Upon Placement** (the switch under it, off by default): on,
+  a marker goes to the team the moment you place it, and again when you edit
+  or move it. Off, nothing is sent on its own: placed, edited and moved markers
+  wait for Send on their radial menu. (Stock TAK Lite sent on every edit; that
+  now follows the switch too.) Markers always keep one uid, so a re-send
+  updates the same marker on teammates' maps.
 - **Clear All Markers** (the red button in the Settings title bar): after a confirmation, removes every marker from this
   phone's map at once, both your own and those received from others. It
   doesn't send anything: markers you already sent stay on teammates' maps.
@@ -83,9 +89,10 @@ no cache headers). Stale tiles are refreshed when the server can be reached.
 Tap one of your dropped markers. The radial menu now has a fourth slice at the
 bottom, **Move** (a circle with an arrow). Tap it, then tap the map where the
 marker should go; the ✕ on the hint bar cancels. The new position is saved.
-If the marker had already been sent to TAK, it is sent again straight away so
-teammates see it move. If you're offline, you get a reminder to send it later.
-Markers received from other users can't be moved.
+With **Send Marker Upon Placement** on (Settings), it is sent again straight
+away so teammates see it move; off, you get a reminder to send it. Leaving the
+map screen cancels a move in progress. Markers received from other users can't
+be moved.
 
 Stock TAK Lite sends a marker under a new random uid each time, so every
 re-send added another copy on teammates' maps. Markers now keep one uid, made
@@ -248,7 +255,7 @@ with your TAK server again), then install the APK.
 |---|---|
 | `src/com/taklite/client/mod/` | Map sources, in Java: source storage, the osmdroid tile source and dialogs (`CustomMapSources`), area download (`AreaDownloader`) and cache size (`TileCache`); marker move (`MarkerMove`), stable marker uids (`MarkerIds`) and classification of received markers (`RemoteMarkers`); shared helpers (`ModUtil`) |
 | `src/com/taklite/client/mod/imports/` | Imported data: parsers (`CotShapes`, `KmlParser`, `GpxParser`, `Importer` for zips and data packages), storage (`ImportStore`), map layers and dialogs (`ImportedLayers`), data package downloads (`DataPackages`) and `ImportActivity` |
-| `patches/taklite-1.5.0.patch` | Changes to the decoded app: hooks in `MainActivity` (map-type cycling; `onCreate` before and after the map is created; `onResume`; `showRadialMenu`; the marker sends; new `modSetMapType`, `modMarkerIcon`, `modStopFollowing`, `modDismissRadialMenu`, `modSaveDroppedMarkers`), `RadialMenuView` (a fourth slice), the marker uid in `TakManager.sendMarker`, `SettingsActivity.onCreate`, `TakManager.onCotReceived` and `processCoT` (remote marker classification), `TakUser.isStale`/`isExpired` and the remote marker delete (keeping received markers), new `TakManager.modForgetUser` and `MainActivity.modDroppedMarkers`/`modTakUserMarkers`, the Settings screen (Emergency button switch under Role, Clear All Markers in the title bar, tighter spacing), and `TakLocationService.onCreate`; the Settings button, the toolbar Data Packages button and its icon; the `ImportActivity` manifest entry; `usesCleartextTraffic`; and the version name |
+| `patches/taklite-1.5.0.patch` | Changes to the decoded app: hooks in `MainActivity` (map-type cycling; `onCreate` before and after the map is created; `onResume`; `showRadialMenu`; the marker sends; new `modSetMapType`, `modMarkerIcon`, `modStopFollowing`, `modDismissRadialMenu`, `modSaveDroppedMarkers`), `RadialMenuView` (a fourth slice), the marker uid in `TakManager.sendMarker`, `SettingsActivity.onCreate`, `TakManager.onCotReceived` and `processCoT` (remote marker classification), `TakUser.isStale`/`isExpired` and the remote marker delete (keeping received markers), new `TakManager.modForgetUser` and `MainActivity.modDroppedMarkers`/`modTakUserMarkers`, the Settings screen (Emergency button and Send-on-placement switches under Role, Clear All Markers in the title bar, tighter spacing), `placeMarker` and the edit dialog's Save (send on placement), `TakManager.sendAlert`/`cancelAlert` (Emergency button re-check), and `TakLocationService.onCreate`; the Settings button, the toolbar Data Packages button and its icon; the `ImportActivity` manifest entry; `usesCleartextTraffic`; and the version name |
 | `stubs/` | Compile-time stand-ins for the stock classes the mod calls (`MainActivity`, `SettingsActivity`, `TakManager`, `TakUser` and others); they are not packaged |
 | `tools/SignApk.java` | Zip-aligns, signs and verifies with apksig |
 

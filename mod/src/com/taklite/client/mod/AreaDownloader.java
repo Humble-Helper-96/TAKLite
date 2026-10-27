@@ -232,6 +232,34 @@ final class AreaDownloader {
         }
     }
 
+    /**
+     * Whether the tile server answers at all. Tiles outside a server's coverage come back
+     * as 404 and count as failures, so 20 failures alone don't mean the server is down:
+     * before giving up, one request is made and any HTTP answer counts as alive.
+     */
+    private static boolean serverAnswers(TemplateTileSource source, long tile, Boolean[] probe) {
+        synchronized (probe) {
+            if (probe[0] != null) return probe[0];
+            boolean answers = false;
+            java.net.HttpURLConnection conn = null;
+            try {
+                conn = (java.net.HttpURLConnection) new java.net.URL(source.getTileURLString(tile)).openConnection();
+                conn.setConnectTimeout(8000);
+                conn.setReadTimeout(8000);
+                conn.setRequestMethod("HEAD");
+                int code = conn.getResponseCode();
+                answers = code > 0;
+                Log.i(TAG, "Server probe answered HTTP " + code + "; missing tiles are treated as not on the server");
+            } catch (java.io.IOException | RuntimeException e) {
+                Log.w(TAG, "Server probe failed: " + e.getMessage());
+            } finally {
+                if (conn != null) conn.disconnect();
+            }
+            probe[0] = answers;
+            return answers;
+        }
+    }
+
     private static void start(final Context context, MapView mapView, final CustomMapSources.Source source,
                               BoundingBox area, final int fromZoom, final int toZoom) {
         final long total = countTiles(area, fromZoom, toZoom);
@@ -243,6 +271,7 @@ final class AreaDownloader {
         final AtomicInteger failed = new AtomicInteger();
         final boolean[] cancelled = new boolean[1];
         final boolean[] unreachable = new boolean[1];
+        final Boolean[] probe = new Boolean[1];
         final long cacheBefore = TileCache.usedBytes(context);
         Log.i(TAG, String.format(Locale.US, "Downloading %,d tiles, zoom %d-%d (%d px tiles); cache %s in use, limit %s",
                 total, fromZoom, toZoom, source.tileSize, ModUtil.formatSize(cacheBefore),
@@ -293,7 +322,8 @@ final class AreaDownloader {
                         Log.w(TAG, "Tile " + MapTileIndex.toString(tile) + " failed", e);
                         failed.incrementAndGet();
                     }
-                    if (failed.get() >= FAILURES_BEFORE_GIVING_UP && downloaded.get() == 0) {
+                    if (failed.get() >= FAILURES_BEFORE_GIVING_UP && downloaded.get() == 0 && upToDate.get() == 0
+                            && !serverAnswers(tileSource, tile, probe)) {
                         synchronized (cancelled) {
                             unreachable[0] = true;
                             cancelled[0] = true;
@@ -334,10 +364,11 @@ final class AreaDownloader {
                 } else if (cancelled[0]) {
                     headline = "Cancelled. Tiles saved so far are kept.";
                 } else {
-                    headline = failed.get() == 0 ? "Done." : "Done, but some tiles failed. Run it again to retry them.";
+                    headline = failed.get() == 0 ? "Done."
+                            : "Done, but some tiles failed (not on the server, or errors). Run it again to retry them.";
                     status.setTextColor(failed.get() == 0 ? DarkDialog.COLOR_ACCENT : 0xFFFFC107);
                 }
-                long used = TileCache.usedBytes(context);
+                long used = TileCache.freshUsedBytes(context);
                 long grown = used - cacheBefore;
                 status.setText(headline + "\n" + counts + "\nCache: " + ModUtil.formatSize(used)
                         + (grown > 0 ? " (+" + ModUtil.formatSize(grown) + ")" : ""));

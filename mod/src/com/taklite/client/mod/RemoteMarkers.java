@@ -51,12 +51,35 @@ public final class RemoteMarkers {
      * greys a marker out when it goes stale and removes it 5 minutes later.
      */
     private static final java.util.Set<String> kept = java.util.concurrent.ConcurrentHashMap.newKeySet();
+    /** Oldest first, so the set above can be capped. */
+    private static final java.util.Deque<String> keptOrder = new java.util.ArrayDeque<>();
+    /** Beyond this many kept markers, the oldest go back to expiring normally. */
+    private static final int MAX_KEPT = 5000;
+
+    private static void keepUid(String uid) {
+        if (!kept.add(uid)) return;
+        synchronized (keptOrder) {
+            keptOrder.addLast(uid);
+            while (keptOrder.size() > MAX_KEPT) kept.remove(keptOrder.removeFirst());
+        }
+    }
 
     private RemoteMarkers() {
     }
 
-    /** Hook: start of TakManager.onCotReceived, with the raw CoT. */
+    /**
+     * Hook: start of TakManager.onCotReceived, with the raw CoT. Runs inside TAK Lite's
+     * socket read loop, where an exception closes the connection, so it never throws.
+     */
     public static void observe(String cot) {
+        try {
+            classify(cot);
+        } catch (RuntimeException e) {
+            Log.w(TAG, "Could not classify a message", e);
+        }
+    }
+
+    private static void classify(String cot) {
         if (cot == null) return;
         Matcher m = EVENT_TAG.matcher(cot);
         if (!m.find()) return;
@@ -67,7 +90,7 @@ public final class RemoteMarkers {
         String how = type.startsWith("a-") ? attr(tag, HOW) : null;
         boolean marker = isMarker(type, how, cot);
         if (marker) {
-            kept.add(uid);
+            keepUid(uid);
         } else {
             kept.remove(uid);
         }
@@ -119,9 +142,16 @@ public final class RemoteMarkers {
         for (String uid : new java.util.ArrayList<>(kept)) onDeleted(uid);
     }
 
-    /** Hook: TakManager.processCoT, right after CotParser.parse. */
+    /** Hook: TakManager.processCoT, right after CotParser.parse. Never throws (see {@link #observe}). */
     public static void adjust(TakUser user) {
-        if (user == null || user.isDrone()) return;
+        try {
+            if (user != null && !user.isDrone()) adjustIcon(user);
+        } catch (RuntimeException e) {
+            Log.w(TAG, "Could not adjust a received item", e);
+        }
+    }
+
+    private static void adjustIcon(TakUser user) {
         String path = user.getIconsetPath();
         if (path != null && !path.isEmpty()) {
             // Already filed as a marker by TAK Lite; just spare it a lookup that can't succeed.

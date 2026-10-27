@@ -434,7 +434,8 @@ final class ImportedLayers {
         title.setTextColor(DarkDialog.COLOR_LABEL);
         final Handler main = new Handler(Looper.getMainLooper());
         try {
-            // Already downloading (a repeat tap, or the same package sent over TAK): just wait.
+            // If it is already downloading (a repeat tap, or the same package sent over
+            // TAK), this just joins the waiting list and the row updates when it ends.
             DataPackages.importFromServer(context, p, (entry, error) -> main.post(() -> {
                 if (entry != null) {
                     title.setText(p.name + "  \u2713");

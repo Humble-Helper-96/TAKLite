@@ -24,7 +24,6 @@ import java.io.File;
  */
 final class TileCache {
 
-    private static final String PREFS = "TAKLitePrefs";
     private static final String KEY_LIMIT_MB = "custom_map_cache_mb";
     /** osmdroid's own default. */
     static final int DEFAULT_LIMIT_MB = 600;
@@ -37,7 +36,7 @@ final class TileCache {
     }
 
     static int limitMb(Context context) {
-        return context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).getInt(KEY_LIMIT_MB, DEFAULT_LIMIT_MB);
+        return ModUtil.prefs(context).getInt(KEY_LIMIT_MB, DEFAULT_LIMIT_MB);
     }
 
     /**
@@ -52,8 +51,10 @@ final class TileCache {
      */
     static void apply(Context context) {
         SqlTileWriter.setCleanupOnStart(false);
-        // Effectively never (a year; Long.MAX_VALUE would overflow osmdroid's check).
-        Configuration.getInstance().setTileGCFrequencyInMillis(365L * 24 * 60 * 60 * 1000);
+        // osmdroid runs its cleanup when now > lastCheck + frequency, with lastCheck starting
+        // at 0, so a frequency of "a year" still fires on the first tile saved after every
+        // start. Half of Long.MAX_VALUE can't be reached and can't overflow the addition.
+        Configuration.getInstance().setTileGCFrequencyInMillis(Long.MAX_VALUE / 2);
         long max = limitMb(context) * MB;
         long available = availableBytes(context);
         // 0 means the free space couldn't be read; keep the chosen limit rather than none.
@@ -61,9 +62,6 @@ final class TileCache {
         IConfigurationProvider config = Configuration.getInstance();
         config.setTileFileSystemCacheMaxBytes(max);
         config.setTileFileSystemCacheTrimBytes(max / 6 * 5);
-        Log.i(TAG, "Offline cache limit " + ModUtil.formatSize(max) + " (chosen " + limitMb(context) + " MB, "
-                + ModUtil.formatSize(freeBytes(cacheDir(context))) + " free, file "
-                + ModUtil.formatSize(fileBytes(context)) + ", in use " + ModUtil.formatSize(usedBytes(context)) + ")");
     }
 
     /**
@@ -84,16 +82,20 @@ final class TileCache {
 
     private static synchronized void trim(Context context) {
         if (AreaDownloader.isRunning()) return; // runs again when the download ends
-        long used = usedBytes(context);
+        long used = readUsedBytes(context);
         IConfigurationProvider config = Configuration.getInstance();
         long max = config.getTileFileSystemCacheMaxBytes();
+        Log.i(TAG, "Offline cache: " + ModUtil.formatSize(used) + " in use of " + ModUtil.formatSize(max)
+                + " (chosen " + limitMb(context) + " MB, file " + ModUtil.formatSize(fileBytes(context)) + ", "
+                + ModUtil.formatSize(freeBytes(cacheDir(context))) + " free)");
         if (max <= 0 || used <= max) return;
         long target = config.getTileFileSystemCacheTrimBytes();
         Log.i(TAG, "Trimming the map cache: " + ModUtil.formatSize(used) + " in use, limit "
                 + ModUtil.formatSize(max) + ", trimming to " + ModUtil.formatSize(target));
         new Cleaner().runCleanupOperation(used - target, config.getTileGCBulkSize(),
                 config.getTileGCBulkPauseInMillis(), true);
-        Log.i(TAG, "Map cache trimmed: " + ModUtil.formatSize(usedBytes(context)) + " in use");
+        forgetUsedBytes();
+        Log.i(TAG, "Map cache trimmed: " + ModUtil.formatSize(readUsedBytes(context)) + " in use");
     }
 
     /** Size of the cache file. SQLite keeps it at its largest and reuses the space of removed tiles. */
@@ -101,8 +103,41 @@ final class TileCache {
         return new File(cacheDir(context), SqlTileWriter.DATABASE_FILENAME).length();
     }
 
-    /** Space the saved tiles take up inside the cache file (what the limit is about). */
+    private static long cachedUsed = -1;
+    private static long cachedUsedAt;
+    private static final long USED_CACHE_MS = 5000;
+
+    /**
+     * Space the saved tiles take up inside the cache file (what the limit is about).
+     * Reading it opens the database, so dialogs get a value at most 5 s old rather
+     * than a fresh read on every call from the main thread.
+     */
     static long usedBytes(Context context) {
+        long now = android.os.SystemClock.elapsedRealtime();
+        synchronized (TileCache.class) {
+            if (cachedUsed >= 0 && now - cachedUsedAt < USED_CACHE_MS) return cachedUsed;
+        }
+        long used = readUsedBytes(context);
+        synchronized (TileCache.class) {
+            cachedUsed = used;
+            cachedUsedAt = now;
+        }
+        return used;
+    }
+
+    /** A just-measured figure, for right after a download or clear. */
+    static long freshUsedBytes(Context context) {
+        forgetUsedBytes();
+        return usedBytes(context);
+    }
+
+    private static void forgetUsedBytes() {
+        synchronized (TileCache.class) {
+            cachedUsed = -1;
+        }
+    }
+
+    private static long readUsedBytes(Context context) {
         File file = new File(cacheDir(context), SqlTileWriter.DATABASE_FILENAME);
         if (!file.exists()) return 0;
         try (SQLiteDatabase db = SQLiteDatabase.openDatabase(file.getPath(), null, SQLiteDatabase.OPEN_READONLY)) {
@@ -175,6 +210,7 @@ final class TileCache {
                 String message;
                 try {
                     new Cleaner().clearAll();
+                    forgetUsedBytes();
                     message = "Map cache cleared: freed " + ModUtil.formatSize(Math.max(0, before - fileBytes(app))) + ".";
                 } catch (RuntimeException e) {
                     Log.e(TAG, "Could not clear the map cache", e);
@@ -216,7 +252,7 @@ final class TileCache {
                     : null;
             d.addRow(mb == current ? title + "  ✓" : title, subtitle,
                     mb == current ? DarkDialog.COLOR_ACCENT : Color.WHITE, v -> {
-                        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+                        ModUtil.prefs(context)
                                 .edit().putInt(KEY_LIMIT_MB, mb).apply();
                         apply(context);
                         d.dismiss();

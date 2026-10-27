@@ -46,7 +46,6 @@ import java.util.List;
 public final class CustomMapSources {
 
     private static final String TAG = "CustomMapSources";
-    private static final String PREFS = "TAKLitePrefs";
     private static final String KEY_SOURCES = "custom_map_sources";
     private static final String KEY_MAP_TYPE = "map_type";
     private static final String KEY_TIP_SHOWN = "custom_map_sources_tip_shown";
@@ -185,7 +184,7 @@ public final class CustomMapSources {
     // ==================== Storage ====================
 
     private static SharedPreferences prefs(Context context) {
-        return context.getSharedPreferences(PREFS, Context.MODE_PRIVATE);
+        return ModUtil.prefs(context);
     }
 
     private static String rawJson(Context context) {

@@ -24,7 +24,9 @@ import java.net.URL;
 import java.security.KeyStore;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.List;
 import java.util.Locale;
 import java.util.Set;
@@ -55,7 +57,6 @@ final class DataPackages {
 
     private static final String TAG = "DataPackages";
     private static final long MAX_PACKAGE_BYTES = 200L * 1024 * 1024;
-    private static final String PREFS = "TAKLitePrefs";
     /**
      * "hash\timport id" lines for packages already received, so a re-send is skipped
      * while that import still exists (deleting it lets the package come in again).
@@ -66,9 +67,13 @@ final class DataPackages {
     /** TAK Server's HTTPS API port (TAK Lite's own server calls use it too). */
     private static final int API_PORT = 8443;
 
-    private static final Set<String> inFlight = new HashSet<>();
+    /** Downloads in progress, by package key, with everyone waiting for each one's result. */
+    private static final Map<String, List<Done>> inFlight = new HashMap<>();
     /** Local http shares the user said no to; not asked about again until TAK Lite restarts. */
     private static final Set<String> declined = new HashSet<>();
+    /** Last "refused / failed / waiting" notice per package, so a misbehaving sender can't flood the shade. */
+    private static final Map<String, Long> lastNotice = new HashMap<>();
+    private static final long NOTICE_INTERVAL_MS = 60_000;
 
     private DataPackages() {
     }
@@ -109,22 +114,30 @@ final class DataPackages {
         final long size = parseLong(share.attr("sizeInBytes"));
 
         final String dedupeKey = sha256 != null ? sha256 : url;
+        final Done announce = (entry, error) -> {
+            if (entry != null) {
+                Imports.announce("Data package received",
+                        "\"" + entry.name + "\" from " + sender + ": " + entry.addedText());
+            } else {
+                notice(dedupeKey, "Data package failed", "\"" + name + "\" from " + sender + ": " + error);
+            }
+        };
         synchronized (inFlight) {
-            if (inFlight.contains(dedupeKey) || declined.contains(dedupeKey) || alreadyReceived(context, dedupeKey)) {
+            if (inFlight.containsKey(dedupeKey) || declined.contains(dedupeKey) || alreadyReceived(context, dedupeKey)) {
                 Log.d(TAG, "Ignoring repeat of " + name);
                 return;
             }
-            inFlight.add(dedupeKey);
+            inFlight.put(dedupeKey, new ArrayList<>());
         }
-        final Runnable fetch = () -> fetchAndImport(context, url, sha256, filename, name,
-                "Data package from " + sender, size, (entry, error) -> {
-                    if (entry != null) {
-                        Imports.announce("Data package received",
-                                "\"" + entry.name + "\" from " + sender + ": " + entry.addedText());
-                    } else {
-                        Imports.announce("Data package failed", "\"" + name + "\" from " + sender + ": " + error);
-                    }
-                }, dedupeKey);
+        final Runnable fetch = () -> {
+            // The notice listener joins only once the download really starts, so a refused
+            // or declined share doesn't also report "failed".
+            synchronized (inFlight) {
+                List<Done> waiting = inFlight.get(dedupeKey);
+                if (waiting != null) waiting.add(announce);
+            }
+            fetchAndImport(context, url, sha256, filename, name, "Data package from " + sender, size, dedupeKey);
+        };
 
         final URL link;
         try {
@@ -153,8 +166,24 @@ final class DataPackages {
 
     private static void refuse(String key, String name, String sender, String reason) {
         Log.w(TAG, "Refused data package " + name + ": " + reason);
-        done(key);
-        Imports.announce("Data package refused", "\"" + name + "\" from " + sender + ": " + reason + ".");
+        // Whoever else was waiting (a server-list tap on the same package) hears the same.
+        finish(key, null, "refused: " + reason, true);
+        notice(key, "Data package refused", "\"" + name + "\" from " + sender + ": " + reason + ".");
+    }
+
+    /** A notification for {@code key}, at most once a minute (the log always gets it). */
+    private static void notice(String key, String title, String text) {
+        synchronized (lastNotice) {
+            long now = android.os.SystemClock.elapsedRealtime();
+            Long last = lastNotice.get(key);
+            if (last != null && now - last < NOTICE_INTERVAL_MS) {
+                Log.i(TAG, title + " (notification suppressed, repeat): " + text);
+                return;
+            }
+            if (lastNotice.size() > 200) lastNotice.clear();
+            lastNotice.put(key, now);
+        }
+        Imports.announce(title, text);
     }
 
     /** Asks on the map screen, now or when TAK Lite is next opened, before an http download. */
@@ -170,7 +199,7 @@ final class DataPackages {
                 synchronized (inFlight) {
                     declined.add(key);
                 }
-                done(key);
+                finish(key, null, "declined on this phone", true);
             });
             d.addAction("IGNORE", DarkDialog.COLOR_LABEL, v -> d.dismiss());
             d.addAction("DOWNLOAD", DarkDialog.COLOR_ACCENT, v -> {
@@ -179,7 +208,7 @@ final class DataPackages {
                 fetch.run();
             });
             d.show();
-        }, () -> Imports.announce("Data package waiting",
+        }, () -> notice(key, "Data package waiting",
                 "\"" + name + "\" from " + sender + ": open TAK Lite to download it."));
     }
 
@@ -206,32 +235,35 @@ final class DataPackages {
 
     /**
      * Downloads a package listed on the server and imports it (replacing an earlier copy).
-     * Returns false, without calling {@code done}, if that package is already downloading.
+     * If that package is already downloading (a repeat tap, or the same package arriving
+     * over TAK), {@code done} simply joins the waiting list and hears the same result.
      */
-    static boolean importFromServer(Context context, ServerPackage p, Done done) {
+    static void importFromServer(Context context, ServerPackage p, Done done) {
         String url = apiBase(context) + "/Marti/sync/content?hash=" + p.hash;
         String key = p.hash.toLowerCase(Locale.US);
         synchronized (inFlight) {
-            if (inFlight.contains(key)) return false;
-            inFlight.add(key);
+            List<Done> waiting = inFlight.get(key);
+            if (waiting != null) {
+                waiting.add(done);
+                return;
+            }
+            inFlight.put(key, new ArrayList<>(java.util.Collections.singletonList(done)));
         }
         String origin = "Server" + (p.submitter.isEmpty() ? "" : ", uploaded by " + p.submitter);
         // Server names usually already end in .zip ("Trails.zip"); don't make it "Trails.zip.zip".
         String filename = p.name.toLowerCase(Locale.US).endsWith(".zip") ? p.name : p.name + ".zip";
-        fetchAndImport(context, url, key, filename, Importer.stripExtension(p.name), origin, p.size, done, key);
-        return true;
+        fetchAndImport(context, url, key, filename, Importer.stripExtension(p.name), origin, p.size, key);
     }
 
     /**
      * Downloads, verifies and imports on a background thread. {@code key} must already be
-     * in {@link #inFlight}; it is removed when finished.
+     * in {@link #inFlight}; everyone waiting on it is told the result and it is removed.
      */
     private static void fetchAndImport(final Context context, final String url, final String sha256,
                                        final String filename, final String name, final String origin,
-                                       long size, final Done done, final String key) {
+                                       long size, final String key) {
         if (size > MAX_PACKAGE_BYTES) {
-            done(key);
-            done.finished(null, "too large (" + (size >> 20) + " MB, limit " + (MAX_PACKAGE_BYTES >> 20) + " MB)");
+            finish(key, null, "too large (" + (size >> 20) + " MB, limit " + (MAX_PACKAGE_BYTES >> 20) + " MB)", true);
             return;
         }
         new Thread(() -> {
@@ -256,10 +288,25 @@ final class DataPackages {
             } finally {
                 //noinspection ResultOfMethodCallIgnored
                 tmp.delete();
-                done(key);
             }
-            done.finished(entry, error);
+            finish(key, entry, error, true);
         }, "DataPackageDownload").start();
+    }
+
+    /** Ends {@code key}'s download: forgets it and tells everyone waiting (if {@code tell}). */
+    private static void finish(String key, ImportStore.Entry entry, String error, boolean tell) {
+        List<Done> waiting;
+        synchronized (inFlight) {
+            waiting = inFlight.remove(key);
+        }
+        if (!tell || waiting == null) return;
+        for (Done d : waiting) {
+            try {
+                d.finished(entry, error);
+            } catch (RuntimeException e) {
+                Log.w(TAG, "Download listener failed", e);
+            }
+        }
     }
 
     /** Lists the data packages on the TAK server. Blocking; call off the main thread. */
@@ -412,14 +459,8 @@ final class DataPackages {
         prefs(context).edit().putString(KEY_RECEIVED, String.join("\n", lines)).apply();
     }
 
-    private static void done(String key) {
-        synchronized (inFlight) {
-            inFlight.remove(key);
-        }
-    }
-
     private static SharedPreferences prefs(Context context) {
-        return context.getSharedPreferences(PREFS, Context.MODE_PRIVATE);
+        return ModUtil.prefs(context);
     }
 
     private static String lower(String s) {

@@ -117,9 +117,9 @@ public class ImportActivity extends Activity {
             } catch (IOException | RuntimeException e) {
                 Log.e(TAG, "Import of " + name + " failed", e);
                 message = "Could not import " + name + ": " + e.getMessage();
-            } catch (OutOfMemoryError e) {
+            } catch (OutOfMemoryError | StackOverflowError e) {
                 Log.e(TAG, "Import of " + name + " failed", e);
-                message = "Could not import " + name + ": too large to import on this phone";
+                message = "Could not import " + name + ": too large or too complex to import on this phone";
             } finally {
                 //noinspection ResultOfMethodCallIgnored
                 tmp.delete();

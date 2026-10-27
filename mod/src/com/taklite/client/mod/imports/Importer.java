@@ -258,6 +258,13 @@ final class Importer {
 
     /** One KML, KMZ, GPX or CoT document. */
     private void readDocument(InputStream input, String name, Result result) throws IOException {
+        readDocument(input, name, result, 0);
+    }
+
+    /** A KMZ inside a data package is one level of nesting; deeper is never legitimate. */
+    private static final int MAX_NESTED_ZIPS = 1;
+
+    private void readDocument(InputStream input, String name, Result result, int depth) throws IOException {
         // Go by the content, not the name: ATAK packages can hold a KMZ (a zip) named ".kml".
         BufferedInputStream raw = new BufferedInputStream(input, 16384);
         raw.mark(4);
@@ -268,11 +275,12 @@ final class Importer {
         raw.reset();
         boolean zipped = got == 4 && magic[0] == 'P' && magic[1] == 'K' && magic[2] == 3 && magic[3] == 4;
         if (zipped) {
+            if (depth >= MAX_NESTED_ZIPS) throw new IOException("zip files nested too deeply in " + name);
             // A KMZ inside a data package: use its first .kml.
             try (ZipInputStream zin = new ZipInputStream(raw)) {
                 for (ZipEntry e = zin.getNextEntry(); e != null; e = zin.getNextEntry()) {
                     if (!e.isDirectory() && e.getName().toLowerCase(Locale.US).endsWith(".kml")) {
-                        readDocument(new CountingStream(zin), e.getName(), result);
+                        readDocument(new CountingStream(zin), e.getName(), result, depth + 1);
                         return;
                     }
                 }

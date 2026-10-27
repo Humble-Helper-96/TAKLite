@@ -8,7 +8,6 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -258,14 +257,12 @@ final class ImportStore {
         f.delete();
     }
 
+    /** Index and feature files are written by this class; 200 MB is far beyond any real one. */
+    private static final int MAX_TEXT_BYTES = 200 * 1024 * 1024;
+
     private static String readText(File f) throws IOException {
-        try (InputStream in = new FileInputStream(f)) {
-            byte[] data = new byte[(int) f.length()];
-            int off = 0;
-            int n;
-            while (off < data.length && (n = in.read(data, off, data.length - off)) > 0) off += n;
-            return new String(data, 0, off, StandardCharsets.UTF_8);
-        }
+        byte[] data = com.taklite.client.mod.ModUtil.readAll(new FileInputStream(f), MAX_TEXT_BYTES, f.getName() + " is too large");
+        return new String(data, StandardCharsets.UTF_8);
     }
 
     private static void writeText(File f, String text) throws IOException {

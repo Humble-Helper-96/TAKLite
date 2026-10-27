@@ -3,6 +3,8 @@ package com.taklite.client.mod;
 import android.app.Activity;
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.os.Handler;
+import android.os.Looper;
 import android.util.Log;
 import android.view.View;
 import android.widget.CompoundButton;
@@ -21,14 +23,15 @@ import java.util.Map;
 /**
  * Settings → Map: show or hide the Emergency button, and clear all markers at once.
  */
-final class MapOptions {
+public final class MapOptions {
 
     private static final String TAG = "MapOptions";
-    private static final String PREFS = "TAKLitePrefs";
+    private static final Handler MAIN = new Handler(Looper.getMainLooper());
     private static final String KEY_SHOW_EMERGENCY = "mod_show_emergency_button";
     /** Set when markers are cleared from Settings while the map screen isn't around. */
     private static final String KEY_CLEAR_PENDING = "mod_clear_markers_pending";
     private static final String TOGGLE_TAG = "mod_emergency_toggle";
+    private static final String SEND_TOGGLE_TAG = "mod_send_on_place_toggle";
     private static final String CLEAR_TAG = "mod_clear_markers_button";
 
     private static WeakReference<MainActivity> mainRef = new WeakReference<>(null);
@@ -62,12 +65,34 @@ final class MapOptions {
         } else {
             Log.w(TAG, "Emergency button toggle not found");
         }
+        View sendToggle = root.findViewWithTag(SEND_TOGGLE_TAG);
+        if (sendToggle instanceof CompoundButton) {
+            CompoundButton box = (CompoundButton) sendToggle;
+            box.setChecked(MarkerSend.autoSend(activity));
+            box.setOnCheckedChangeListener((b, checked) -> MarkerSend.setAutoSend(activity, checked));
+        } else {
+            Log.w(TAG, "Send-on-placement toggle not found");
+        }
         View clear = root.findViewWithTag(CLEAR_TAG);
         if (clear != null) {
             clear.setOnClickListener(v -> confirmClear(activity));
         } else {
             Log.w(TAG, "Clear All Markers button not found");
         }
+    }
+
+    /**
+     * Hook: start of TakManager.sendAlert and cancelAlert (any thread). The alert state
+     * changes at the end of those methods, so the button is re-checked now and again a
+     * second later; a hidden button must come back while an alert is active.
+     */
+    public static void onAlertChanged() {
+        Runnable apply = () -> {
+            MainActivity main = mainRef.get();
+            if (main != null && !main.isFinishing()) applyEmergencyButton(main);
+        };
+        MAIN.post(apply);
+        MAIN.postDelayed(apply, 1000);
     }
 
     private static boolean showEmergency(Context context) {
@@ -163,6 +188,6 @@ final class MapOptions {
     }
 
     private static SharedPreferences prefs(Context context) {
-        return context.getSharedPreferences(PREFS, Context.MODE_PRIVATE);
+        return ModUtil.prefs(context);
     }
 }

@@ -19,7 +19,6 @@ import android.widget.Toast;
 import com.taklite.client.DroppedMarker;
 import com.taklite.client.MainActivity;
 import com.taklite.client.RadialMenuView;
-import com.taklite.client.tak.TakManager;
 
 import org.osmdroid.events.MapEventsReceiver;
 import org.osmdroid.util.GeoPoint;
@@ -28,8 +27,8 @@ import org.osmdroid.views.overlay.MapEventsOverlay;
 
 /**
  * "Move" on a dropped marker's radial menu: tap the marker, tap Move, tap the
- * map where it should go. A marker that was already sent to TAK is sent again
- * under the same uid (see {@link MarkerIds}), so teammates see it move.
+ * map where it should go. With "Send Marker Upon Placement" on, the marker is
+ * sent again under the same uid (see {@link MarkerIds}), so teammates see it move.
  */
 public final class MarkerMove {
 
@@ -80,8 +79,8 @@ public final class MarkerMove {
         pending = new Pending(activity, map, marker);
     }
 
-    /** Ends move mode, if a marker is being moved. */
-    static void cancel() {
+    /** Ends move mode, if a marker is being moved (also when the map screen is paused). */
+    public static void cancel() {
         if (pending != null) {
             pending.finish();
             pending = null;
@@ -159,19 +158,9 @@ public final class MarkerMove {
             marker.marker.setPosition(new GeoPoint(p.getLatitude(), p.getLongitude(), marker.position.getAltitude()));
             map.invalidate();
             activity.modSaveDroppedMarkers();
-            String message = "Marker moved.";
-            if (marker.transmitted) {
-                TakManager tak = TakManager.getInstance();
-                if (tak.isConnected()) {
-                    MarkerIds.beforeSend(marker);
-                    tak.sendMarker(marker.position.getLatitude(), marker.position.getLongitude(),
-                            marker.position.getAltitude(), marker.affiliation, marker.name, marker.remarks);
-                    message = "Marker moved and sent to the team.";
-                } else {
-                    message = "Marker moved. Not connected: send it again to update the team.";
-                }
-            }
-            Toast.makeText(activity, message, Toast.LENGTH_SHORT).show();
+            // Sent again only with "Send Marker Upon Placement" on; otherwise the user sends it.
+            String message = MarkerSend.sendIfAuto(activity, marker, "moved");
+            Toast.makeText(activity, message != null ? message : "Marker moved.", Toast.LENGTH_SHORT).show();
             cancel();
         }
 

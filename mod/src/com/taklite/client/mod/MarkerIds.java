@@ -30,7 +30,12 @@ public final class MarkerIds {
 
     /** Hook: just before TakManager.sendMarker for this marker. */
     public static synchronized void beforeSend(DroppedMarker marker) {
-        pendingKey = marker == null ? null : marker.key;
+        // sendMarker returns at once when not connected, which would leave the key armed.
+        if (marker == null || !connected()) {
+            pendingKey = null;
+            return;
+        }
+        pendingKey = marker.key;
         pendingThread = Thread.currentThread();
         pendingAt = android.os.SystemClock.elapsedRealtime();
     }
@@ -56,6 +61,14 @@ public final class MarkerIds {
     public static void logOutgoing(String cot) {
         if (android.util.Log.isLoggable("MarkerIds", android.util.Log.DEBUG)) {
             android.util.Log.d("MarkerIds", "Marker CoT: " + cot);
+        }
+    }
+
+    private static boolean connected() {
+        try {
+            return com.taklite.client.tak.TakManager.getInstance().isConnected();
+        } catch (RuntimeException e) {
+            return false;
         }
     }
 

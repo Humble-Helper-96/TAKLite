@@ -18,7 +18,14 @@ public final class ModUtil {
     private static final long MB = KB * 1024L;
     private static final long GB = MB * 1024L;
 
+    /** TAK Lite's own preferences file; the mod keeps its settings there too, under "mod_" / "custom_map_" keys. */
+    public static final String PREFS = "TAKLitePrefs";
+
     private ModUtil() {
+    }
+
+    public static android.content.SharedPreferences prefs(android.content.Context context) {
+        return context.getSharedPreferences(PREFS, android.content.Context.MODE_PRIVATE);
     }
 
     /** TAK Lite's main map (layout id "mapView"), or null if this activity doesn't show it. */
