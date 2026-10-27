@@ -76,8 +76,8 @@ no cache headers). Stale tiles are refreshed when the server can be reached.
 - **Send Marker Upon Placement** (the switch under it, off by default): on,
   a marker goes to the team the moment you place it, and again when you save
   an edit or move it. Off, nothing is sent on its own: placed, edited and moved
-  markers wait until you choose Send (on the marker's menu, or Save & Send in
-  the edit dialog). Markers always keep one uid, so a re-send updates the same
+  markers wait until you choose Send (on the marker's menu, or SEND in the
+  edit dialog). Markers always keep one uid, so a re-send updates the same
   marker on teammates' maps.
 - **Clear All Markers** (the red button in the Settings title bar): after a confirmation, removes every marker from this
   phone's map at once, both your own and those received from others. It
