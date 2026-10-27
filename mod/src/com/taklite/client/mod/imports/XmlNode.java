@@ -7,7 +7,6 @@ import org.xmlpull.v1.XmlPullParserFactory;
 import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -21,8 +20,12 @@ import java.util.Map;
  */
 final class XmlNode {
 
-    /** Guards against pathological files; real KML/GPX/CoT is far below this. */
+    /** Guards against pathological files; real KML/GPX/CoT is far below these. */
     private static final int MAX_NODES = 2_000_000;
+    /** Code walking the tree recurses once per level, so a deeper file could overflow the stack. */
+    private static final int MAX_DEPTH = 500;
+    /** Comments and processing instructions allowed before the root element. */
+    private static final int MAX_PROLOG = 1 << 20;
 
     final String name;
     final Map<String, String> attrs;
@@ -41,7 +44,7 @@ final class XmlNode {
 
     static XmlNode parse(InputStream input) throws IOException {
         BufferedInputStream in = new BufferedInputStream(input, 16384);
-        rejectEntityDeclarations(in);
+        rejectInternalDtd(in);
         try {
             XmlPullParserFactory factory = XmlPullParserFactory.newInstance();
             factory.setNamespaceAware(false);
@@ -65,6 +68,7 @@ final class XmlNode {
                         stack.get(stack.size() - 1).children.add(node);
                     }
                     stack.add(node);
+                    if (stack.size() > MAX_DEPTH) throw new IOException("XML nested too deeply");
                 } else if (event == XmlPullParser.END_TAG) {
                     stack.remove(stack.size() - 1);
                 } else if ((event == XmlPullParser.TEXT || event == XmlPullParser.CDSECT) && !stack.isEmpty()) {
@@ -80,17 +84,82 @@ final class XmlNode {
 
     /**
      * Entity declarations can expand exponentially ("billion laughs"), and none of the
-     * formats we read use them, so refuse any file that declares one near the top.
+     * formats we read use them. They can only appear in a DOCTYPE's internal subset
+     * ({@code <!DOCTYPE x [ ... ]>}), which must come before the root element, so read
+     * up to the root element and refuse such a DOCTYPE. A plain DOCTYPE is fine: the
+     * parser never fetches external DTDs.
      */
-    private static void rejectEntityDeclarations(BufferedInputStream in) throws IOException {
-        byte[] head = new byte[8192];
-        in.mark(head.length);
-        int n = 0;
-        int r;
-        while (n < head.length && (r = in.read(head, n, head.length - n)) > 0) n += r;
-        in.reset();
-        if (new String(head, 0, n, StandardCharsets.ISO_8859_1).contains("<!ENTITY")) {
-            throw new IOException("XML entity declarations are not supported");
+    private static void rejectInternalDtd(BufferedInputStream in) throws IOException {
+        in.mark(MAX_PROLOG);
+        try {
+            byte[] buf = new byte[8192];
+            int n = 0;
+            while (true) {
+                int r = in.read(buf, n, buf.length - n);
+                if (r > 0) n += r;
+                Boolean ok = scanProlog(buf, n);
+                if (ok != null) {
+                    if (!ok) throw new IOException("XML files with a DOCTYPE declaration are not supported");
+                    return;
+                }
+                if (r < 0) return; // ends before the root element; the parser reports that
+                if (n == buf.length) {
+                    if (buf.length == MAX_PROLOG) throw new IOException("Not a usable XML file (too much before the first element)");
+                    buf = java.util.Arrays.copyOf(buf, buf.length * 2);
+                }
+            }
+        } finally {
+            in.reset();
+        }
+    }
+
+    /**
+     * Looks at the start of an XML file: TRUE once the root element starts, FALSE at a DOCTYPE
+     * with an internal subset, null if more bytes are needed. Zero bytes are skipped so the
+     * markup is also found in UTF-16 files.
+     */
+    static Boolean scanProlog(byte[] bytes, int length) {
+        StringBuilder sb = new StringBuilder(length);
+        for (int i = 0; i < length; i++) {
+            if (bytes[i] != 0) sb.append((char) (bytes[i] & 0xFF));
+        }
+        String s = sb.toString();
+        int i = 0;
+        while (true) {
+            i = s.indexOf('<', i);
+            if (i < 0 || i + 1 >= s.length()) return null;
+            int end;
+            if (s.startsWith("<?", i)) {
+                end = s.indexOf("?>", i + 2);
+                if (end < 0) return null;
+                i = end + 2;
+            } else if (s.startsWith("<!--", i)) {
+                end = s.indexOf("-->", i + 4);
+                if (end < 0) return null;
+                i = end + 3;
+            } else if (s.charAt(i + 1) == '!') {
+                if (s.length() - i < 9) return null;
+                if (!s.startsWith("<!DOCTYPE", i)) return Boolean.FALSE;
+                // Up to the closing '>', skipping quoted ids, which may contain '[' or '>'.
+                int close = -1;
+                char quote = 0;
+                for (int j = i + 9; j < s.length() && close < 0; j++) {
+                    char c = s.charAt(j);
+                    if (quote != 0) {
+                        if (c == quote) quote = 0;
+                    } else if (c == '"' || c == '\'') {
+                        quote = c;
+                    } else if (c == '[') {
+                        return Boolean.FALSE;
+                    } else if (c == '>') {
+                        close = j;
+                    }
+                }
+                if (close < 0) return null;
+                i = close + 1;
+            } else {
+                return Boolean.TRUE;
+            }
         }
     }
 

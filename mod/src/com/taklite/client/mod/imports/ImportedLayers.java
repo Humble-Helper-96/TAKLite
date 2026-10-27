@@ -24,13 +24,14 @@ import com.taklite.client.MainActivity;
 import com.taklite.client.mod.DarkDialog;
 import com.taklite.client.mod.MapLabel;
 import com.taklite.client.mod.Tak;
+import com.taklite.client.mod.ModUtil;
+import com.taklite.client.mod.RemoteMarkers;
 
 import org.osmdroid.util.BoundingBox;
 import org.osmdroid.util.GeoPoint;
 import org.osmdroid.views.MapView;
 import org.osmdroid.views.overlay.FolderOverlay;
 import org.osmdroid.views.overlay.Marker;
-import org.osmdroid.views.overlay.Overlay;
 import org.osmdroid.views.overlay.Polygon;
 import org.osmdroid.views.overlay.Polyline;
 
@@ -39,8 +40,12 @@ import java.io.IOException;
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
+import java.util.Set;
 
 /** Draws imported data on the main map, and the dialogs to inspect and manage it. */
 final class ImportedLayers {
@@ -48,7 +53,11 @@ final class ImportedLayers {
     private static final String TAG = "ImportedLayers";
 
     private static WeakReference<MainActivity> activityRef = new WeakReference<>(null);
-    private static final List<Overlay> layers = new ArrayList<>();
+    /**
+     * The drawn layer of each visible import, by import id. An import's items never change
+     * (a re-import gets a new id), so a reload only builds layers for newly shown imports.
+     */
+    private static Map<String, FolderOverlay> layers = new LinkedHashMap<>();
     private static int drawnVersion = -1;
     private static int loadGeneration;
 
@@ -57,7 +66,7 @@ final class ImportedLayers {
 
     static void attach(MainActivity activity) {
         activityRef = new WeakReference<>(activity);
-        layers.clear();
+        layers = new LinkedHashMap<>();
         drawnVersion = -1;
         reload();
     }
@@ -65,13 +74,6 @@ final class ImportedLayers {
     static void onResume(MainActivity activity) {
         activityRef = new WeakReference<>(activity);
         if (drawnVersion != Imports.version()) reload();
-        String zoomId = Imports.pendingZoomId;
-        if (zoomId != null) {
-            Imports.pendingZoomId = null;
-            ImportStore.Entry e = Imports.store().get(zoomId);
-            MapView map = mapView(activity);
-            if (e != null && map != null) map.post(() -> zoomTo(activity, map, e));
-        }
     }
 
     /** TAK Lite's map screen if it is showing, for toasts. */
@@ -81,26 +83,44 @@ final class ImportedLayers {
     }
 
     private static MapView mapView(Activity activity) {
-        int id = activity.getResources().getIdentifier("mapView", "id", activity.getPackageName());
-        View v = id == 0 ? null : activity.findViewById(id);
-        return v instanceof MapView ? (MapView) v : null;
+        return ModUtil.mapView(activity);
     }
 
-    /** Re-reads every visible import and redraws it. Main thread. */
+    /**
+     * Brings the map in line with the imports: removes hidden or deleted ones and draws
+     * newly shown ones, reading their items and making their dot icons off the main thread.
+     * Main thread.
+     */
     static void reload() {
         final MainActivity activity = activityRef.get();
         if (activity == null || Imports.store() == null) return;
         final int version = Imports.version();
         final int generation = ++loadGeneration;
+        final Set<String> drawn = new HashSet<>(layers.keySet());
         new Thread(() -> {
             List<ImportStore.Entry> entries = new ArrayList<>();
+            // Per entry: null if already drawn, else its items and their pre-made icons.
             List<List<Feature>> features = new ArrayList<>();
+            List<Drawable[]> dotIcons = new ArrayList<>();
             for (ImportStore.Entry e : Imports.store().list()) {
                 if (!e.visible) continue;
-                try {
-                    features.add(Imports.store().features(e.id));
+                if (drawn.contains(e.id)) {
                     entries.add(e);
-                } catch (IOException ex) {
+                    features.add(null);
+                    dotIcons.add(null);
+                    continue;
+                }
+                try {
+                    List<Feature> items = Imports.store().features(e.id);
+                    Drawable[] icons = new Drawable[items.size()];
+                    for (int i = 0; i < items.size(); i++) {
+                        Feature f = items.get(i);
+                        if (f.kind == Feature.POINT && !usesTakIcon(f)) icons[i] = dotIcon(activity, label(f), f.pointColor);
+                    }
+                    entries.add(e);
+                    features.add(items);
+                    dotIcons.add(icons);
+                } catch (IOException | OutOfMemoryError ex) {
                     Log.e(TAG, "Could not load import " + e.name, ex);
                 }
             }
@@ -108,22 +128,29 @@ final class ImportedLayers {
                 if (generation != loadGeneration || activity.isFinishing()) return;
                 MapView map = mapView(activity);
                 if (map == null) return;
-                map.getOverlays().removeAll(layers);
-                layers.clear();
+                map.getOverlays().removeAll(layers.values());
+                Map<String, FolderOverlay> next = new LinkedHashMap<>();
                 // Just above the map's tap handler (index 0), below markers and teammates.
                 int index = Math.min(1, map.getOverlays().size());
                 for (int i = 0; i < entries.size(); i++) {
-                    FolderOverlay folder = build(activity, map, entries.get(i), features.get(i));
+                    ImportStore.Entry e = entries.get(i);
+                    FolderOverlay folder = features.get(i) == null ? layers.get(e.id) : null;
+                    if (folder == null) {
+                        if (features.get(i) == null) continue; // drawn layer went away meanwhile
+                        folder = build(activity, map, e, features.get(i), dotIcons.get(i));
+                    }
                     map.getOverlays().add(index++, folder);
-                    layers.add(folder);
+                    next.put(e.id, folder);
                 }
+                layers = next;
                 drawnVersion = version;
                 map.invalidate();
             });
         }, "ImportedLayersLoad").start();
     }
 
-    private static FolderOverlay build(MainActivity activity, MapView map, ImportStore.Entry entry, List<Feature> features) {
+    private static FolderOverlay build(MainActivity activity, MapView map, ImportStore.Entry entry,
+                                       List<Feature> features, Drawable[] dotIcons) {
         FolderOverlay folder = new FolderOverlay();
         float density = activity.getResources().getDisplayMetrics().density;
         // Lines and areas first so markers draw on top of them.
@@ -157,11 +184,12 @@ final class ImportedLayers {
                 folder.add(area);
             }
         }
-        for (Feature f : features) {
+        for (int i = 0; i < features.size(); i++) {
+            final Feature f = features.get(i);
             if (f.kind != Feature.POINT) continue;
             Marker marker = new Marker(map);
             marker.setPosition(new GeoPoint(f.lat(0), f.lon(0)));
-            marker.setIcon(icon(activity, f));
+            marker.setIcon(dotIcons[i] != null ? dotIcons[i] : takIcon(activity, f));
             marker.setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_CENTER);
             marker.setTitle(f.name);
             marker.setInfoWindow(null);
@@ -175,19 +203,25 @@ final class ImportedLayers {
     }
 
     /** CoT units use TAK Lite's own MIL-STD-2525 / iconset symbols; other points get a dot. */
-    private static Drawable icon(MainActivity activity, Feature f) {
-        String label = f.image != null ? "📷 " + f.name : f.name;
-        if (f.iconsetPath != null || (f.cotType != null && f.cotType.startsWith("a-"))) {
-            try {
-                // A path that resolves to no iconset makes TAK Lite fall back to the CoT type's symbol.
-                String iconset = f.iconsetPath != null ? f.iconsetPath : "mod/" + f.cotType;
-                Drawable d = activity.modMarkerIcon(label, f.cotType == null ? "" : f.cotType, iconset);
-                if (d != null) return d;
-            } catch (RuntimeException e) {
-                Log.w(TAG, "TAK Lite icon failed for " + f.cotType, e);
-            }
+    private static boolean usesTakIcon(Feature f) {
+        return f.iconsetPath != null || (f.cotType != null && f.cotType.startsWith("a-"));
+    }
+
+    private static String label(Feature f) {
+        return f.image != null ? "📷 " + f.name : f.name;
+    }
+
+    /** TAK Lite's own symbol for a CoT unit (main thread: it uses TAK Lite's icon code). */
+    private static Drawable takIcon(MainActivity activity, Feature f) {
+        try {
+            String iconset = f.iconsetPath != null ? RemoteMarkers.iconsetOrStandIn(f.iconsetPath)
+                    : RemoteMarkers.STAND_IN_ICONSET;
+            Drawable d = activity.modMarkerIcon(label(f), f.cotType == null ? "" : f.cotType, iconset);
+            if (d != null) return d;
+        } catch (RuntimeException e) {
+            Log.w(TAG, "TAK Lite icon failed for " + f.cotType, e);
         }
-        return dotIcon(activity, label, f.pointColor);
+        return dotIcon(activity, label(f), f.pointColor);
     }
 
     /** Coloured dot with a label underneath, in the style of TAK Lite's teammate markers. */
@@ -318,11 +352,13 @@ final class ImportedLayers {
                 Toast.makeText(context, "Could not save: " + ex.getMessage(), Toast.LENGTH_LONG).show();
             }
         });
+        // Only map sources: nothing on the map to show or hide.
+        if (e.count == 0) box.setVisibility(View.INVISIBLE);
         row.addView(box);
 
         String date = DateFormat.getMediumDateFormat(context).format(new Date(e.importedAt));
         LinearLayout text = DarkDialog.row(context, e.name,
-                e.origin + " \u00b7 " + e.count + " items \u00b7 " + date, Color.WHITE, v -> {
+                e.origin + " \u00b7 " + e.contents() + " \u00b7 " + date, Color.WHITE, v -> {
                     d.dismiss();
                     showEntry(context, e);
                 });
@@ -378,7 +414,7 @@ final class ImportedLayers {
                         : "Tap a package to download it and add it to the map.");
                 for (final DataPackages.ServerPackage p : packages) {
                     boolean have = DataPackages.isImported(context, p.hash);
-                    StringBuilder sub = new StringBuilder(formatSize(p.size));
+                    StringBuilder sub = new StringBuilder(p.size > 0 ? ModUtil.formatSize(p.size) : "size unknown");
                     if (!p.submitter.isEmpty()) sub.append(" \u00b7 ").append(p.submitter);
                     if (p.submitted.length() >= 10) sub.append(" \u00b7 ").append(p.submitted.substring(0, 10));
                     if (have) sub.append(" \u00b7 on this phone");
@@ -398,11 +434,13 @@ final class ImportedLayers {
         title.setTextColor(Tak.TEXT_SECONDARY);
         final Handler main = new Handler(Looper.getMainLooper());
         try {
+            // If it is already downloading (a repeat tap, or the same package sent over
+            // TAK), this just joins the waiting list and the row updates when it ends.
             DataPackages.importFromServer(context, p, (entry, error) -> main.post(() -> {
                 if (entry != null) {
                     title.setText(p.name + "  \u2713");
                     title.setTextColor(Tak.STATE_GO);
-                    Toast.makeText(context, "\"" + entry.name + "\": " + entry.count + " items added to the map.",
+                    Toast.makeText(context, "\"" + entry.name + "\": " + entry.addedText(),
                             Toast.LENGTH_LONG).show();
                 } else {
                     title.setText(p.name + "  (failed)");
@@ -415,18 +453,15 @@ final class ImportedLayers {
         }
     }
 
-    private static String formatSize(long bytes) {
-        if (bytes <= 0) return "size unknown";
-        if (bytes < 1024 * 1024) return Math.max(1, bytes / 1024) + " KB";
-        return String.format(Locale.US, "%.1f MB", bytes / (1024.0 * 1024.0));
-    }
-
     private static void showEntry(final Context context, final ImportStore.Entry e) {
         final DarkDialog d = new DarkDialog(context, e.name);
-        d.addText(e.origin + "\n" + e.count + " items, imported "
+        d.addText(e.origin + "\n" + e.contents() + ", imported "
                 + DateFormat.getMediumDateFormat(context).format(new Date(e.importedAt)) + " "
                 + DateFormat.getTimeFormat(context).format(new Date(e.importedAt)));
-        d.addButton("Zoom To", Tak.BTN_PRIMARY, v -> {
+        if (e.count == 0) {
+            d.addText("Its map sources are in Map Sources: long-press the map layers button to pick "
+                    + "one, or edit them in Settings \u2192 Map Sources.");
+        } else d.addButton("Zoom To", Tak.STATE_GO, v -> {
             d.dismiss();
             try {
                 if (!e.visible) Imports.setVisible(e.id, true);
@@ -436,13 +471,9 @@ final class ImportedLayers {
             if (context instanceof MainActivity) {
                 MapView map = mapView((MainActivity) context);
                 if (map != null) zoomTo((MainActivity) context, map, e);
-            } else {
-                // Opened from Settings: go back to the map, which zooms when it resumes.
-                Imports.pendingZoomId = e.id;
-                if (context instanceof Activity) ((Activity) context).finish();
             }
         });
-        d.addButton(e.visible ? "Hide on Map" : "Show on Map", Tak.BTN_NEUTRAL, v -> {
+        if (e.count > 0) d.addButton(e.visible ? "Hide on Map" : "Show on Map", Tak.BTN_NEUTRAL, v -> {
             try {
                 Imports.setVisible(e.id, !e.visible);
             } catch (IOException ex) {
@@ -466,7 +497,9 @@ final class ImportedLayers {
     /** {@code back} reopens whichever dialog the delete was started from. */
     private static void confirmDelete(final Context context, final ImportStore.Entry e, final Runnable back) {
         final DarkDialog d = new DarkDialog(context, "Delete \"" + e.name + "\"?");
-        d.addText("Removes its " + e.count + " items from the map and this phone.");
+        d.addText(e.count > 0 ? "Removes its " + e.count + " items from the map and this phone."
+                + (e.mapSources > 0 ? " Its map sources stay in Map Sources." : "")
+                : "Removes it from this phone. Its map sources stay in Map Sources; delete them there.");
         d.addAction("CANCEL", v -> {
             d.dismiss();
             back.run();

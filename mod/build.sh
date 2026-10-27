@@ -35,7 +35,8 @@ JADX_SHA256=12fd966431903b8e15c36e5007f19343475be7d8f2a55f082e7a929eeabc937e
 OSMDROID_URL=https://repo1.maven.org/maven2/org/osmdroid/osmdroid-android/6.1.15/osmdroid-android-6.1.15.aar
 OSMDROID_SHA256=96464c7267ed966e69a076c83bda562c9147b7756fec013ac0e5c56df2b91476
 # Compile-time only (never packaged). Uses your SDK's copy when ANDROID_HOME is set.
-ANDROID_JAR_URL=https://raw.githubusercontent.com/Reginer/aosp-android-jar/main/android-35/android.jar
+ANDROID_JAR_URL=https://raw.githubusercontent.com/Reginer/aosp-android-jar/262f6ae931160011572a5adfe4ec6302585e8f60/android-35/android.jar
+ANDROID_JAR_SHA256=60be6880d7b2b526d654460d4ce6fa81bf23efaa28b02d901d0b63a01ccf4671
 
 log() { printf '\n==> %s\n' "$*"; }
 die() { printf 'error: %s\n' "$*" >&2; exit 1; }
@@ -71,7 +72,7 @@ if [ -n "${ANDROID_HOME:-}" ] && [ -s "$ANDROID_HOME/platforms/android-35/androi
     ANDROID_JAR="$ANDROID_HOME/platforms/android-35/android.jar"
 else
     ANDROID_JAR="$TOOLS/android-35.jar"
-    fetch "$ANDROID_JAR_URL" "$ANDROID_JAR"
+    fetch "$ANDROID_JAR_URL" "$ANDROID_JAR" "$ANDROID_JAR_SHA256"
 fi
 
 log "Decoding the APK"
@@ -86,9 +87,16 @@ rm -rf "$WORK/classes" "$WORK/stubs" "$WORK/dex"
 mkdir -p "$WORK/classes" "$WORK/stubs" "$WORK/dex"
 CP="$ANDROID_JAR:$TOOLS/osmdroid.jar"
 JAVAC=(javac --release 8 -proc:none -nowarn -encoding UTF-8)
-"${JAVAC[@]}" -cp "$CP" -d "$WORK/stubs" $(find "$MOD/stubs" -name '*.java') 2>&1 | grep -v '^warning\|UnsupportedAppUsage\|^Note:\|warnings$' || true
-"${JAVAC[@]}" -cp "$CP:$WORK/stubs" -d "$WORK/classes" $(find "$MOD/src" -name '*.java') 2>&1 | grep -v '^warning\|UnsupportedAppUsage\|^Note:\|warnings$' || true
-[ -s "$WORK/classes/com/taklite/client/mod/CustomMapSources.class" ] || die "javac failed"
+# compile WHAT DEST CLASSPATH SOURCES...: javac's own exit status decides; only its noise is filtered.
+compile() {
+    local what=$1 dest=$2 cp=$3; shift 3
+    local out rc=0
+    out=$("${JAVAC[@]}" -cp "$cp" -d "$dest" "$@" 2>&1) || rc=$?
+    printf '%s\n' "$out" | grep -v '^warning\|UnsupportedAppUsage\|^Note:\|warnings$\|^$' || true
+    [ "$rc" -eq 0 ] || die "javac failed compiling $what"
+}
+compile "stubs" "$WORK/stubs" "$CP" $(find "$MOD/stubs" -name '*.java')
+compile "mod/src" "$WORK/classes" "$CP:$WORK/stubs" $(find "$MOD/src" -name '*.java')
 java -cp "$JADX_JAR" com.android.tools.r8.D8 --release --min-api 26 \
     --lib "$ANDROID_JAR" --classpath "$TOOLS/osmdroid.jar" --classpath "$WORK/stubs" \
     --output "$WORK/dex" $(find "$WORK/classes" -name '*.class')

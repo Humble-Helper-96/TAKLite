@@ -15,7 +15,6 @@ import org.osmdroid.config.IConfigurationProvider;
 import org.osmdroid.tileprovider.modules.SqlTileWriter;
 
 import java.io.File;
-import java.util.Locale;
 
 /**
  * Size limit of osmdroid's on-phone tile cache (one SQLite file shared by all maps).
@@ -25,34 +24,133 @@ import java.util.Locale;
  */
 final class TileCache {
 
-    private static final String PREFS = "TAKLitePrefs";
     private static final String KEY_LIMIT_MB = "custom_map_cache_mb";
     /** osmdroid's own default. */
     static final int DEFAULT_LIMIT_MB = 600;
     private static final int[] LIMIT_CHOICES_MB = {300, 600, 1024, 2048, 4096, 8192, 16384};
     private static final long MB = 1024L * 1024L;
 
+    private static final String TAG = "TileCache";
+
     private TileCache() {
     }
 
     static int limitMb(Context context) {
-        return context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).getInt(KEY_LIMIT_MB, DEFAULT_LIMIT_MB);
+        return ModUtil.prefs(context).getInt(KEY_LIMIT_MB, DEFAULT_LIMIT_MB);
     }
 
     /**
      * Pushes the chosen limit into osmdroid. Like osmdroid itself, never lets the cache
      * grow past 95% of the space it could have, and trims it to 5/6 of the limit
      * (osmdroid's 500 MB / 600 MB ratio) when it overflows.
+     *
+     * Trimming is done by {@link #trimSoon} rather than osmdroid: osmdroid compares the
+     * cache FILE size with the limit, but SQLite never shrinks the file when tiles are
+     * deleted. Once the file had grown past the limit, osmdroid deleted another batch of
+     * the oldest tiles every 5 minutes of map use, eating into downloaded offline areas.
      */
     static void apply(Context context) {
-        long max = Math.min(limitMb(context) * MB, (long) (availableBytes(context) * 0.95));
+        SqlTileWriter.setCleanupOnStart(false);
+        // osmdroid runs its cleanup when now > lastCheck + frequency, with lastCheck starting
+        // at 0, so a frequency of "a year" still fires on the first tile saved after every
+        // start. Half of Long.MAX_VALUE can't be reached and can't overflow the addition.
+        Configuration.getInstance().setTileGCFrequencyInMillis(Long.MAX_VALUE / 2);
+        long max = limitMb(context) * MB;
+        long available = availableBytes(context);
+        // 0 means the free space couldn't be read; keep the chosen limit rather than none.
+        if (available > 0) max = Math.min(max, (long) (available * 0.95));
         IConfigurationProvider config = Configuration.getInstance();
         config.setTileFileSystemCacheMaxBytes(max);
         config.setTileFileSystemCacheTrimBytes(max / 6 * 5);
     }
 
-    static long usedBytes(Context context) {
+    /**
+     * Trims the cache to 5/6 of the limit, oldest tiles first, if the tiles in it take up more
+     * than the limit. On a background thread; called when the map opens or comes back, and
+     * after an area download.
+     */
+    static void trimSoon(Context context) {
+        final Context app = context.getApplicationContext();
+        new Thread(() -> {
+            try {
+                trim(app);
+            } catch (RuntimeException e) {
+                Log.e(TAG, "Could not trim the map cache", e);
+            }
+        }, "TileCacheTrim").start();
+    }
+
+    private static synchronized void trim(Context context) {
+        if (AreaDownloader.isRunning()) return; // runs again when the download ends
+        long used = readUsedBytes(context);
+        IConfigurationProvider config = Configuration.getInstance();
+        long max = config.getTileFileSystemCacheMaxBytes();
+        Log.i(TAG, "Offline cache: " + ModUtil.formatSize(used) + " in use of " + ModUtil.formatSize(max)
+                + " (chosen " + limitMb(context) + " MB, file " + ModUtil.formatSize(fileBytes(context)) + ", "
+                + ModUtil.formatSize(freeBytes(cacheDir(context))) + " free)");
+        if (max <= 0 || used <= max) return;
+        long target = config.getTileFileSystemCacheTrimBytes();
+        Log.i(TAG, "Trimming the map cache: " + ModUtil.formatSize(used) + " in use, limit "
+                + ModUtil.formatSize(max) + ", trimming to " + ModUtil.formatSize(target));
+        new Cleaner().runCleanupOperation(used - target, config.getTileGCBulkSize(),
+                config.getTileGCBulkPauseInMillis(), true);
+        forgetUsedBytes();
+        Log.i(TAG, "Map cache trimmed: " + ModUtil.formatSize(readUsedBytes(context)) + " in use");
+    }
+
+    /** Size of the cache file. SQLite keeps it at its largest and reuses the space of removed tiles. */
+    static long fileBytes(Context context) {
         return new File(cacheDir(context), SqlTileWriter.DATABASE_FILENAME).length();
+    }
+
+    private static long cachedUsed = -1;
+    private static long cachedUsedAt;
+    private static final long USED_CACHE_MS = 5000;
+
+    /**
+     * Space the saved tiles take up inside the cache file (what the limit is about).
+     * Reading it opens the database, so dialogs get a value at most 5 s old rather
+     * than a fresh read on every call from the main thread.
+     */
+    static long usedBytes(Context context) {
+        long now = android.os.SystemClock.elapsedRealtime();
+        synchronized (TileCache.class) {
+            if (cachedUsed >= 0 && now - cachedUsedAt < USED_CACHE_MS) return cachedUsed;
+        }
+        long used = readUsedBytes(context);
+        synchronized (TileCache.class) {
+            cachedUsed = used;
+            cachedUsedAt = now;
+        }
+        return used;
+    }
+
+    /** A just-measured figure, for right after a download or clear. */
+    static long freshUsedBytes(Context context) {
+        forgetUsedBytes();
+        return usedBytes(context);
+    }
+
+    private static void forgetUsedBytes() {
+        synchronized (TileCache.class) {
+            cachedUsed = -1;
+        }
+    }
+
+    private static long readUsedBytes(Context context) {
+        File file = new File(cacheDir(context), SqlTileWriter.DATABASE_FILENAME);
+        if (!file.exists()) return 0;
+        try (SQLiteDatabase db = SQLiteDatabase.openDatabase(file.getPath(), null, SQLiteDatabase.OPEN_READONLY)) {
+            return (pragma(db, "page_count") - pragma(db, "freelist_count")) * pragma(db, "page_size");
+        } catch (RuntimeException e) {
+            return file.length();
+        }
+    }
+
+    private static long pragma(SQLiteDatabase db, String name) {
+        try (android.database.Cursor c = db.rawQuery("PRAGMA " + name, null)) {
+            return c.moveToFirst() ? c.getLong(0) : 0;
+        }
     }
 
     static long maxBytes() {
@@ -61,8 +159,17 @@ final class TileCache {
 
     /** Free space plus what the cache already uses: the most the cache could grow to. */
     private static long availableBytes(Context context) {
-        File dir = cacheDir(context);
-        return dir.getUsableSpace() + usedBytes(context);
+        return freeBytes(cacheDir(context)) + fileBytes(context);
+    }
+
+    /**
+     * Free space where the cache lives. On a fresh install osmdroid hasn't created the
+     * folder yet, and getUsableSpace() is 0 for a missing folder, so ask its nearest parent.
+     */
+    private static long freeBytes(File dir) {
+        File f = dir;
+        while (f != null && !f.exists()) f = f.getParentFile();
+        return f == null ? 0 : f.getUsableSpace();
     }
 
     private static File cacheDir(Context context) {
@@ -73,20 +180,9 @@ final class TileCache {
     }
 
     static String summary(Context context) {
-        File dir = cacheDir(context);
-        return "Using " + formatSize(usedBytes(context)) + " of " + formatSize(maxBytes())
-                + " · " + formatSize(dir.getUsableSpace()) + " free on this phone. "
+        return "Using " + ModUtil.formatSize(usedBytes(context)) + " of " + ModUtil.formatSize(maxBytes())
+                + " · " + ModUtil.formatSize(freeBytes(cacheDir(context))) + " free on this phone. "
                 + "Shared by all maps; when it fills up, the oldest tiles are removed.";
-    }
-
-    static String formatSize(long bytes) {
-        if (bytes >= 1024 * MB) {
-            double gb = bytes / (1024.0 * MB);
-            return gb >= 10 || gb == Math.floor(gb)
-                    ? String.format(Locale.US, "%.0f GB", gb)
-                    : String.format(Locale.US, "%.1f GB", gb);
-        }
-        return Math.max(0, Math.round(bytes / (double) MB)) + " MB";
     }
 
     /** Confirms, then deletes every cached tile (all maps) and reopens via {@code next}. */
@@ -98,7 +194,7 @@ final class TileCache {
             return;
         }
         final DarkDialog d = new DarkDialog(context, "Clear Offline Cache?");
-        d.addText("Deletes all " + formatSize(usedBytes(context)) + " of saved map tiles, for every "
+        d.addText("Deletes all " + ModUtil.formatSize(usedBytes(context)) + " of saved map tiles, for every "
                 + "map. Areas you downloaded for offline use will need downloading again. Tiles are "
                 + "saved again as you use the map.");
         d.addAction("CANCEL", v -> {
@@ -108,15 +204,16 @@ final class TileCache {
         d.addDestructiveAction("CLEAR", v -> {
             d.dismiss();
             final Context app = context.getApplicationContext();
-            final long before = usedBytes(context);
+            final long before = fileBytes(context);
             Toast.makeText(context, "Clearing the map cache\u2026", Toast.LENGTH_SHORT).show();
             new Thread(() -> {
                 String message;
                 try {
                     new Cleaner().clearAll();
-                    message = "Map cache cleared: freed " + formatSize(Math.max(0, before - usedBytes(app))) + ".";
+                    forgetUsedBytes();
+                    message = "Map cache cleared: freed " + ModUtil.formatSize(Math.max(0, before - fileBytes(app))) + ".";
                 } catch (RuntimeException e) {
-                    Log.e("TileCache", "Could not clear the map cache", e);
+                    Log.e(TAG, "Could not clear the map cache", e);
                     message = "Could not clear the map cache: " + e.getMessage();
                 }
                 final String result = message;
@@ -149,13 +246,13 @@ final class TileCache {
         long available = availableBytes(context);
         int current = limitMb(context);
         for (final int mb : LIMIT_CHOICES_MB) {
-            String title = formatSize(mb * MB) + (mb == DEFAULT_LIMIT_MB ? " (default)" : "");
-            String subtitle = mb * MB > available * 0.95
-                    ? "More than this phone has free; limited to " + formatSize((long) (available * 0.95))
+            String title = ModUtil.formatSize(mb * MB) + (mb == DEFAULT_LIMIT_MB ? " (default)" : "");
+            String subtitle = available > 0 && mb * MB > available * 0.95
+                    ? "More than this phone has free; limited to " + ModUtil.formatSize((long) (available * 0.95))
                     : null;
             d.addRow(mb == current ? title + "  ✓" : title, subtitle,
                     mb == current ? Tak.STATE_GO : Color.WHITE, v -> {
-                        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+                        ModUtil.prefs(context)
                                 .edit().putInt(KEY_LIMIT_MB, mb).apply();
                         apply(context);
                         d.dismiss();

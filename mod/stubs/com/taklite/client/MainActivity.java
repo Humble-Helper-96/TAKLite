@@ -30,4 +30,14 @@ public class MainActivity extends android.app.Activity {
     public void modSaveDroppedMarkers() {
         throw new UnsupportedOperationException("stub");
     }
+
+    /** The stock droppedMarkers map (key -> marker; received markers have keys "remote-<uid>"). */
+    public java.util.Map<String, DroppedMarker> modDroppedMarkers() {
+        throw new UnsupportedOperationException("stub");
+    }
+
+    /** The stock takUserMarkers map (uid -> map marker) for teammates and received markers. */
+    public java.util.Map<String, org.osmdroid.views.overlay.Marker> modTakUserMarkers() {
+        throw new UnsupportedOperationException("stub");
+    }
 }

@@ -32,6 +32,20 @@ public final class DarkDialog {
 
     private static final int RADIUS_DP = 12;
 
+    /**
+     * The colour names the feature code (shared with the 1.5.0 branch) uses, mapped onto
+     * the TAKPilot tokens so that code compiles here unchanged and still comes out in this
+     * theme: see {@link #addAction(String, int, View.OnClickListener)} and
+     * {@link #addButton}, which translate them to roles rather than painting the raw values.
+     */
+    public static final int COLOR_ACCENT = Tak.STATE_GO;
+    public static final int COLOR_DANGER = Tak.STATE_DANGER;
+    public static final int COLOR_LABEL = Tak.TEXT_SECONDARY;
+    public static final int COLOR_FIELD = Tak.BTN_NEUTRAL;
+    public static final int COLOR_PRIMARY = Tak.SURFACE_DIALOG;
+    public static final int COLOR_HINT = Tak.TEXT_HINT;
+    public static final int COLOR_SECONDARY = Tak.TEXT_SECONDARY;
+
     public final Context context;
     public final Dialog dialog;
     public final LinearLayout content;
@@ -98,12 +112,17 @@ public final class DarkDialog {
         return addAction(label, Tak.BTN_DANGER_DIALOG, listener);
     }
 
-    private TextView addAction(String label, int color, View.OnClickListener listener) {
+    /**
+     * A text action with a colour hint. In this theme actions are either the accent or,
+     * for destructive ones, the dialog red, so the hint only decides between those two.
+     */
+    public TextView addAction(String label, int color, View.OnClickListener listener) {
+        boolean destructive = color == COLOR_DANGER || color == Tak.BTN_DANGER || color == Tak.BTN_DANGER_DIALOG;
         TextView action = new TextView(context);
         action.setText(label);
         action.setTextSize(TypedValue.COMPLEX_UNIT_SP, 14);
         action.setTypeface(Typeface.DEFAULT_BOLD);
-        action.setTextColor(color);
+        action.setTextColor(destructive ? Tak.BTN_DANGER_DIALOG : Tak.ACCENT);
         action.setPadding(dp(12), dp(10), dp(12), dp(10));
         action.setClickable(true);
         action.setFocusable(true);
@@ -159,8 +178,10 @@ public final class DarkDialog {
         return field;
     }
 
-    /** A full-width button; {@code role} is one of the Tak.BTN_* colours. */
+    /** A full-width button; {@code role} is one of the Tak.BTN_* colours (or a COLOR_* name, translated). */
     public Button addButton(String label, int role, View.OnClickListener listener) {
+        if (role == COLOR_ACCENT) role = Tak.BTN_PRIMARY;
+        else if (role == COLOR_DANGER) role = Tak.BTN_DANGER;
         Button button = new Button(context);
         button.setText(label);
         button.setTextColor(Tak.TEXT_PRIMARY);

@@ -233,7 +233,7 @@ diff -ruN a/res/layout/activity_onboarding.xml b/res/layout/activity_onboarding.
 diff -ruN a/res/layout/activity_settings.xml b/res/layout/activity_settings.xml
 --- a/res/layout/activity_settings.xml
 +++ b/res/layout/activity_settings.xml
-@@ -1,32 +1,36 @@
+@@ -1,62 +1,69 @@
  <?xml version="1.0" encoding="utf-8"?>
  <androidx.constraintlayout.widget.ConstraintLayout android:background="@color/background" android:layout_width="fill_parent" android:layout_height="fill_parent"
    xmlns:android="http://schemas.android.com/apk/res/android" xmlns:app="http://schemas.android.com/apk/res-auto">
@@ -241,80 +241,107 @@ diff -ruN a/res/layout/activity_settings.xml b/res/layout/activity_settings.xml
 +    <LinearLayout android:gravity="center_vertical" android:orientation="horizontal" android:id="@id/titleBar" android:background="@color/tp_surface_card" android:padding="12.0dip" android:layout_width="fill_parent" android:layout_height="wrap_content" android:elevation="4.0dip" app:layout_constraintTop_toTopOf="parent">
          <ImageButton android:id="@id/backButton" android:background="?selectableItemBackgroundBorderless" android:layout_width="40.0dip" android:layout_height="40.0dip" android:src="@android:drawable/ic_menu_revert" android:contentDescription="Back" app:tint="@android:color/white" />
          <TextView android:textSize="20.0sp" android:textStyle="bold" android:textColor="@android:color/white" android:layout_width="0.0dip" android:layout_height="wrap_content" android:text="@string/settings" android:layout_weight="1.0" android:layout_marginStart="8.0dip" />
++        <Button android:textSize="12.0sp" android:textColor="@android:color/white" android:textAllCaps="false" android:tag="mod_clear_markers_button" android:layout_width="wrap_content" android:layout_height="36.0dip" android:minHeight="0.0dip" android:minWidth="0.0dip" android:paddingStart="12.0dip" android:paddingEnd="12.0dip" android:text="Clear All Markers" android:backgroundTint="@color/tp_btn_danger" />
      </LinearLayout>
      <ScrollView android:layout_width="fill_parent" android:layout_height="0.0dip" app:layout_constraintBottom_toBottomOf="parent" app:layout_constraintTop_toBottomOf="@id/titleBar">
          <LinearLayout android:orientation="vertical" android:background="@color/surface" android:padding="16.0dip" android:layout_width="fill_parent" android:layout_height="wrap_content">
-             <TextView android:textSize="14.0sp" android:textStyle="bold" android:textColor="@color/text_primary" android:paddingBottom="4.0dip" android:layout_width="fill_parent" android:layout_height="wrap_content" android:text="Callsign" />
+-            <TextView android:textSize="14.0sp" android:textStyle="bold" android:textColor="@color/text_primary" android:paddingBottom="4.0dip" android:layout_width="fill_parent" android:layout_height="wrap_content" android:text="Callsign" />
 -            <EditText android:textSize="14.0sp" android:textColor="@color/text_primary" android:textColorHint="@color/text_secondary" android:id="@id/takCallsign" android:background="@color/background" android:padding="12.0dip" android:layout_width="fill_parent" android:layout_height="48.0dip" android:layout_marginBottom="12.0dip" android:hint="Your callsign" android:inputType="text" />
-+            <EditText android:textSize="14.0sp" android:textColor="@color/text_primary" android:textColorHint="@color/text_secondary" android:id="@id/takCallsign" android:background="@drawable/tp_field_bg" android:padding="12.0dip" android:layout_width="fill_parent" android:layout_height="48.0dip" android:layout_marginBottom="12.0dip" android:hint="Your callsign" android:inputType="text" />
-             <TextView android:textSize="14.0sp" android:textStyle="bold" android:textColor="@color/text_primary" android:paddingBottom="4.0dip" android:layout_width="fill_parent" android:layout_height="wrap_content" android:text="Phone Number" />
+-            <TextView android:textSize="14.0sp" android:textStyle="bold" android:textColor="@color/text_primary" android:paddingBottom="4.0dip" android:layout_width="fill_parent" android:layout_height="wrap_content" android:text="Phone Number" />
 -            <EditText android:textSize="14.0sp" android:textColor="@color/text_primary" android:textColorHint="@color/text_secondary" android:id="@id/takPhone" android:background="@color/background" android:padding="12.0dip" android:layout_width="fill_parent" android:layout_height="48.0dip" android:layout_marginBottom="12.0dip" android:hint="Your phone number" android:inputType="phone" />
-+            <EditText android:textSize="14.0sp" android:textColor="@color/text_primary" android:textColorHint="@color/text_secondary" android:id="@id/takPhone" android:background="@drawable/tp_field_bg" android:padding="12.0dip" android:layout_width="fill_parent" android:layout_height="48.0dip" android:layout_marginBottom="12.0dip" android:hint="Your phone number" android:inputType="phone" />
-             <TextView android:textSize="14.0sp" android:textStyle="bold" android:textColor="@color/text_primary" android:paddingBottom="4.0dip" android:layout_width="fill_parent" android:layout_height="wrap_content" android:text="Team Color" />
-             <Spinner android:id="@id/takTeamSpinner" android:background="@drawable/spinner_background" android:layout_width="fill_parent" android:layout_height="48.0dip" android:layout_marginBottom="12.0dip" android:popupBackground="@color/surface" />
-             <TextView android:textSize="14.0sp" android:textStyle="bold" android:textColor="@color/text_primary" android:paddingBottom="4.0dip" android:layout_width="fill_parent" android:layout_height="wrap_content" android:text="Role" />
-             <Spinner android:id="@id/takRoleSpinner" android:background="@drawable/spinner_background" android:layout_width="fill_parent" android:layout_height="48.0dip" android:layout_marginBottom="16.0dip" android:popupBackground="@color/surface" />
+-            <TextView android:textSize="14.0sp" android:textStyle="bold" android:textColor="@color/text_primary" android:paddingBottom="4.0dip" android:layout_width="fill_parent" android:layout_height="wrap_content" android:text="Team Color" />
+-            <Spinner android:id="@id/takTeamSpinner" android:background="@drawable/spinner_background" android:layout_width="fill_parent" android:layout_height="48.0dip" android:layout_marginBottom="12.0dip" android:popupBackground="@color/surface" />
+-            <TextView android:textSize="14.0sp" android:textStyle="bold" android:textColor="@color/text_primary" android:paddingBottom="4.0dip" android:layout_width="fill_parent" android:layout_height="wrap_content" android:text="Role" />
+-            <Spinner android:id="@id/takRoleSpinner" android:background="@drawable/spinner_background" android:layout_width="fill_parent" android:layout_height="48.0dip" android:layout_marginBottom="16.0dip" android:popupBackground="@color/surface" />
 -            <View android:background="@color/background" android:layout_width="fill_parent" android:layout_height="1.0dip" android:layout_marginBottom="16.0dip" />
-+            <View android:background="@color/tp_divider" android:layout_width="fill_parent" android:layout_height="1.0dip" android:layout_marginBottom="16.0dip" />
-             <TextView android:textSize="14.0sp" android:textStyle="bold" android:textColor="@color/text_primary" android:paddingBottom="4.0dip" android:layout_width="fill_parent" android:layout_height="wrap_content" android:text="Server Enrollment" />
-             <TextView android:textSize="12.0sp" android:textColor="@color/text_secondary" android:paddingBottom="8.0dip" android:layout_width="fill_parent" android:layout_height="wrap_content" android:text="Scan QR code to connect to a TAK server" />
+-            <TextView android:textSize="14.0sp" android:textStyle="bold" android:textColor="@color/text_primary" android:paddingBottom="4.0dip" android:layout_width="fill_parent" android:layout_height="wrap_content" android:text="Server Enrollment" />
+-            <TextView android:textSize="12.0sp" android:textColor="@color/text_secondary" android:paddingBottom="8.0dip" android:layout_width="fill_parent" android:layout_height="wrap_content" android:text="Scan QR code to connect to a TAK server" />
 -            <Button android:textSize="16.0sp" android:textColor="@android:color/white" android:id="@id/takEnrollQrButton" android:layout_width="fill_parent" android:layout_height="52.0dip" android:layout_marginBottom="8.0dip" android:text="Scan Enrollment QR Code" android:backgroundTint="@color/primary" />
-+            <Button android:textSize="16.0sp" android:textColor="@android:color/white" android:id="@id/takEnrollQrButton" android:layout_width="fill_parent" android:layout_height="52.0dip" android:layout_marginBottom="8.0dip" android:text="Scan Enrollment QR Code" android:backgroundTint="@color/tp_btn_neutral" />
-             <TextView android:textSize="12.0sp" android:textColor="@color/text_secondary" android:id="@id/takEnrollStatus" android:visibility="gone" android:layout_width="fill_parent" android:layout_height="wrap_content" android:layout_marginBottom="12.0dip" />
-             <TextView android:textSize="14.0sp" android:textStyle="bold" android:textColor="@color/text_primary" android:paddingBottom="4.0dip" android:layout_width="fill_parent" android:layout_height="wrap_content" android:text="Group Assignment" />
-             <TextView android:textSize="12.0sp" android:textColor="@color/text_secondary" android:paddingBottom="8.0dip" android:layout_width="fill_parent" android:layout_height="wrap_content" android:text="Fetch available groups from the server and assign this client" />
+-            <TextView android:textSize="12.0sp" android:textColor="@color/text_secondary" android:id="@id/takEnrollStatus" android:visibility="gone" android:layout_width="fill_parent" android:layout_height="wrap_content" android:layout_marginBottom="12.0dip" />
+-            <TextView android:textSize="14.0sp" android:textStyle="bold" android:textColor="@color/text_primary" android:paddingBottom="4.0dip" android:layout_width="fill_parent" android:layout_height="wrap_content" android:text="Group Assignment" />
+-            <TextView android:textSize="12.0sp" android:textColor="@color/text_secondary" android:paddingBottom="8.0dip" android:layout_width="fill_parent" android:layout_height="wrap_content" android:text="Fetch available groups from the server and assign this client" />
 -            <Button android:textSize="14.0sp" android:textColor="@android:color/white" android:id="@id/takFetchGroupsButton" android:layout_width="fill_parent" android:layout_height="44.0dip" android:layout_marginBottom="8.0dip" android:text="Fetch Groups" android:backgroundTint="@color/accent" />
-+            <Button android:textSize="14.0sp" android:textColor="@android:color/white" android:id="@id/takFetchGroupsButton" android:layout_width="fill_parent" android:layout_height="44.0dip" android:layout_marginBottom="8.0dip" android:text="Fetch Groups" android:backgroundTint="@color/tp_btn_primary" />
-             <LinearLayout android:orientation="vertical" android:id="@id/takGroupCheckboxContainer" android:layout_width="fill_parent" android:layout_height="wrap_content" android:layout_marginBottom="4.0dip" />
+-            <LinearLayout android:orientation="vertical" android:id="@id/takGroupCheckboxContainer" android:layout_width="fill_parent" android:layout_height="wrap_content" android:layout_marginBottom="4.0dip" />
 -            <Button android:textSize="14.0sp" android:textColor="@android:color/white" android:id="@id/takAssignGroupsButton" android:visibility="gone" android:layout_width="fill_parent" android:layout_height="44.0dip" android:layout_marginBottom="4.0dip" android:text="Assign Selected Groups" android:backgroundTint="@color/primary" />
-+            <Button android:textSize="14.0sp" android:textColor="@android:color/white" android:id="@id/takAssignGroupsButton" android:visibility="gone" android:layout_width="fill_parent" android:layout_height="44.0dip" android:layout_marginBottom="4.0dip" android:text="Assign Selected Groups" android:backgroundTint="@color/tp_btn_neutral" />
-             <TextView android:textSize="12.0sp" android:textColor="@color/text_secondary" android:id="@id/takGroupStatus" android:visibility="gone" android:layout_width="fill_parent" android:layout_height="wrap_content" android:layout_marginBottom="12.0dip" />
+-            <TextView android:textSize="12.0sp" android:textColor="@color/text_secondary" android:id="@id/takGroupStatus" android:visibility="gone" android:layout_width="fill_parent" android:layout_height="wrap_content" android:layout_marginBottom="12.0dip" />
 -            <View android:background="@color/background" android:layout_width="fill_parent" android:layout_height="1.0dip" android:layout_marginBottom="12.0dip" />
-+            <View android:background="@color/tp_divider" android:layout_width="fill_parent" android:layout_height="1.0dip" android:layout_marginBottom="12.0dip" />
-+            <TextView android:textSize="14.0sp" android:textStyle="bold" android:textColor="@color/text_primary" android:paddingBottom="4.0dip" android:layout_width="fill_parent" android:layout_height="wrap_content" android:text="Map Sources" />
-+            <TextView android:textSize="12.0sp" android:textColor="@color/text_secondary" android:paddingBottom="8.0dip" android:layout_width="fill_parent" android:layout_height="wrap_content" android:text="Add your own tile servers, e.g. TileServer GL" />
-+            <Button android:textSize="14.0sp" android:textColor="@android:color/white" android:tag="custom_map_sources_button" android:layout_width="fill_parent" android:layout_height="44.0dip" android:layout_marginBottom="12.0dip" android:text="Manage Map Sources" android:backgroundTint="@color/tp_btn_primary" />
-+            <View android:background="@color/tp_divider" android:layout_width="fill_parent" android:layout_height="1.0dip" android:layout_marginBottom="12.0dip" />
-             <LinearLayout android:gravity="center_vertical" android:orientation="horizontal" android:id="@id/advancedHeader" android:background="?selectableItemBackground" android:layout_width="fill_parent" android:layout_height="44.0dip" android:layout_marginBottom="8.0dip" android:paddingStart="4.0dip" android:paddingEnd="4.0dip">
+-            <LinearLayout android:gravity="center_vertical" android:orientation="horizontal" android:id="@id/advancedHeader" android:background="?selectableItemBackground" android:layout_width="fill_parent" android:layout_height="44.0dip" android:layout_marginBottom="8.0dip" android:paddingStart="4.0dip" android:paddingEnd="4.0dip">
++            <TextView android:textSize="14.0sp" android:textStyle="bold" android:textColor="@color/text_primary" android:paddingBottom="2.0dip" android:layout_width="fill_parent" android:layout_height="wrap_content" android:text="Callsign" />
++            <EditText android:textSize="14.0sp" android:textColor="@color/text_primary" android:textColorHint="@color/text_secondary" android:id="@id/takCallsign" android:background="@drawable/tp_field_bg" android:padding="12.0dip" android:layout_width="fill_parent" android:layout_height="48.0dip" android:layout_marginBottom="6.0dip" android:hint="Your callsign" android:inputType="text" />
++            <TextView android:textSize="14.0sp" android:textStyle="bold" android:textColor="@color/text_primary" android:paddingBottom="2.0dip" android:layout_width="fill_parent" android:layout_height="wrap_content" android:text="Phone Number" />
++            <EditText android:textSize="14.0sp" android:textColor="@color/text_primary" android:textColorHint="@color/text_secondary" android:id="@id/takPhone" android:background="@drawable/tp_field_bg" android:padding="12.0dip" android:layout_width="fill_parent" android:layout_height="48.0dip" android:layout_marginBottom="6.0dip" android:hint="Your phone number" android:inputType="phone" />
++            <TextView android:textSize="14.0sp" android:textStyle="bold" android:textColor="@color/text_primary" android:paddingBottom="2.0dip" android:layout_width="fill_parent" android:layout_height="wrap_content" android:text="Team Color" />
++            <Spinner android:id="@id/takTeamSpinner" android:background="@drawable/spinner_background" android:layout_width="fill_parent" android:layout_height="48.0dip" android:layout_marginBottom="6.0dip" android:popupBackground="@color/surface" />
++            <TextView android:textSize="14.0sp" android:textStyle="bold" android:textColor="@color/text_primary" android:paddingBottom="2.0dip" android:layout_width="fill_parent" android:layout_height="wrap_content" android:text="Role" />
++            <Spinner android:id="@id/takRoleSpinner" android:background="@drawable/spinner_background" android:layout_width="fill_parent" android:layout_height="48.0dip" android:layout_marginBottom="8.0dip" android:popupBackground="@color/surface" />
++            <Switch android:textSize="14.0sp" android:textStyle="bold" android:textColor="@color/text_primary" android:tag="mod_emergency_toggle" android:layout_width="fill_parent" android:layout_height="40.0dip" android:layout_marginBottom="8.0dip" android:checked="true" android:text="Show Emergency Button" />
++            <Switch android:textSize="14.0sp" android:textStyle="bold" android:textColor="@color/text_primary" android:tag="mod_send_on_place_toggle" android:layout_width="fill_parent" android:layout_height="40.0dip" android:layout_marginBottom="8.0dip" android:checked="false" android:text="Send Marker Upon Placement" />
++            <View android:background="@color/tp_divider" android:layout_width="fill_parent" android:layout_height="1.0dip" android:layout_marginBottom="8.0dip" />
++            <TextView android:textSize="14.0sp" android:textStyle="bold" android:textColor="@color/text_primary" android:paddingBottom="2.0dip" android:layout_width="fill_parent" android:layout_height="wrap_content" android:text="Server Enrollment" />
++            <TextView android:textSize="12.0sp" android:textColor="@color/text_secondary" android:paddingBottom="4.0dip" android:layout_width="fill_parent" android:layout_height="wrap_content" android:text="Scan QR code to connect to a TAK server" />
++            <Button android:textSize="16.0sp" android:textColor="@android:color/white" android:id="@id/takEnrollQrButton" android:layout_width="fill_parent" android:layout_height="52.0dip" android:layout_marginBottom="4.0dip" android:text="Scan Enrollment QR Code" android:backgroundTint="@color/tp_btn_neutral" />
++            <TextView android:textSize="12.0sp" android:textColor="@color/text_secondary" android:id="@id/takEnrollStatus" android:visibility="gone" android:layout_width="fill_parent" android:layout_height="wrap_content" android:layout_marginBottom="6.0dip" />
++            <TextView android:textSize="14.0sp" android:textStyle="bold" android:textColor="@color/text_primary" android:paddingBottom="2.0dip" android:layout_width="fill_parent" android:layout_height="wrap_content" android:text="Group Assignment" />
++            <TextView android:textSize="12.0sp" android:textColor="@color/text_secondary" android:paddingBottom="4.0dip" android:layout_width="fill_parent" android:layout_height="wrap_content" android:text="Fetch available groups from the server and assign this client" />
++            <Button android:textSize="14.0sp" android:textColor="@android:color/white" android:id="@id/takFetchGroupsButton" android:layout_width="fill_parent" android:layout_height="44.0dip" android:layout_marginBottom="4.0dip" android:text="Fetch Groups" android:backgroundTint="@color/tp_btn_primary" />
++            <LinearLayout android:orientation="vertical" android:id="@id/takGroupCheckboxContainer" android:layout_width="fill_parent" android:layout_height="wrap_content" android:layout_marginBottom="2.0dip" />
++            <Button android:textSize="14.0sp" android:textColor="@android:color/white" android:id="@id/takAssignGroupsButton" android:visibility="gone" android:layout_width="fill_parent" android:layout_height="44.0dip" android:layout_marginBottom="2.0dip" android:text="Assign Selected Groups" android:backgroundTint="@color/tp_btn_neutral" />
++            <TextView android:textSize="12.0sp" android:textColor="@color/text_secondary" android:id="@id/takGroupStatus" android:visibility="gone" android:layout_width="fill_parent" android:layout_height="wrap_content" android:layout_marginBottom="6.0dip" />
++            <View android:background="@color/tp_divider" android:layout_width="fill_parent" android:layout_height="1.0dip" android:layout_marginBottom="6.0dip" />
++            <TextView android:textSize="14.0sp" android:textStyle="bold" android:textColor="@color/text_primary" android:paddingBottom="2.0dip" android:layout_width="fill_parent" android:layout_height="wrap_content" android:text="Map Sources" />
++            <TextView android:textSize="12.0sp" android:textColor="@color/text_secondary" android:paddingBottom="4.0dip" android:layout_width="fill_parent" android:layout_height="wrap_content" android:text="Add your own tile servers, e.g. TileServer GL" />
++            <Button android:textSize="14.0sp" android:textColor="@android:color/white" android:tag="custom_map_sources_button" android:layout_width="fill_parent" android:layout_height="44.0dip" android:layout_marginBottom="6.0dip" android:text="Manage Map Sources" android:backgroundTint="@color/tp_btn_primary" />
++            <View android:background="@color/tp_divider" android:layout_width="fill_parent" android:layout_height="1.0dip" android:layout_marginBottom="6.0dip" />
++            <LinearLayout android:gravity="center_vertical" android:orientation="horizontal" android:id="@id/advancedHeader" android:background="?selectableItemBackground" android:layout_width="fill_parent" android:layout_height="44.0dip" android:layout_marginBottom="4.0dip" android:paddingStart="4.0dip" android:paddingEnd="4.0dip">
                  <TextView android:textSize="14.0sp" android:textStyle="bold" android:textColor="@color/text_secondary" android:id="@id/advancedHeaderText" android:layout_width="0.0dip" android:layout_height="wrap_content" android:text="Advanced Settings" android:layout_weight="1.0" />
                  <ImageView android:id="@id/advancedArrow" android:layout_width="24.0dip" android:layout_height="24.0dip" android:src="@android:drawable/arrow_down_float" android:contentDescription="Expand" app:tint="@color/text_secondary" />
-@@ -34,29 +38,29 @@
+             </LinearLayout>
              <LinearLayout android:orientation="vertical" android:id="@id/advancedContent" android:visibility="gone" android:layout_width="fill_parent" android:layout_height="wrap_content">
-                 <TextView android:textSize="14.0sp" android:textStyle="bold" android:textColor="@color/text_primary" android:paddingBottom="4.0dip" android:layout_width="fill_parent" android:layout_height="wrap_content" android:text="Server" />
-                 <LinearLayout android:orientation="horizontal" android:layout_width="fill_parent" android:layout_height="wrap_content" android:layout_marginBottom="12.0dip">
+-                <TextView android:textSize="14.0sp" android:textStyle="bold" android:textColor="@color/text_primary" android:paddingBottom="4.0dip" android:layout_width="fill_parent" android:layout_height="wrap_content" android:text="Server" />
+-                <LinearLayout android:orientation="horizontal" android:layout_width="fill_parent" android:layout_height="wrap_content" android:layout_marginBottom="12.0dip">
 -                    <EditText android:textSize="14.0sp" android:textColor="@color/text_primary" android:textColorHint="@color/text_secondary" android:id="@id/takServerAddress" android:background="@color/background" android:padding="12.0dip" android:layout_width="0.0dip" android:layout_height="48.0dip" android:hint="Server address" android:layout_weight="3.0" android:inputType="text" android:layout_marginEnd="8.0dip" />
 -                    <EditText android:textSize="14.0sp" android:textColor="@color/text_primary" android:textColorHint="@color/text_secondary" android:id="@id/takServerPort" android:background="@color/background" android:padding="12.0dip" android:layout_width="0.0dip" android:layout_height="48.0dip" android:hint="8089" android:layout_weight="1.0" android:inputType="number" />
++                <TextView android:textSize="14.0sp" android:textStyle="bold" android:textColor="@color/text_primary" android:paddingBottom="2.0dip" android:layout_width="fill_parent" android:layout_height="wrap_content" android:text="Server" />
++                <LinearLayout android:orientation="horizontal" android:layout_width="fill_parent" android:layout_height="wrap_content" android:layout_marginBottom="6.0dip">
 +                    <EditText android:textSize="14.0sp" android:textColor="@color/text_primary" android:textColorHint="@color/text_secondary" android:id="@id/takServerAddress" android:background="@drawable/tp_field_bg" android:padding="12.0dip" android:layout_width="0.0dip" android:layout_height="48.0dip" android:hint="Server address" android:layout_weight="3.0" android:inputType="text" android:layout_marginEnd="8.0dip" />
 +                    <EditText android:textSize="14.0sp" android:textColor="@color/text_primary" android:textColorHint="@color/text_secondary" android:id="@id/takServerPort" android:background="@drawable/tp_field_bg" android:padding="12.0dip" android:layout_width="0.0dip" android:layout_height="48.0dip" android:hint="8089" android:layout_weight="1.0" android:inputType="number" />
                  </LinearLayout>
-                 <TextView android:textSize="14.0sp" android:textStyle="bold" android:textColor="@color/text_primary" android:paddingBottom="4.0dip" android:layout_width="fill_parent" android:layout_height="wrap_content" android:text="Manual Enrollment" />
+-                <TextView android:textSize="14.0sp" android:textStyle="bold" android:textColor="@color/text_primary" android:paddingBottom="4.0dip" android:layout_width="fill_parent" android:layout_height="wrap_content" android:text="Manual Enrollment" />
 -                <EditText android:textSize="14.0sp" android:textColor="@color/text_primary" android:textColorHint="@color/text_secondary" android:id="@id/takEnrollUsername" android:background="@color/background" android:padding="12.0dip" android:layout_width="fill_parent" android:layout_height="48.0dip" android:layout_marginBottom="8.0dip" android:hint="TAK Username" android:inputType="text" />
 -                <EditText android:textSize="14.0sp" android:textColor="@color/text_primary" android:textColorHint="@color/text_secondary" android:id="@id/takEnrollPassword" android:background="@color/background" android:padding="12.0dip" android:layout_width="fill_parent" android:layout_height="48.0dip" android:layout_marginBottom="8.0dip" android:hint="TAK Password" android:inputType="textPassword" />
 -                <EditText android:textSize="14.0sp" android:textColor="@color/text_primary" android:textColorHint="@color/text_secondary" android:id="@id/takEnrollPort" android:background="@color/background" android:padding="12.0dip" android:layout_width="fill_parent" android:layout_height="48.0dip" android:layout_marginBottom="8.0dip" android:hint="Enrollment Port (default 8446)" android:inputType="number" />
 -                <Button android:textSize="14.0sp" android:textColor="@android:color/white" android:id="@id/takEnrollButton" android:layout_width="fill_parent" android:layout_height="44.0dip" android:layout_marginBottom="12.0dip" android:text="Enroll &amp; Download Certs" android:backgroundTint="@color/accent" />
-+                <EditText android:textSize="14.0sp" android:textColor="@color/text_primary" android:textColorHint="@color/text_secondary" android:id="@id/takEnrollUsername" android:background="@drawable/tp_field_bg" android:padding="12.0dip" android:layout_width="fill_parent" android:layout_height="48.0dip" android:layout_marginBottom="8.0dip" android:hint="TAK Username" android:inputType="text" />
-+                <EditText android:textSize="14.0sp" android:textColor="@color/text_primary" android:textColorHint="@color/text_secondary" android:id="@id/takEnrollPassword" android:background="@drawable/tp_field_bg" android:padding="12.0dip" android:layout_width="fill_parent" android:layout_height="48.0dip" android:layout_marginBottom="8.0dip" android:hint="TAK Password" android:inputType="textPassword" />
-+                <EditText android:textSize="14.0sp" android:textColor="@color/text_primary" android:textColorHint="@color/text_secondary" android:id="@id/takEnrollPort" android:background="@drawable/tp_field_bg" android:padding="12.0dip" android:layout_width="fill_parent" android:layout_height="48.0dip" android:layout_marginBottom="8.0dip" android:hint="Enrollment Port (default 8446)" android:inputType="number" />
-+                <Button android:textSize="14.0sp" android:textColor="@android:color/white" android:id="@id/takEnrollButton" android:layout_width="fill_parent" android:layout_height="44.0dip" android:layout_marginBottom="12.0dip" android:text="Enroll &amp; Download Certs" android:backgroundTint="@color/tp_btn_primary" />
-                 <TextView android:textSize="12.0sp" android:id="@id/certExpirationLabel" android:paddingBottom="12.0dip" android:visibility="gone" android:layout_width="fill_parent" android:layout_height="wrap_content" />
-                 <TextView android:textSize="14.0sp" android:textStyle="bold" android:textColor="@color/text_primary" android:paddingBottom="8.0dip" android:layout_width="fill_parent" android:layout_height="wrap_content" android:text="Manual Certificate Import" />
-                 <TextView android:textSize="13.0sp" android:textColor="@color/text_primary" android:paddingBottom="4.0dip" android:layout_width="fill_parent" android:layout_height="wrap_content" android:text="Trust Store (.p12)" />
-                 <LinearLayout android:gravity="center_vertical" android:orientation="horizontal" android:layout_width="fill_parent" android:layout_height="wrap_content" android:layout_marginBottom="12.0dip">
+-                <TextView android:textSize="12.0sp" android:id="@id/certExpirationLabel" android:paddingBottom="12.0dip" android:visibility="gone" android:layout_width="fill_parent" android:layout_height="wrap_content" />
+-                <TextView android:textSize="14.0sp" android:textStyle="bold" android:textColor="@color/text_primary" android:paddingBottom="8.0dip" android:layout_width="fill_parent" android:layout_height="wrap_content" android:text="Manual Certificate Import" />
+-                <TextView android:textSize="13.0sp" android:textColor="@color/text_primary" android:paddingBottom="4.0dip" android:layout_width="fill_parent" android:layout_height="wrap_content" android:text="Trust Store (.p12)" />
+-                <LinearLayout android:gravity="center_vertical" android:orientation="horizontal" android:layout_width="fill_parent" android:layout_height="wrap_content" android:layout_marginBottom="12.0dip">
 -                    <Button android:textSize="12.0sp" android:textColor="@android:color/white" android:id="@id/takTrustStoreButton" android:layout_width="wrap_content" android:layout_height="40.0dip" android:text="Select File" android:layout_marginEnd="12.0dip" android:backgroundTint="@color/accent" />
++                <TextView android:textSize="14.0sp" android:textStyle="bold" android:textColor="@color/text_primary" android:paddingBottom="2.0dip" android:layout_width="fill_parent" android:layout_height="wrap_content" android:text="Manual Enrollment" />
++                <EditText android:textSize="14.0sp" android:textColor="@color/text_primary" android:textColorHint="@color/text_secondary" android:id="@id/takEnrollUsername" android:background="@drawable/tp_field_bg" android:padding="12.0dip" android:layout_width="fill_parent" android:layout_height="48.0dip" android:layout_marginBottom="4.0dip" android:hint="TAK Username" android:inputType="text" />
++                <EditText android:textSize="14.0sp" android:textColor="@color/text_primary" android:textColorHint="@color/text_secondary" android:id="@id/takEnrollPassword" android:background="@drawable/tp_field_bg" android:padding="12.0dip" android:layout_width="fill_parent" android:layout_height="48.0dip" android:layout_marginBottom="4.0dip" android:hint="TAK Password" android:inputType="textPassword" />
++                <EditText android:textSize="14.0sp" android:textColor="@color/text_primary" android:textColorHint="@color/text_secondary" android:id="@id/takEnrollPort" android:background="@drawable/tp_field_bg" android:padding="12.0dip" android:layout_width="fill_parent" android:layout_height="48.0dip" android:layout_marginBottom="4.0dip" android:hint="Enrollment Port (default 8446)" android:inputType="number" />
++                <Button android:textSize="14.0sp" android:textColor="@android:color/white" android:id="@id/takEnrollButton" android:layout_width="fill_parent" android:layout_height="44.0dip" android:layout_marginBottom="6.0dip" android:text="Enroll &amp; Download Certs" android:backgroundTint="@color/tp_btn_primary" />
++                <TextView android:textSize="12.0sp" android:id="@id/certExpirationLabel" android:paddingBottom="6.0dip" android:visibility="gone" android:layout_width="fill_parent" android:layout_height="wrap_content" />
++                <TextView android:textSize="14.0sp" android:textStyle="bold" android:textColor="@color/text_primary" android:paddingBottom="4.0dip" android:layout_width="fill_parent" android:layout_height="wrap_content" android:text="Manual Certificate Import" />
++                <TextView android:textSize="13.0sp" android:textColor="@color/text_primary" android:paddingBottom="2.0dip" android:layout_width="fill_parent" android:layout_height="wrap_content" android:text="Trust Store (.p12)" />
++                <LinearLayout android:gravity="center_vertical" android:orientation="horizontal" android:layout_width="fill_parent" android:layout_height="wrap_content" android:layout_marginBottom="6.0dip">
 +                    <Button android:textSize="12.0sp" android:textColor="@android:color/white" android:id="@id/takTrustStoreButton" android:layout_width="wrap_content" android:layout_height="40.0dip" android:text="Select File" android:layout_marginEnd="12.0dip" android:backgroundTint="@color/tp_btn_primary" />
                      <TextView android:textSize="12.0sp" android:textColor="@color/text_secondary" android:ellipsize="middle" android:id="@id/takTrustStoreLabel" android:layout_width="0.0dip" android:layout_height="wrap_content" android:text="No file selected" android:singleLine="true" android:layout_weight="1.0" />
                  </LinearLayout>
-                 <TextView android:textSize="13.0sp" android:textColor="@color/text_primary" android:paddingBottom="4.0dip" android:layout_width="fill_parent" android:layout_height="wrap_content" android:text="Client Certificate (.p12)" />
-                 <LinearLayout android:gravity="center_vertical" android:orientation="horizontal" android:layout_width="fill_parent" android:layout_height="wrap_content" android:layout_marginBottom="12.0dip">
+-                <TextView android:textSize="13.0sp" android:textColor="@color/text_primary" android:paddingBottom="4.0dip" android:layout_width="fill_parent" android:layout_height="wrap_content" android:text="Client Certificate (.p12)" />
+-                <LinearLayout android:gravity="center_vertical" android:orientation="horizontal" android:layout_width="fill_parent" android:layout_height="wrap_content" android:layout_marginBottom="12.0dip">
 -                    <Button android:textSize="12.0sp" android:textColor="@android:color/white" android:id="@id/takClientCertButton" android:layout_width="wrap_content" android:layout_height="40.0dip" android:text="Select File" android:layout_marginEnd="12.0dip" android:backgroundTint="@color/accent" />
++                <TextView android:textSize="13.0sp" android:textColor="@color/text_primary" android:paddingBottom="2.0dip" android:layout_width="fill_parent" android:layout_height="wrap_content" android:text="Client Certificate (.p12)" />
++                <LinearLayout android:gravity="center_vertical" android:orientation="horizontal" android:layout_width="fill_parent" android:layout_height="wrap_content" android:layout_marginBottom="6.0dip">
 +                    <Button android:textSize="12.0sp" android:textColor="@android:color/white" android:id="@id/takClientCertButton" android:layout_width="wrap_content" android:layout_height="40.0dip" android:text="Select File" android:layout_marginEnd="12.0dip" android:backgroundTint="@color/tp_btn_primary" />
                      <TextView android:textSize="12.0sp" android:textColor="@color/text_secondary" android:ellipsize="middle" android:id="@id/takClientCertLabel" android:layout_width="0.0dip" android:layout_height="wrap_content" android:text="No file selected" android:singleLine="true" android:layout_weight="1.0" />
                  </LinearLayout>
-                 <TextView android:textSize="13.0sp" android:textColor="@color/text_primary" android:paddingBottom="4.0dip" android:layout_width="fill_parent" android:layout_height="wrap_content" android:text="Certificate Password" />
+-                <TextView android:textSize="13.0sp" android:textColor="@color/text_primary" android:paddingBottom="4.0dip" android:layout_width="fill_parent" android:layout_height="wrap_content" android:text="Certificate Password" />
 -                <EditText android:textSize="14.0sp" android:textColor="@color/text_primary" android:textColorHint="@color/text_secondary" android:id="@id/takCertPassword" android:background="@color/background" android:padding="12.0dip" android:layout_width="fill_parent" android:layout_height="48.0dip" android:layout_marginBottom="16.0dip" android:hint="atakatak" android:inputType="textPassword" />
 -                <Button android:textSize="14.0sp" android:textColor="@android:color/white" android:id="@id/takTestConnectionButton" android:layout_width="fill_parent" android:layout_height="44.0dip" android:layout_marginBottom="8.0dip" android:text="Test Connection" android:backgroundTint="@color/accent" />
-+                <EditText android:textSize="14.0sp" android:textColor="@color/text_primary" android:textColorHint="@color/text_secondary" android:id="@id/takCertPassword" android:background="@drawable/tp_field_bg" android:padding="12.0dip" android:layout_width="fill_parent" android:layout_height="48.0dip" android:layout_marginBottom="16.0dip" android:hint="atakatak" android:inputType="textPassword" />
-+                <Button android:textSize="14.0sp" android:textColor="@android:color/white" android:id="@id/takTestConnectionButton" android:layout_width="fill_parent" android:layout_height="44.0dip" android:layout_marginBottom="8.0dip" android:text="Test Connection" android:backgroundTint="@color/tp_btn_primary" />
++                <TextView android:textSize="13.0sp" android:textColor="@color/text_primary" android:paddingBottom="2.0dip" android:layout_width="fill_parent" android:layout_height="wrap_content" android:text="Certificate Password" />
++                <EditText android:textSize="14.0sp" android:textColor="@color/text_primary" android:textColorHint="@color/text_secondary" android:id="@id/takCertPassword" android:background="@drawable/tp_field_bg" android:padding="12.0dip" android:layout_width="fill_parent" android:layout_height="48.0dip" android:layout_marginBottom="8.0dip" android:hint="atakatak" android:inputType="textPassword" />
++                <Button android:textSize="14.0sp" android:textColor="@android:color/white" android:id="@id/takTestConnectionButton" android:layout_width="fill_parent" android:layout_height="44.0dip" android:layout_marginBottom="4.0dip" android:text="Test Connection" android:backgroundTint="@color/tp_btn_primary" />
              </LinearLayout>
          </LinearLayout>
      </ScrollView>
@@ -516,7 +543,16 @@ diff -ruN a/res/values/takpilot_colors.xml b/res/values/takpilot_colors.xml
 diff -ruN a/smali_classes2/com/taklite/client/MainActivity$6.smali b/smali_classes2/com/taklite/client/MainActivity$6.smali
 --- a/smali_classes2/com/taklite/client/MainActivity$6.smali
 +++ b/smali_classes2/com/taklite/client/MainActivity$6.smali
-@@ -369,6 +369,8 @@
+@@ -99,6 +99,8 @@
+ 
+     move-result-object p3
+ 
++    invoke-static {p3}, Lcom/taklite/client/mod/RemoteMarkers;->onDeleted(Ljava/lang/String;)V
++
+     iget-object v0, p0, Lcom/taklite/client/MainActivity$6;->this$0:Lcom/taklite/client/MainActivity;
+ 
+     .line 1562
+@@ -369,6 +371,8 @@
  
      iget-object v10, v0, Lcom/taklite/client/DroppedMarker;->remarks:Ljava/lang/String;
  
@@ -595,7 +631,7 @@ diff -ruN a/smali_classes2/com/taklite/client/MainActivity.smali b/smali_classes
  
      int-to-float v3, v6
  
-@@ -2998,6 +3013,112 @@
+@@ -2998,6 +3013,128 @@
      return-object v0
  .end method
  
@@ -640,6 +676,22 @@ diff -ruN a/smali_classes2/com/taklite/client/MainActivity.smali b/smali_classes
 +    invoke-direct {p0}, Lcom/taklite/client/MainActivity;->dismissRadialMenu()V
 +
 +    return-void
++.end method
++
++.method public modDroppedMarkers()Ljava/util/Map;
++    .locals 1
++
++    iget-object v0, p0, Lcom/taklite/client/MainActivity;->droppedMarkers:Ljava/util/Map;
++
++    return-object v0
++.end method
++
++.method public modTakUserMarkers()Ljava/util/Map;
++    .locals 1
++
++    iget-object v0, p0, Lcom/taklite/client/MainActivity;->takUserMarkers:Ljava/util/Map;
++
++    return-object v0
 +.end method
 +
 +.method public modSaveDroppedMarkers()V
@@ -708,7 +760,7 @@ diff -ruN a/smali_classes2/com/taklite/client/MainActivity.smali b/smali_classes
  .method private cycleMapType()V
      .locals 4
  
-@@ -3006,7 +3127,11 @@
+@@ -3006,7 +3143,11 @@
      add-int/lit8 v0, v0, 0x1
  
      .line 1806
@@ -721,7 +773,16 @@ diff -ruN a/smali_classes2/com/taklite/client/MainActivity.smali b/smali_classes
  
      iput v0, p0, Lcom/taklite/client/MainActivity;->currentMapType:I
  
-@@ -6091,6 +6216,8 @@
+@@ -4832,6 +4973,8 @@
+     .line 1526
+     invoke-direct {p0}, Lcom/taklite/client/MainActivity;->saveDroppedMarkers()V
+ 
++    invoke-static {p0, v2}, Lcom/taklite/client/mod/MarkerSend;->onPlaced(Lcom/taklite/client/MainActivity;Lcom/taklite/client/DroppedMarker;)V
++
+     return-void
+ .end method
+ 
+@@ -6091,6 +6234,8 @@
  
      iput-object v1, p0, Lcom/taklite/client/MainActivity;->activeRadialMenu:Landroid/view/View;
  
@@ -730,7 +791,20 @@ diff -ruN a/smali_classes2/com/taklite/client/MainActivity.smali b/smali_classes
      .line 1602
      invoke-virtual {p0}, Lcom/taklite/client/MainActivity;->getWindow()Landroid/view/Window;
  
-@@ -8948,6 +9075,8 @@
+@@ -8908,6 +9053,12 @@
+     invoke-direct {p0}, Lcom/taklite/client/MainActivity;->saveDroppedMarkers()V
+ 
+     :cond_3
++    invoke-static {p0, p1}, Lcom/taklite/client/mod/MarkerSend;->skipStockSendAfterEdit(Lcom/taklite/client/MainActivity;Lcom/taklite/client/DroppedMarker;)Z
++
++    move-result p2
++
++    if-nez p2, :goto_3
++
+     iget-object p2, p0, Lcom/taklite/client/MainActivity;->takManager:Lcom/taklite/client/tak/TakManager;
+ 
+     if-eqz p2, :cond_4
+@@ -8948,6 +9099,8 @@
      iget-object v9, p1, Lcom/taklite/client/DroppedMarker;->remarks:Ljava/lang/String;
  
      .line 1717
@@ -739,7 +813,7 @@ diff -ruN a/smali_classes2/com/taklite/client/MainActivity.smali b/smali_classes
      invoke-virtual/range {v0 .. v9}, Lcom/taklite/client/tak/TakManager;->sendMarker(DDDLjava/lang/String;Ljava/lang/String;Ljava/lang/String;)V
  
      const/4 p2, 0x1
-@@ -9232,6 +9361,8 @@
+@@ -9232,6 +9385,8 @@
  
      invoke-interface {v1, v2}, Lorg/osmdroid/config/IConfigurationProvider;->setUserAgentValue(Ljava/lang/String;)V
  
@@ -748,7 +822,7 @@ diff -ruN a/smali_classes2/com/taklite/client/MainActivity.smali b/smali_classes
      .line 146
      sget v1, Lcom/taklite/client/R$layout;->activity_main:I
  
-@@ -9624,6 +9755,8 @@
+@@ -9624,6 +9779,8 @@
      invoke-virtual {v0, p1}, Landroid/app/NotificationManager;->createNotificationChannel(Landroid/app/NotificationChannel;)V
  
      :cond_4
@@ -757,7 +831,7 @@ diff -ruN a/smali_classes2/com/taklite/client/MainActivity.smali b/smali_classes
      return-void
  .end method
  
-@@ -9768,6 +9901,8 @@
+@@ -9768,6 +9925,8 @@
      .line 260
      invoke-virtual {v1}, Lorg/osmdroid/views/MapView;->onResume()V
  
@@ -864,7 +938,33 @@ diff -ruN a/smali_classes2/com/taklite/client/tak/TakManager.smali b/smali_class
      if-eqz p1, :cond_e
  
      .line 282
-@@ -1482,6 +1484,10 @@
+@@ -680,6 +682,8 @@
+ .method public cancelAlert()V
+     .locals 3
+ 
++    invoke-static {}, Lcom/taklite/client/mod/MapOptions;->onAlertChanged()V
++
+     iget-object v0, p0, Lcom/taklite/client/tak/TakManager;->client:Lcom/taklite/client/tak/TakClient;
+ 
+     if-eqz v0, :cond_1
+@@ -961,6 +965,16 @@
+     return v0
+ .end method
+ 
++.method public modForgetUser(Ljava/lang/String;)V
++    .locals 1
++
++    iget-object v0, p0, Lcom/taklite/client/tak/TakManager;->takUsers:Ljava/util/concurrent/ConcurrentHashMap;
++
++    invoke-virtual {v0, p1}, Ljava/util/concurrent/ConcurrentHashMap;->remove(Ljava/lang/Object;)Ljava/lang/Object;
++
++    return-void
++.end method
++
+ .method public isConnected()Z
+     .locals 1
+ 
+@@ -1482,6 +1496,10 @@
  .method public onCotReceived(Ljava/lang/String;)V
      .locals 3
  
@@ -875,7 +975,16 @@ diff -ruN a/smali_classes2/com/taklite/client/tak/TakManager.smali b/smali_class
      .line 190
      new-instance v0, Ljava/lang/StringBuilder;
  
-@@ -1762,6 +1768,12 @@
+@@ -1610,6 +1628,8 @@
+ .method public sendAlert(Landroid/location/Location;Ljava/lang/String;)V
+     .locals 12
+ 
++    invoke-static {}, Lcom/taklite/client/mod/MapOptions;->onAlertChanged()V
++
+     iget-object v0, p0, Lcom/taklite/client/tak/TakManager;->client:Lcom/taklite/client/tak/TakClient;
+ 
+     if-eqz v0, :cond_1
+@@ -1762,6 +1782,12 @@
  
      iget-object v2, v0, Lcom/taklite/client/tak/TakManager;->uid:Ljava/lang/String;
  
@@ -888,7 +997,7 @@ diff -ruN a/smali_classes2/com/taklite/client/tak/TakManager.smali b/smali_class
      iget-object v3, v0, Lcom/taklite/client/tak/TakManager;->callsign:Ljava/lang/String;
  
      move-object v4, v1
-@@ -1783,6 +1795,8 @@
+@@ -1783,6 +1809,8 @@
  
      move-result-object v2
  
@@ -897,3 +1006,44 @@ diff -ruN a/smali_classes2/com/taklite/client/tak/TakManager.smali b/smali_class
      iget-object v3, v0, Lcom/taklite/client/tak/TakManager;->client:Lcom/taklite/client/tak/TakClient;
  
      .line 172
+diff -ruN a/smali_classes2/com/taklite/client/tak/TakUser.smali b/smali_classes2/com/taklite/client/tak/TakUser.smali
+--- a/smali_classes2/com/taklite/client/tak/TakUser.smali
++++ b/smali_classes2/com/taklite/client/tak/TakUser.smali
+@@ -355,6 +355,18 @@
+ .method public isExpired()Z
+     .locals 6
+ 
++    invoke-static {p0}, Lcom/taklite/client/mod/RemoteMarkers;->keep(Lcom/taklite/client/tak/TakUser;)Z
++
++    move-result v0
++
++    if-eqz v0, :mod_not_kept
++
++    const/4 v0, 0x0
++
++    return v0
++
++    :mod_not_kept
++
+     .line 45
+     invoke-static {}, Ljava/lang/System;->currentTimeMillis()J
+ 
+@@ -384,6 +396,18 @@
+ .method public isStale()Z
+     .locals 4
+ 
++    invoke-static {p0}, Lcom/taklite/client/mod/RemoteMarkers;->keep(Lcom/taklite/client/tak/TakUser;)Z
++
++    move-result v0
++
++    if-eqz v0, :mod_not_kept
++
++    const/4 v0, 0x0
++
++    return v0
++
++    :mod_not_kept
++
+     .line 41
+     invoke-static {}, Ljava/lang/System;->currentTimeMillis()J
+ 
