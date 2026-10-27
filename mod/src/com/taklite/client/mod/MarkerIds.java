@@ -49,9 +49,14 @@ public final class MarkerIds {
         return stableUid(deviceUid, key);
     }
 
-    /** Hook: TakManager.sendMarker, with the CoT about to go out (debug log only). */
+    /**
+     * Hook: TakManager.sendMarker, with the CoT about to go out. Logged only when turned on
+     * with {@code adb shell setprop log.tag.MarkerIds DEBUG}; TAK Lite already logs each send.
+     */
     public static void logOutgoing(String cot) {
-        android.util.Log.d("MarkerIds", "Marker CoT: " + cot);
+        if (android.util.Log.isLoggable("MarkerIds", android.util.Log.DEBUG)) {
+            android.util.Log.d("MarkerIds", "Marker CoT: " + cot);
+        }
     }
 
     /** Same device and marker key, same uid; different devices never collide. */

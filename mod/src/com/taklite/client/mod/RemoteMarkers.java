@@ -25,6 +25,17 @@ public final class RemoteMarkers {
     private static final String TAG = "RemoteMarkers";
     private static final int REMEMBER = 2000;
     private static final Pattern EVENT_TAG = Pattern.compile("<event\\b[^>]*>", Pattern.DOTALL);
+    // Runs for every message received, so the patterns are compiled once.
+    private static final Pattern UID = attrPattern("uid");
+    private static final Pattern TYPE = attrPattern("type");
+    private static final Pattern HOW = attrPattern("how");
+
+    /**
+     * Icon path given to markers that have none. Without a '/' TAK Lite doesn't look for
+     * an iconset file at all and goes straight to the CoT type's MIL-STD-2525 symbol,
+     * which avoids a failed asset lookup on every update.
+     */
+    public static final String STAND_IN_ICONSET = "mod-2525";
 
     /** uid -> whether its latest CoT described a marker. */
     private static final Map<String, Boolean> markers = Collections.synchronizedMap(
@@ -44,13 +55,14 @@ public final class RemoteMarkers {
         Matcher m = EVENT_TAG.matcher(cot);
         if (!m.find()) return;
         String tag = m.group();
-        String uid = attr(tag, "uid");
-        String type = attr(tag, "type");
+        String uid = attr(tag, UID);
+        String type = attr(tag, TYPE);
         if (uid == null || type == null) return;
-        boolean marker = isMarker(type, attr(tag, "how"), cot);
+        String how = type.startsWith("a-") ? attr(tag, HOW) : null;
+        boolean marker = isMarker(type, how, cot);
         Boolean before = markers.put(uid, marker);
         if (before == null || before != marker) {
-            Log.d(TAG, uid + " type=" + type + " how=" + attr(tag, "how") + " -> " + (marker ? "marker" : "contact"));
+            Log.d(TAG, uid + " type=" + type + " how=" + how + " -> " + (marker ? "marker" : "contact"));
         }
     }
 
@@ -73,14 +85,17 @@ public final class RemoteMarkers {
         if (uid == null || !Boolean.TRUE.equals(markers.get(uid))) return;
         String path = user.getIconsetPath();
         if (path == null || path.isEmpty()) {
-            // No iconset of this name exists, so TAK Lite falls back to the CoT type's 2525 symbol.
-            user.setIconsetPath("mod/" + user.getCotType());
+            user.setIconsetPath(STAND_IN_ICONSET);
         }
     }
 
     /** Attribute from a start tag; TAK clients use either quote style. */
-    static String attr(String tag, String name) {
-        Matcher m = Pattern.compile("\\s" + name + "\\s*=\\s*(['\"])(.*?)\\1", Pattern.DOTALL).matcher(tag);
+    static String attr(String tag, Pattern attribute) {
+        Matcher m = attribute.matcher(tag);
         return m.find() ? m.group(2) : null;
+    }
+
+    private static Pattern attrPattern(String name) {
+        return Pattern.compile("\\s" + name + "\\s*=\\s*(['\"])(.*?)\\1", Pattern.DOTALL);
     }
 }

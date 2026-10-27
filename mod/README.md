@@ -75,8 +75,10 @@ marker. Such markers show up as deletable markers with their type's
 MIL-STD-2525 symbol. Entries already listed as people by an older build go away
 when they expire or when the app restarts.
 
-For troubleshooting, `adb logcat -s RemoteMarkers MarkerIds` shows how each
-incoming item was classified and the full CoT of each marker sent.
+For troubleshooting, `adb logcat -s RemoteMarkers` shows how each incoming
+item was classified. To also log the full CoT of each marker sent, run
+`adb shell setprop log.tag.MarkerIds DEBUG` first and add `MarkerIds` to the
+logcat command (it's off by default, as it runs for every send).
 
 ## Imported data: data packages, KML, KMZ, GPX, CoT
 
@@ -141,6 +143,37 @@ translucent so they don't hide the map.
   may otherwise send traffic over the cellular network instead.
 - The zoom level is adjusted when you switch between 256 px and 512 px sources,
   so the map keeps the same scale on screen.
+
+## Battery notes for the stock code
+
+A battery review found these in TAK Lite 1.5.0 itself. They are left for the
+source code rather than patched into the decompiled app. None of them should
+change what the user sees.
+
+1. The map screen's own high-accuracy location request (15 s) is only removed
+   in `onDestroy`; remove it in `onPause` and request it again in `onResume`.
+   The service keeps sending position reports.
+2. `TakClient` reconnects every 5 s forever and reloads the certificates each
+   time: back off to 1–2 min, retry at once when a network comes up, and reuse
+   the SSL context.
+3. `setSoTimeout(1000)` wakes the read thread every second; `stopClient()`
+   already closes the socket, so 0 (or 60 s) is enough.
+4. One GPS fix at 0.5 m/s or more switches to moving mode (2 s, high
+   accuracy). Indoor speed jitter keeps flipping a still phone; ignore speed on
+   low-accuracy fixes, or require 2 moving fixes.
+5. The <30 % / <15 % battery steps only apply when the movement mode changes;
+   re-apply the location request when the battery crosses them.
+6. The TAK user listener stays registered while paused, so marker icons are
+   redrawn with the screen off; remove it in `onPause` (`onResume` redraws
+   everyone).
+7. `createTakMarkerIcon` decodes icon PNGs on every update; cache the
+   finished icons and skip `setIcon` when nothing changed.
+8. The drone video player retries every 3 s, also in the background; skip
+   retries while not visible and back off.
+9. Each CoT is parsed up to three times with a new parser factory; reuse the
+   factory and only run the disconnect/alert parses for those types.
+10. Full PLI XML and several lines per received message are logged; guard the
+    logging behind a debug check.
 
 ## Building
 

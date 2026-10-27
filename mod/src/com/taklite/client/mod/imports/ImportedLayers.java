@@ -22,6 +22,7 @@ import android.widget.Toast;
 import com.taklite.client.MainActivity;
 import com.taklite.client.mod.DarkDialog;
 import com.taklite.client.mod.ModUtil;
+import com.taklite.client.mod.RemoteMarkers;
 
 import org.osmdroid.util.BoundingBox;
 import org.osmdroid.util.GeoPoint;
@@ -210,8 +211,7 @@ final class ImportedLayers {
     /** TAK Lite's own symbol for a CoT unit (main thread: it uses TAK Lite's icon code). */
     private static Drawable takIcon(MainActivity activity, Feature f) {
         try {
-            // A path that resolves to no iconset makes TAK Lite fall back to the CoT type's symbol.
-            String iconset = f.iconsetPath != null ? f.iconsetPath : "mod/" + f.cotType;
+            String iconset = f.iconsetPath != null ? f.iconsetPath : RemoteMarkers.STAND_IN_ICONSET;
             Drawable d = activity.modMarkerIcon(label(f), f.cotType == null ? "" : f.cotType, iconset);
             if (d != null) return d;
         } catch (RuntimeException e) {
