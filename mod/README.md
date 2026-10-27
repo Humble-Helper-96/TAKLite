@@ -89,11 +89,11 @@ no cache headers). Stale tiles are refreshed when the server can be reached.
   is active (for example from the volume-key panic), the button shows anyway,
   so the alert can be cancelled.
 - **Send Marker Upon Placement** (the switch under it, off by default): on,
-  a marker goes to the team the moment you place it, and again when you edit
-  or move it. Off, nothing is sent on its own: placed, edited and moved markers
-  wait for Send on their radial menu. (Stock TAK Lite sent on every edit; that
-  now follows the switch too.) Markers always keep one uid, so a re-send
-  updates the same marker on teammates' maps.
+  a marker goes to the team the moment you place it, and again when you save
+  an edit or move it. Off, nothing is sent on its own: placed, edited and moved
+  markers wait until you choose Send (on the marker's menu, or Save & Send in
+  the edit dialog). Markers always keep one uid, so a re-send updates the same
+  marker on teammates' maps.
 - **Clear All Markers** (the red button in the Settings title bar): after a confirmation, removes every marker from this
   phone's map at once, both your own and those received from others. It
   doesn't send anything: markers you already sent stay on teammates' maps.
