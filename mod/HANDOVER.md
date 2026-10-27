@@ -93,7 +93,7 @@ nested zips refused, `OutOfMemoryError`/`StackOverflowError` caught on import th
 ## Build and test
 
 ```
-bash mod/build.sh      # official 1.5.0 APK + patch + src -> out/TAKLite-V1.5.0-custommaps.apk
+bash mod/build.sh      # official 1.5.0 APK + patch + src -> out/TAKLite-V1.5.1-custommaps.apk
 bash mod/test/run.sh   # 122 JVM checks incl. an end-to-end run against a mock TAK server (mTLS)
 ```
 
@@ -114,8 +114,12 @@ users must be signed with one key, so keep it.
 - Not handled on purpose: KML holes, ground overlays, network links, custom icon
   images; WMS and multi-layer map sources; sending packages from TAK Lite.
 
-## A separate branch: the restyled GUI
+## This branch: the restyled GUI (1.5.1)
 
-`claude/taklite-1.5.1-gui` carries the same features with a TAK Aware-style look
-(gold icons, black label boxes), versioned 1.5.1 so it can't be confused with this
-one. It is on hold and a few commits behind this branch; take it or leave it.
+This branch (`claude/taklite-1.5.1-gui`) carries the same features as `main` with a
+TAK Aware-style look: gold map-control icons, black label boxes, HUD capsules on the
+map, and dialogs/settings in the TAKPilot2 token palette (`Tak.java`, `MapLabel.java`,
+the restyled `DarkDialog`, the `tp_*` resources and five `MapLabel.background` calls in
+place of `Canvas.drawRoundRect` in `MainActivity`). It is versioned 1.5.1 so it can't
+be confused with the plain 1.5.0 on `main`. Take it or leave it; the features don't
+depend on it.

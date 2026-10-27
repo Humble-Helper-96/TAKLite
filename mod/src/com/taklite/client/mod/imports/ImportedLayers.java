@@ -461,7 +461,7 @@ final class ImportedLayers {
         if (e.count == 0) {
             d.addText("Its map sources are in Map Sources: long-press the map layers button to pick "
                     + "one, or edit them in Settings \u2192 Map Sources.");
-        } else d.addButton("Zoom To", Tak.STATE_GO, v -> {
+        } else d.addButton("Zoom To", Tak.BTN_PRIMARY, v -> {
             d.dismiss();
             try {
                 if (!e.visible) Imports.setVisible(e.id, true);
