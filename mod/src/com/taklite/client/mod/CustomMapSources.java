@@ -147,7 +147,11 @@ public final class CustomMapSources {
         }
     }
 
-    /** End of MainActivity.onCreate(): long-press on the map layers button opens the picker. */
+    /**
+     * End of MainActivity.onCreate(): a tap on the map layers button opens the picker
+     * (stock cycled to the next map, which means a lot of tapping once there are many
+     * sources); a long-press does the same.
+     */
     public static void onMainActivityCreated(final MainActivity activity) {
         Imports.onMainActivityCreated(activity);
         int id = activity.getResources().getIdentifier("mapTypeButton", "id", activity.getPackageName());
@@ -156,6 +160,8 @@ public final class CustomMapSources {
             Log.w(TAG, "mapTypeButton not found");
             return;
         }
+        // Replaces the stock listener set earlier in onCreate, which called cycleMapType().
+        button.setOnClickListener(v -> showPicker(activity));
         button.setOnLongClickListener(v -> {
             showPicker(activity);
             return true;
@@ -330,7 +336,7 @@ public final class CustomMapSources {
 
     // ==================== UI ====================
 
-    /** Long-press picker listing every map type, built-in and custom. */
+    /** Picker on the map layers button, listing every map type, built-in and custom. */
     static void showPicker(final MainActivity activity) {
         final DarkDialog d = new DarkDialog(activity, "Map Source");
         int selected = prefs(activity).getInt(KEY_MAP_TYPE, 0);
@@ -413,7 +419,7 @@ public final class CustomMapSources {
 
         d.addDivider();
         d.addLabel("Offline cache");
-        d.addText(TileCache.summary(context) + " To save an area ahead of time, long-press the "
+        d.addText(TileCache.summary(context) + " To save an area ahead of time, tap the "
                 + "map layers button and choose \"Download visible area\".");
         d.addButton("Cache size: " + ModUtil.formatSize(TileCache.limitMb(context) * 1024L * 1024L),
                 DarkDialog.COLOR_FIELD, v -> {
@@ -724,7 +730,6 @@ public final class CustomMapSources {
     private static void showTipOnce(Context context) {
         if (context instanceof MainActivity || prefs(context).getBoolean(KEY_TIP_SHOWN, false)) return;
         prefs(context).edit().putBoolean(KEY_TIP_SHOWN, true).apply();
-        Toast.makeText(context, "Tip: on the map, tap the layers button to cycle maps, "
-                + "or long-press it to pick one.", Toast.LENGTH_LONG).show();
+        Toast.makeText(context, "Tip: on the map, tap the layers button to pick a map.", Toast.LENGTH_LONG).show();
     }
 }

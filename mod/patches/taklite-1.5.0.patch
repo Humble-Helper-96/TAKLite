@@ -566,11 +566,13 @@ diff -ruN a/smali_classes2/com/taklite/client/tak/TakManager.smali b/smali_class
      iget-object v3, v0, Lcom/taklite/client/tak/TakManager;->callsign:Ljava/lang/String;
  
      move-object v4, v1
-@@ -1783,6 +1809,8 @@
+@@ -1783,6 +1809,10 @@
  
      move-result-object v2
  
-+    invoke-static {v2}, Lcom/taklite/client/mod/MarkerIds;->logOutgoing(Ljava/lang/String;)V
++    invoke-static {v2}, Lcom/taklite/client/mod/MarkerIds;->outgoing(Ljava/lang/String;)Ljava/lang/String;
++
++    move-result-object v2
 +
      iget-object v3, v0, Lcom/taklite/client/tak/TakManager;->client:Lcom/taklite/client/tak/TakClient;
  

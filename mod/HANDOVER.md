@@ -14,11 +14,11 @@ settings and the on-phone test list. This document is the developer's side.
 
 | Feature | Where |
 |---|---|
-| Custom XYZ map sources (TileServer GL and any `{z}/{x}/{y}`, `{-y}`, `{q}` quadkey, `{s:a,b,c}` URL), picker on long-press of the layers button, TileServer `styles.json` import | `mod/CustomMapSources`, `TemplateTileSource` |
+| Custom XYZ map sources (TileServer GL and any `{z}/{x}/{y}`, `{-y}`, `{q}` quadkey, `{s:a,b,c}` URL), picker on tap of the layers button, TileServer `styles.json` import | `mod/CustomMapSources`, `TemplateTileSource` |
 | Offline: cache size setting, Clear Cache, download of the visible area for a custom source (zoom cap 18) | `mod/TileCache`, `AreaDownloader` |
 | Data packages: received over TAK (`b-f-t-r`), downloaded from the server list, or imported as files; KML/KMZ/GPX/CoT drawn on the map; ATAK map source XML becomes map sources | `mod/imports/*` |
 | Markers from other clients classified as markers (not people), shown with their 2525 symbol, kept until deleted (ATAK behaviour) | `mod/RemoteMarkers` |
-| Stable marker uids (a re-send updates instead of duplicating) | `mod/MarkerIds` |
+| Stable marker uids (a re-send updates instead of duplicating); sent markers carry `<archive/>` and a 1-year stale so other clients keep them | `mod/MarkerIds` |
 | Move on the marker radial menu | `mod/MarkerMove` |
 | Settings: Show Emergency Button, Send Marker Upon Placement, Clear All Markers | `mod/MapOptions`, `MarkerSend` |
 
@@ -29,16 +29,16 @@ The patch adds 34 call sites. In Java they are:
 | Stock method | Add | Purpose |
 |---|---|---|
 | `MainActivity.onCreate`, right after osmdroid `Configuration` is loaded, before `setContentView` | `CustomMapSources.beforeMapCreated(this)` | cache size must be set before the MapView exists |
-| `MainActivity.onCreate`, end | `CustomMapSources.onMainActivityCreated(this)` | picker, toolbar Data Packages button, imported layers |
+| `MainActivity.onCreate`, end | `CustomMapSources.onMainActivityCreated(this)` | map picker on tap (replaces the stock `cycleMapType` listener) and long-press of the layers button, toolbar Data Packages button, imported layers |
 | `MainActivity.onResume`, end | `CustomMapSources.onMainActivityResumed(this)` | redraw after Settings changes, cache trim, Emergency button, queued clears |
 | `MainActivity.applyMapType(int)`, start | `String n = CustomMapSources.applyMapType(this, mapView, type); if (n != null) return n;` | custom types come after the four built-ins |
-| `MainActivity.cycleMapType` | `% CustomMapSources.getMapTypeCount(this)` instead of `% 4` | |
+| `MainActivity.cycleMapType` | `% CustomMapSources.getMapTypeCount(this)` instead of `% 4` | no longer reached from the button (see below), kept so the method stays correct |
 | `MainActivity.showRadialMenu(DroppedMarker)`, after the view is created | `MarkerMove.attach(this, activeRadialMenu, marker)` | the Move slice |
 | `RadialMenuView` | a fourth slice for markers, icon `MarkerMove.radialIcon(ctx)`, runs the `modMove` Runnable | |
 | `MainActivity.placeMarker`, end | `MarkerSend.onPlaced(this, marker)` | send on placement if the setting is on |
 | Edit-marker dialog, the SAVE button, after the marker is updated | `MarkerSend.onEdited(this, marker)` | with the setting on, a saved edit is sent at once; the SEND button is untouched |
 | Both stock `sendMarker` call sites (radial Send, edit Save), just before the call | `MarkerIds.beforeSend(marker)` | names the marker for the uid below |
-| `TakManager.sendMarker`, where the random uid is made | `uid = MarkerIds.uidForSend(this.uid, randomUid)` | stable uid; `MarkerIds.logOutgoing(cot)` after building |
+| `TakManager.sendMarker`, where the random uid is made, and between `CotBuilder.buildMarker` and `client.sendMessage` | `uid = MarkerIds.uidForSend(this.uid, randomUid)`; `cot = MarkerIds.outgoing(cot)` | stable uid; the CoT gets `<archive/>` and a stale time a year out (stock: 10 min), so TAK Aware/ATAK keep the marker until deleted. Unrecognised CoT goes out unchanged. In the source, do it in `CotBuilder.buildMarker` |
 | `TakManager.onCotReceived`, start | `Imports.onCotReceived(cot); RemoteMarkers.observe(cot);` | package shares; marker classification |
 | `TakManager.processCoT`, right after `CotParser.parse` | `RemoteMarkers.adjust(user)` | stand-in iconset path so the stock code files it as a marker |
 | `TakManager.sendAlert` / `cancelAlert`, start | `MapOptions.onAlertChanged()` | a hidden Emergency button must show while an alert is active |
@@ -73,6 +73,12 @@ because apktool can't allocate ids; with real ids, replace `findViewWithTag`.
 - **Send on placement (off by default):** on, a marker is sent when placed, when an
   edit is saved and when moved. Off, nothing is sent on its own, exactly as stock:
   the radial Send and the edit dialog's SEND button remain the ways to share.
+- **Sent markers are kept by other clients:** stock `buildMarker` set stale = time +
+  10 min and no `<archive/>`, so TAK Aware and ATAK treated a TAK Lite marker as a
+  transient and dropped it after a few minutes. `MarkerIds.outgoing` adds `<archive/>`
+  after `<detail>` and sets stale a year out. PLI and alert stale times are unchanged.
+- **Map button:** a tap opens the map list (as the long-press did) instead of cycling
+  to the next map, which got tedious with many sources.
 - **Tile cache:** osmdroid's own trimming is disabled (`setCleanupOnStart(false)`,
   GC frequency `Long.MAX_VALUE / 2`). It compares the cache *file* size with the
   limit, and SQLite files never shrink, so once over the limit it deleted a batch
@@ -95,7 +101,7 @@ nested zips refused, `OutOfMemoryError`/`StackOverflowError` caught on import th
 
 ```
 bash mod/build.sh      # official 1.5.0 APK + patch + src -> out/TAKLite-V1.5.0-custommaps.apk
-bash mod/test/run.sh   # 122 JVM checks incl. an end-to-end run against a mock TAK server (mTLS)
+bash mod/test/run.sh   # 137 JVM checks incl. an end-to-end run against a mock TAK server (mTLS)
 ```
 
 The build needs no Android SDK (D8 and apksig come from the jadx jar; everything is
