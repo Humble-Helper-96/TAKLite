@@ -211,7 +211,8 @@ final class ImportedLayers {
     /** TAK Lite's own symbol for a CoT unit (main thread: it uses TAK Lite's icon code). */
     private static Drawable takIcon(MainActivity activity, Feature f) {
         try {
-            String iconset = f.iconsetPath != null ? f.iconsetPath : RemoteMarkers.STAND_IN_ICONSET;
+            String iconset = f.iconsetPath != null ? RemoteMarkers.iconsetOrStandIn(f.iconsetPath)
+                    : RemoteMarkers.STAND_IN_ICONSET;
             Drawable d = activity.modMarkerIcon(label(f), f.cotType == null ? "" : f.cotType, iconset);
             if (d != null) return d;
         } catch (RuntimeException e) {

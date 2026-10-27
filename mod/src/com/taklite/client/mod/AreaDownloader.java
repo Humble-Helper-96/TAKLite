@@ -244,6 +244,9 @@ final class AreaDownloader {
         final boolean[] cancelled = new boolean[1];
         final boolean[] unreachable = new boolean[1];
         final long cacheBefore = TileCache.usedBytes(context);
+        Log.i(TAG, String.format(Locale.US, "Downloading %,d tiles, zoom %d-%d (%d px tiles); cache %s in use, limit %s",
+                total, fromZoom, toZoom, source.tileSize, ModUtil.formatSize(cacheBefore),
+                ModUtil.formatSize(TileCache.maxBytes())));
 
         final DarkDialog d = new DarkDialog(context, "Downloading " + source.name);
         d.dialog.setCancelable(false);
@@ -334,9 +337,13 @@ final class AreaDownloader {
                     headline = failed.get() == 0 ? "Done." : "Done, but some tiles failed. Run it again to retry them.";
                     status.setTextColor(failed.get() == 0 ? DarkDialog.COLOR_ACCENT : 0xFFFFC107);
                 }
-                long grown = TileCache.usedBytes(context) - cacheBefore;
-                status.setText(headline + "\n" + counts + "\nCache: " + ModUtil.formatSize(TileCache.usedBytes(context))
+                long used = TileCache.usedBytes(context);
+                long grown = used - cacheBefore;
+                status.setText(headline + "\n" + counts + "\nCache: " + ModUtil.formatSize(used)
                         + (grown > 0 ? " (+" + ModUtil.formatSize(grown) + ")" : ""));
+                Log.i(TAG, headline + " " + counts + "; cache " + ModUtil.formatSize(used) + " in use (+"
+                        + ModUtil.formatSize(Math.max(0, grown)) + "), limit " + ModUtil.formatSize(TileCache.maxBytes()));
+                TileCache.trimSoon(context);
             }
         });
         // Belt and braces: never leave the "running" flag stuck if the UI goes away.

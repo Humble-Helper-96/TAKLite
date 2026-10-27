@@ -213,7 +213,8 @@ public final class Imports {
         }
     }
 
-    static Context app() {
+    /** The application context once {@link #init} has run, else null. */
+    public static Context app() {
         return app;
     }
 }

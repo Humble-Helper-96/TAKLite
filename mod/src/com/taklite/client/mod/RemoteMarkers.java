@@ -62,7 +62,8 @@ public final class RemoteMarkers {
         boolean marker = isMarker(type, how, cot);
         Boolean before = markers.put(uid, marker);
         if (before == null || before != marker) {
-            Log.d(TAG, uid + " type=" + type + " how=" + how + " -> " + (marker ? "marker" : "contact"));
+            Log.d(TAG, uid + " type=" + type + (how != null ? " how=" + how : "") + " -> "
+                    + (marker ? "marker" : "not a marker"));
         }
     }
 
@@ -81,12 +82,58 @@ public final class RemoteMarkers {
     /** Hook: TakManager.processCoT, right after CotParser.parse. */
     public static void adjust(TakUser user) {
         if (user == null || user.isDrone()) return;
-        String uid = user.getUid();
-        if (uid == null || !Boolean.TRUE.equals(markers.get(uid))) return;
         String path = user.getIconsetPath();
-        if (path == null || path.isEmpty()) {
-            user.setIconsetPath(STAND_IN_ICONSET);
+        if (path != null && !path.isEmpty()) {
+            // Already filed as a marker by TAK Lite; just spare it a lookup that can't succeed.
+            if (!path.equals(STAND_IN_ICONSET) && !iconsetExists(path)) user.setIconsetPath(STAND_IN_ICONSET);
+            return;
         }
+        String uid = user.getUid();
+        if (uid != null && Boolean.TRUE.equals(markers.get(uid))) user.setIconsetPath(STAND_IN_ICONSET);
+    }
+
+    /**
+     * {@code path}, or the stand-in if it names an icon TAK Lite doesn't ship. TAK Lite
+     * redraws markers every 30 s, and a missing icon is looked for (and logged) each time;
+     * TAK Aware, for one, sends "/Ground track/a-h-G", which has no file. Both end up with
+     * the CoT type's MIL-STD-2525 symbol.
+     */
+    public static String iconsetOrStandIn(String path) {
+        return path == null || path.isEmpty() || iconsetExists(path) ? path : STAND_IN_ICONSET;
+    }
+
+    /** iconset path -> whether TAK Lite has that icon. */
+    private static final Map<String, Boolean> iconsets = Collections.synchronizedMap(
+            new LinkedHashMap<String, Boolean>(16, 0.75f, true) {
+                @Override
+                protected boolean removeEldestEntry(Map.Entry<String, Boolean> eldest) {
+                    return size() > 500;
+                }
+            });
+
+    /**
+     * Whether TAK Lite's icon lookup would find a file for {@code path}. Only paths of the
+     * form "group/folder/icon" are checked: for those TAK Lite opens assets/iconsets/folder/icon.
+     * Shorter paths go through TAK Lite's own group table and are assumed to exist.
+     */
+    private static boolean iconsetExists(String path) {
+        int slash = path.indexOf('/');
+        if (slash < 0) return true;
+        String rest = path.substring(slash + 1);
+        if (!rest.contains("/")) return true;
+        Boolean known = iconsets.get(path);
+        if (known != null) return known;
+        android.content.Context app = com.taklite.client.mod.imports.Imports.app();
+        if (app == null) return true;
+        boolean exists;
+        try (java.io.InputStream in = app.getAssets().open("iconsets/" + rest)) {
+            exists = true;
+        } catch (java.io.IOException e) {
+            exists = false;
+        }
+        iconsets.put(path, exists);
+        if (!exists) Log.d(TAG, "No icon for \"" + path + "\"; using the CoT type's symbol");
+        return exists;
     }
 
     /** Attribute from a start tag; TAK clients use either quote style. */

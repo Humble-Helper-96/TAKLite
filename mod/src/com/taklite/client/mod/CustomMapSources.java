@@ -142,6 +142,7 @@ public final class CustomMapSources {
         Imports.init(context);
         try {
             TileCache.apply(context);
+            TileCache.trimSoon(context);
         } catch (RuntimeException e) {
             Log.e(TAG, "Could not apply tile cache size", e);
         }
@@ -165,6 +166,7 @@ public final class CustomMapSources {
     /** MainActivity.onResume(): redraw the map if sources were edited in Settings. */
     public static void onMainActivityResumed(MainActivity activity) {
         refreshMainMap(activity);
+        TileCache.trimSoon(activity);
         Imports.onMainActivityResumed(activity);
     }
 

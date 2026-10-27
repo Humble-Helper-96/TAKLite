@@ -31,6 +31,8 @@ final class TileCache {
     private static final int[] LIMIT_CHOICES_MB = {300, 600, 1024, 2048, 4096, 8192, 16384};
     private static final long MB = 1024L * 1024L;
 
+    private static final String TAG = "TileCache";
+
     private TileCache() {
     }
 
@@ -42,8 +44,16 @@ final class TileCache {
      * Pushes the chosen limit into osmdroid. Like osmdroid itself, never lets the cache
      * grow past 95% of the space it could have, and trims it to 5/6 of the limit
      * (osmdroid's 500 MB / 600 MB ratio) when it overflows.
+     *
+     * Trimming is done by {@link #trimSoon} rather than osmdroid: osmdroid compares the
+     * cache FILE size with the limit, but SQLite never shrinks the file when tiles are
+     * deleted. Once the file had grown past the limit, osmdroid deleted another batch of
+     * the oldest tiles every 5 minutes of map use, eating into downloaded offline areas.
      */
     static void apply(Context context) {
+        SqlTileWriter.setCleanupOnStart(false);
+        // Effectively never (a year; Long.MAX_VALUE would overflow osmdroid's check).
+        Configuration.getInstance().setTileGCFrequencyInMillis(365L * 24 * 60 * 60 * 1000);
         long max = limitMb(context) * MB;
         long available = availableBytes(context);
         // 0 means the free space couldn't be read; keep the chosen limit rather than none.
@@ -51,10 +61,61 @@ final class TileCache {
         IConfigurationProvider config = Configuration.getInstance();
         config.setTileFileSystemCacheMaxBytes(max);
         config.setTileFileSystemCacheTrimBytes(max / 6 * 5);
+        Log.i(TAG, "Offline cache limit " + ModUtil.formatSize(max) + " (chosen " + limitMb(context) + " MB, "
+                + ModUtil.formatSize(freeBytes(cacheDir(context))) + " free, file "
+                + ModUtil.formatSize(fileBytes(context)) + ", in use " + ModUtil.formatSize(usedBytes(context)) + ")");
     }
 
-    static long usedBytes(Context context) {
+    /**
+     * Trims the cache to 5/6 of the limit, oldest tiles first, if the tiles in it take up more
+     * than the limit. On a background thread; called when the map opens or comes back, and
+     * after an area download.
+     */
+    static void trimSoon(Context context) {
+        final Context app = context.getApplicationContext();
+        new Thread(() -> {
+            try {
+                trim(app);
+            } catch (RuntimeException e) {
+                Log.e(TAG, "Could not trim the map cache", e);
+            }
+        }, "TileCacheTrim").start();
+    }
+
+    private static synchronized void trim(Context context) {
+        if (AreaDownloader.isRunning()) return; // runs again when the download ends
+        long used = usedBytes(context);
+        IConfigurationProvider config = Configuration.getInstance();
+        long max = config.getTileFileSystemCacheMaxBytes();
+        if (max <= 0 || used <= max) return;
+        long target = config.getTileFileSystemCacheTrimBytes();
+        Log.i(TAG, "Trimming the map cache: " + ModUtil.formatSize(used) + " in use, limit "
+                + ModUtil.formatSize(max) + ", trimming to " + ModUtil.formatSize(target));
+        new Cleaner().runCleanupOperation(used - target, config.getTileGCBulkSize(),
+                config.getTileGCBulkPauseInMillis(), true);
+        Log.i(TAG, "Map cache trimmed: " + ModUtil.formatSize(usedBytes(context)) + " in use");
+    }
+
+    /** Size of the cache file. SQLite keeps it at its largest and reuses the space of removed tiles. */
+    static long fileBytes(Context context) {
         return new File(cacheDir(context), SqlTileWriter.DATABASE_FILENAME).length();
+    }
+
+    /** Space the saved tiles take up inside the cache file (what the limit is about). */
+    static long usedBytes(Context context) {
+        File file = new File(cacheDir(context), SqlTileWriter.DATABASE_FILENAME);
+        if (!file.exists()) return 0;
+        try (SQLiteDatabase db = SQLiteDatabase.openDatabase(file.getPath(), null, SQLiteDatabase.OPEN_READONLY)) {
+            return (pragma(db, "page_count") - pragma(db, "freelist_count")) * pragma(db, "page_size");
+        } catch (RuntimeException e) {
+            return file.length();
+        }
+    }
+
+    private static long pragma(SQLiteDatabase db, String name) {
+        try (android.database.Cursor c = db.rawQuery("PRAGMA " + name, null)) {
+            return c.moveToFirst() ? c.getLong(0) : 0;
+        }
     }
 
     static long maxBytes() {
@@ -63,7 +124,7 @@ final class TileCache {
 
     /** Free space plus what the cache already uses: the most the cache could grow to. */
     private static long availableBytes(Context context) {
-        return freeBytes(cacheDir(context)) + usedBytes(context);
+        return freeBytes(cacheDir(context)) + fileBytes(context);
     }
 
     /**
@@ -108,15 +169,15 @@ final class TileCache {
         d.addAction("CLEAR", DarkDialog.COLOR_DANGER, v -> {
             d.dismiss();
             final Context app = context.getApplicationContext();
-            final long before = usedBytes(context);
+            final long before = fileBytes(context);
             Toast.makeText(context, "Clearing the map cache\u2026", Toast.LENGTH_SHORT).show();
             new Thread(() -> {
                 String message;
                 try {
                     new Cleaner().clearAll();
-                    message = "Map cache cleared: freed " + ModUtil.formatSize(Math.max(0, before - usedBytes(app))) + ".";
+                    message = "Map cache cleared: freed " + ModUtil.formatSize(Math.max(0, before - fileBytes(app))) + ".";
                 } catch (RuntimeException e) {
-                    Log.e("TileCache", "Could not clear the map cache", e);
+                    Log.e(TAG, "Could not clear the map cache", e);
                     message = "Could not clear the map cache: " + e.getMessage();
                 }
                 final String result = message;

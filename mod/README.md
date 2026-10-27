@@ -39,10 +39,16 @@ no cache headers). Stale tiles are refreshed when the server can be reached.
   For 512 px TileServer GL tiles that is their zoom 17, which has the same
   detail. Zoom in further and the map enlarges those tiles, offline too.
 - **Cache size**: Settings → Map Sources → Manage → **Cache size** (300 MB to
-  16 GB; the default is 600 MB). The cache is shared by all maps. When it's
-  full, the oldest tiles are removed down to 5/6 of the limit. The limit is
-  capped at 95% of the phone's free space. A lower limit takes effect the next
-  time the map opens.
+  16 GB; the default is 600 MB). The cache is shared by all maps. When the
+  saved tiles take up more than the limit, the oldest are removed down to 5/6
+  of it. This is checked when the map opens or comes back to the screen, and
+  after an area download. The limit is capped at 95% of the phone's free
+  space. The cache file itself doesn't shrink when tiles are removed; new
+  tiles reuse the space, and **Clear Cache** gives it back to the phone.
+
+  (osmdroid's own trimming is turned off: it compares the file size with the
+  limit, and as the file never shrinks it kept deleting the oldest tiles every
+  5 minutes, including downloaded areas.)
 - **Clear Cache**: Settings → Map Sources → Manage → **Clear Cache** deletes
   every saved tile for all maps, after a confirmation, and gives the space
   back to the phone. It is refused while an area download is running.
