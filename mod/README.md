@@ -106,9 +106,11 @@ Settings is grouped into **You** (callsign, phone, team, role), **Server**
 
 After you pick Friendly / Hostile / Unknown / Neutral from the **+** button, a bar
 under the top bar says "Tap the map to place the Friendly marker", with a ✕ to
-change your mind; stock TAK Lite waited for the tap with nothing on screen. A
-marker that is on your phone only carries a small hollow ring at its top right
-until it has been sent, and every placement and send ends in a short message
+change your mind; stock TAK Lite waited for the tap with nothing on screen. Once
+a marker has been sent, a small paper plane is drawn inside its symbol; a marker
+that is on your phone only has an empty symbol. (The plane is on the symbol, not
+the label, so it sits in the same place however long the name is.) Every
+placement and send ends in a short message
 ("Marker placed. Tap it, then the paper plane, to share it with the team." /
 "Marker sent to the team."; the paper plane is the Send slice of the marker's
 menu). The Emergency dialogs say what each alert means ("911 Alert: I need help
@@ -298,7 +300,7 @@ with your TAK server again), then install the APK.
 
 | Path | What it is |
 |---|---|
-| `src/com/taklite/client/mod/` | Map sources, in Java: source storage, the osmdroid tile source and dialogs (`CustomMapSources`), area download (`AreaDownloader`) and cache size (`TileCache`); marker move (`MarkerMove`), stable marker uids (`MarkerIds`) and classification of received markers (`RemoteMarkers`); sending and the "not sent" ring (`MarkerSend`), the placement and move hint bars (`MarkerPlace`, `HintBar`); shared helpers (`ModUtil`); this branch's theme: colour tokens (`Tak`), map label boxes (`MapLabel`) and the restyled `DarkDialog` |
+| `src/com/taklite/client/mod/` | Map sources, in Java: source storage, the osmdroid tile source and dialogs (`CustomMapSources`), area download (`AreaDownloader`) and cache size (`TileCache`); marker move (`MarkerMove`), stable marker uids (`MarkerIds`) and classification of received markers (`RemoteMarkers`); sending and the "sent" paper plane on the symbol (`MarkerSend`), the placement and move hint bars (`MarkerPlace`, `HintBar`); shared helpers (`ModUtil`); this branch's theme: colour tokens (`Tak`), map label boxes (`MapLabel`) and the restyled `DarkDialog` |
 | `src/com/taklite/client/mod/imports/` | Imported data: parsers (`CotShapes`, `KmlParser`, `GpxParser`, `Importer` for zips and data packages), storage (`ImportStore`), map layers and dialogs (`ImportedLayers`), data package downloads (`DataPackages`) and `ImportActivity` |
 | `patches/taklite-1.5.0.patch` | Changes to the decoded app: hooks in `MainActivity` (map-type cycling; `onCreate` before and after the map is created; `onResume`; `showRadialMenu`; the marker sends; new `modSetMapType`, `modMarkerIcon`, `modStopFollowing`, `modDismissRadialMenu`, `modSaveDroppedMarkers`, `modCancelPlacement`), `RadialMenuView` (a fourth slice), the marker uid in `TakManager.sendMarker`, `SettingsActivity.onCreate`, `TakManager.onCotReceived` and `processCoT` (remote marker classification), `TakUser.isStale`/`isExpired` and the remote marker delete (keeping received markers), new `TakManager.modForgetUser` and `MainActivity.modDroppedMarkers`/`modTakUserMarkers`, the Settings screen (You / Server / Map / Advanced groups, the two switches with help lines and Clear All Markers under Map), the + popup and the radial Send (placement hint bar, "sent" feedback), the Emergency dialog texts, `placeMarker` and the edit dialog's Save (send on placement), `TakManager.sendAlert`/`cancelAlert` (Emergency button re-check), and `TakLocationService.onCreate`; the Settings button, the toolbar Data Packages button and its icon; the `ImportActivity` manifest entry; `usesCleartextTraffic`; and the version name |
 | `stubs/` | Compile-time stand-ins for the stock classes the mod calls (`MainActivity`, `SettingsActivity`, `TakManager`, `TakUser` and others); they are not packaged |
