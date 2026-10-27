@@ -164,8 +164,12 @@ public final class Imports {
         @Override
         public void onActivityPaused(Activity activity) {
             if (activity == resumed) resumed = null;
-            // A half-done marker move would otherwise keep the whole map screen alive.
-            if (activity instanceof MainActivity) com.taklite.client.mod.MarkerMove.cancel();
+            // A half-done marker move would otherwise keep the whole map screen alive, and a
+            // placement waiting for a tap would come back as a hidden mode.
+            if (activity instanceof MainActivity) {
+                com.taklite.client.mod.MarkerMove.cancel();
+                com.taklite.client.mod.MarkerPlace.cancel((MainActivity) activity);
+            }
         }
 
         @Override

@@ -150,6 +150,7 @@ public final class CustomMapSources {
     /** End of MainActivity.onCreate(): long-press on the map layers button opens the picker. */
     public static void onMainActivityCreated(final MainActivity activity) {
         Imports.onMainActivityCreated(activity);
+        MarkerSend.refreshAll(activity);
         int id = activity.getResources().getIdentifier("mapTypeButton", "id", activity.getPackageName());
         View button = id == 0 ? null : activity.findViewById(id);
         if (button == null) {
@@ -412,16 +413,16 @@ public final class CustomMapSources {
         });
 
         d.addDivider();
-        d.addLabel("Offline cache");
+        d.addLabel("Saved maps (offline)");
         d.addText(TileCache.summary(context) + " To save an area ahead of time, long-press the "
                 + "map layers button and choose \"Download visible area\".");
-        d.addButton("Cache size: " + ModUtil.formatSize(TileCache.limitMb(context) * 1024L * 1024L),
+        d.addButton("Space for saved maps: " + ModUtil.formatSize(TileCache.limitMb(context) * 1024L * 1024L),
                 Tak.BTN_NEUTRAL, v -> {
                     d.dialog.setOnDismissListener(null);
                     d.dismiss();
                     TileCache.showLimitPicker(context, () -> showManager(context, onClose));
                 });
-        d.addButton("Clear Cache", Tak.BTN_DANGER, v -> {
+        d.addButton("Delete Saved Maps", Tak.BTN_DANGER, v -> {
             d.dialog.setOnDismissListener(null);
             d.dismiss();
             TileCache.confirmClear(context, () -> showManager(context, onClose));

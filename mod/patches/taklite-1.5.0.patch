@@ -233,7 +233,7 @@ diff -ruN a/res/layout/activity_onboarding.xml b/res/layout/activity_onboarding.
 diff -ruN a/res/layout/activity_settings.xml b/res/layout/activity_settings.xml
 --- a/res/layout/activity_settings.xml
 +++ b/res/layout/activity_settings.xml
-@@ -1,62 +1,69 @@
+@@ -1,62 +1,72 @@
  <?xml version="1.0" encoding="utf-8"?>
  <androidx.constraintlayout.widget.ConstraintLayout android:background="@color/background" android:layout_width="fill_parent" android:layout_height="fill_parent"
    xmlns:android="http://schemas.android.com/apk/res/android" xmlns:app="http://schemas.android.com/apk/res-auto">
@@ -241,7 +241,6 @@ diff -ruN a/res/layout/activity_settings.xml b/res/layout/activity_settings.xml
 +    <LinearLayout android:gravity="center_vertical" android:orientation="horizontal" android:id="@id/titleBar" android:background="@color/tp_surface_card" android:padding="12.0dip" android:layout_width="fill_parent" android:layout_height="wrap_content" android:elevation="4.0dip" app:layout_constraintTop_toTopOf="parent">
          <ImageButton android:id="@id/backButton" android:background="?selectableItemBackgroundBorderless" android:layout_width="40.0dip" android:layout_height="40.0dip" android:src="@android:drawable/ic_menu_revert" android:contentDescription="Back" app:tint="@android:color/white" />
          <TextView android:textSize="20.0sp" android:textStyle="bold" android:textColor="@android:color/white" android:layout_width="0.0dip" android:layout_height="wrap_content" android:text="@string/settings" android:layout_weight="1.0" android:layout_marginStart="8.0dip" />
-+        <Button android:textSize="12.0sp" android:textColor="@android:color/white" android:textAllCaps="false" android:tag="mod_clear_markers_button" android:layout_width="wrap_content" android:layout_height="36.0dip" android:minHeight="0.0dip" android:minWidth="0.0dip" android:paddingStart="12.0dip" android:paddingEnd="12.0dip" android:text="Clear All Markers" android:backgroundTint="@color/tp_btn_danger" />
      </LinearLayout>
      <ScrollView android:layout_width="fill_parent" android:layout_height="0.0dip" app:layout_constraintBottom_toBottomOf="parent" app:layout_constraintTop_toBottomOf="@id/titleBar">
          <LinearLayout android:orientation="vertical" android:background="@color/surface" android:padding="16.0dip" android:layout_width="fill_parent" android:layout_height="wrap_content">
@@ -266,6 +265,7 @@ diff -ruN a/res/layout/activity_settings.xml b/res/layout/activity_settings.xml
 -            <TextView android:textSize="12.0sp" android:textColor="@color/text_secondary" android:id="@id/takGroupStatus" android:visibility="gone" android:layout_width="fill_parent" android:layout_height="wrap_content" android:layout_marginBottom="12.0dip" />
 -            <View android:background="@color/background" android:layout_width="fill_parent" android:layout_height="1.0dip" android:layout_marginBottom="12.0dip" />
 -            <LinearLayout android:gravity="center_vertical" android:orientation="horizontal" android:id="@id/advancedHeader" android:background="?selectableItemBackground" android:layout_width="fill_parent" android:layout_height="44.0dip" android:layout_marginBottom="8.0dip" android:paddingStart="4.0dip" android:paddingEnd="4.0dip">
++            <TextView android:textSize="12.0sp" android:textStyle="bold" android:textColor="@color/tp_accent" android:paddingBottom="4.0dip" android:layout_width="fill_parent" android:layout_height="wrap_content" android:text="YOU" />
 +            <TextView android:textSize="14.0sp" android:textStyle="bold" android:textColor="@color/text_primary" android:paddingBottom="2.0dip" android:layout_width="fill_parent" android:layout_height="wrap_content" android:text="Callsign" />
 +            <EditText android:textSize="14.0sp" android:textColor="@color/text_primary" android:textColorHint="@color/text_secondary" android:id="@id/takCallsign" android:background="@drawable/tp_field_bg" android:padding="12.0dip" android:layout_width="fill_parent" android:layout_height="48.0dip" android:layout_marginBottom="6.0dip" android:hint="Your callsign" android:inputType="text" />
 +            <TextView android:textSize="14.0sp" android:textStyle="bold" android:textColor="@color/text_primary" android:paddingBottom="2.0dip" android:layout_width="fill_parent" android:layout_height="wrap_content" android:text="Phone Number" />
@@ -274,10 +274,8 @@ diff -ruN a/res/layout/activity_settings.xml b/res/layout/activity_settings.xml
 +            <Spinner android:id="@id/takTeamSpinner" android:background="@drawable/spinner_background" android:layout_width="fill_parent" android:layout_height="48.0dip" android:layout_marginBottom="6.0dip" android:popupBackground="@color/surface" />
 +            <TextView android:textSize="14.0sp" android:textStyle="bold" android:textColor="@color/text_primary" android:paddingBottom="2.0dip" android:layout_width="fill_parent" android:layout_height="wrap_content" android:text="Role" />
 +            <Spinner android:id="@id/takRoleSpinner" android:background="@drawable/spinner_background" android:layout_width="fill_parent" android:layout_height="48.0dip" android:layout_marginBottom="8.0dip" android:popupBackground="@color/surface" />
-+            <Switch android:textSize="14.0sp" android:textStyle="bold" android:textColor="@color/text_primary" android:tag="mod_emergency_toggle" android:layout_width="fill_parent" android:layout_height="40.0dip" android:layout_marginBottom="8.0dip" android:checked="true" android:text="Show Emergency Button" />
-+            <Switch android:textSize="14.0sp" android:textStyle="bold" android:textColor="@color/text_primary" android:tag="mod_send_on_place_toggle" android:layout_width="fill_parent" android:layout_height="40.0dip" android:layout_marginBottom="8.0dip" android:checked="false" android:text="Send Marker Upon Placement" />
 +            <View android:background="@color/tp_divider" android:layout_width="fill_parent" android:layout_height="1.0dip" android:layout_marginBottom="8.0dip" />
-+            <TextView android:textSize="14.0sp" android:textStyle="bold" android:textColor="@color/text_primary" android:paddingBottom="2.0dip" android:layout_width="fill_parent" android:layout_height="wrap_content" android:text="Server Enrollment" />
++            <TextView android:textSize="12.0sp" android:textStyle="bold" android:textColor="@color/tp_accent" android:paddingBottom="4.0dip" android:layout_width="fill_parent" android:layout_height="wrap_content" android:text="SERVER" />
 +            <TextView android:textSize="12.0sp" android:textColor="@color/text_secondary" android:paddingBottom="4.0dip" android:layout_width="fill_parent" android:layout_height="wrap_content" android:text="Scan QR code to connect to a TAK server" />
 +            <Button android:textSize="16.0sp" android:textColor="@android:color/white" android:id="@id/takEnrollQrButton" android:layout_width="fill_parent" android:layout_height="52.0dip" android:layout_marginBottom="4.0dip" android:text="Scan Enrollment QR Code" android:backgroundTint="@color/tp_btn_neutral" />
 +            <TextView android:textSize="12.0sp" android:textColor="@color/text_secondary" android:id="@id/takEnrollStatus" android:visibility="gone" android:layout_width="fill_parent" android:layout_height="wrap_content" android:layout_marginBottom="6.0dip" />
@@ -288,9 +286,14 @@ diff -ruN a/res/layout/activity_settings.xml b/res/layout/activity_settings.xml
 +            <Button android:textSize="14.0sp" android:textColor="@android:color/white" android:id="@id/takAssignGroupsButton" android:visibility="gone" android:layout_width="fill_parent" android:layout_height="44.0dip" android:layout_marginBottom="2.0dip" android:text="Assign Selected Groups" android:backgroundTint="@color/tp_btn_neutral" />
 +            <TextView android:textSize="12.0sp" android:textColor="@color/text_secondary" android:id="@id/takGroupStatus" android:visibility="gone" android:layout_width="fill_parent" android:layout_height="wrap_content" android:layout_marginBottom="6.0dip" />
 +            <View android:background="@color/tp_divider" android:layout_width="fill_parent" android:layout_height="1.0dip" android:layout_marginBottom="6.0dip" />
-+            <TextView android:textSize="14.0sp" android:textStyle="bold" android:textColor="@color/text_primary" android:paddingBottom="2.0dip" android:layout_width="fill_parent" android:layout_height="wrap_content" android:text="Map Sources" />
++            <TextView android:textSize="12.0sp" android:textStyle="bold" android:textColor="@color/tp_accent" android:paddingBottom="4.0dip" android:layout_width="fill_parent" android:layout_height="wrap_content" android:text="MAP" />
++            <Switch android:textSize="14.0sp" android:textStyle="bold" android:textColor="@color/text_primary" android:tag="mod_emergency_toggle" android:layout_width="fill_parent" android:layout_height="40.0dip" android:layout_marginBottom="0.0dip" android:checked="true" android:text="Show Emergency Button" />
++            <TextView android:textSize="12.0sp" android:textColor="@color/text_secondary" android:paddingBottom="6.0dip" android:layout_width="fill_parent" android:layout_height="wrap_content" android:text="Hides the red Emergency button on the map. It comes back while an alert from this phone is active, so it can be cancelled." />
++            <Switch android:textSize="14.0sp" android:textStyle="bold" android:textColor="@color/text_primary" android:tag="mod_send_on_place_toggle" android:layout_width="fill_parent" android:layout_height="40.0dip" android:layout_marginBottom="0.0dip" android:checked="false" android:text="Send Marker Upon Placement" />
++            <TextView android:textSize="12.0sp" android:textColor="@color/text_secondary" android:paddingBottom="6.0dip" android:layout_width="fill_parent" android:layout_height="wrap_content" android:text="On: a marker you place, save after editing, or move goes to the team at once. Off: nothing is shared until you tap Send." />
 +            <TextView android:textSize="12.0sp" android:textColor="@color/text_secondary" android:paddingBottom="4.0dip" android:layout_width="fill_parent" android:layout_height="wrap_content" android:text="Add your own tile servers, e.g. TileServer GL" />
 +            <Button android:textSize="14.0sp" android:textColor="@android:color/white" android:tag="custom_map_sources_button" android:layout_width="fill_parent" android:layout_height="44.0dip" android:layout_marginBottom="6.0dip" android:text="Manage Map Sources" android:backgroundTint="@color/tp_btn_primary" />
++            <Button android:textSize="14.0sp" android:textColor="@android:color/white" android:tag="mod_clear_markers_button" android:layout_width="fill_parent" android:layout_height="44.0dip" android:layout_marginBottom="6.0dip" android:text="Clear All Markers" android:backgroundTint="@color/tp_btn_danger" />
 +            <View android:background="@color/tp_divider" android:layout_width="fill_parent" android:layout_height="1.0dip" android:layout_marginBottom="6.0dip" />
 +            <LinearLayout android:gravity="center_vertical" android:orientation="horizontal" android:id="@id/advancedHeader" android:background="?selectableItemBackground" android:layout_width="fill_parent" android:layout_height="44.0dip" android:layout_marginBottom="4.0dip" android:paddingStart="4.0dip" android:paddingEnd="4.0dip">
                  <TextView android:textSize="14.0sp" android:textStyle="bold" android:textColor="@color/text_secondary" android:id="@id/advancedHeaderText" android:layout_width="0.0dip" android:layout_height="wrap_content" android:text="Advanced Settings" android:layout_weight="1.0" />
@@ -368,14 +371,38 @@ diff -ruN a/res/layout/activity_track_history.xml b/res/layout/activity_track_hi
 diff -ruN a/res/layout/dialog_alert.xml b/res/layout/dialog_alert.xml
 --- a/res/layout/dialog_alert.xml
 +++ b/res/layout/dialog_alert.xml
-@@ -10,7 +10,7 @@
+@@ -3,14 +3,26 @@
+   xmlns:android="http://schemas.android.com/apk/res/android">
+     <TextView android:textSize="16.0sp" android:textStyle="bold" android:textColor="@android:color/white" android:id="@id/alertDialogTitle" android:background="@drawable/dialog_rounded_top" android:padding="16.0dip" android:layout_width="fill_parent" android:layout_height="wrap_content" android:text="Send Emergency Alert" />
+     <LinearLayout android:orientation="vertical" android:id="@id/alertOptionsContainer" android:paddingTop="8.0dip" android:paddingBottom="8.0dip" android:layout_width="fill_parent" android:layout_height="wrap_content" android:paddingStart="8.0dip" android:paddingEnd="8.0dip">
+-        <TextView android:textSize="15.0sp" android:textColor="#ffcccccc" android:id="@id/alertOption911" android:background="?selectableItemBackground" android:padding="14.0dip" android:focusable="true" android:clickable="true" android:layout_width="fill_parent" android:layout_height="wrap_content" android:text="911 Alert" />
+-        <TextView android:textSize="15.0sp" android:textColor="#ffcccccc" android:id="@id/alertOptionBell" android:background="?selectableItemBackground" android:padding="14.0dip" android:focusable="true" android:clickable="true" android:layout_width="fill_parent" android:layout_height="wrap_content" android:text="Ring The Bell" />
+-        <TextView android:textSize="15.0sp" android:textColor="#ffcccccc" android:id="@id/alertOptionContact" android:background="?selectableItemBackground" android:padding="14.0dip" android:focusable="true" android:clickable="true" android:layout_width="fill_parent" android:layout_height="wrap_content" android:text="In Contact" />
+-        <TextView android:textSize="15.0sp" android:textColor="#ffcccccc" android:id="@id/alertOptionGeofence" android:background="?selectableItemBackground" android:padding="14.0dip" android:focusable="true" android:clickable="true" android:layout_width="fill_parent" android:layout_height="wrap_content" android:text="Geo-fence Breached" />
++        <LinearLayout android:orientation="vertical" android:id="@id/alertOption911" android:background="?selectableItemBackground" android:paddingLeft="16.0dip" android:paddingTop="10.0dip" android:paddingRight="16.0dip" android:paddingBottom="10.0dip" android:layout_width="fill_parent" android:layout_height="wrap_content">
++            <TextView android:textSize="15.0sp" android:textStyle="bold" android:textColor="@android:color/white" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="911 Alert" />
++            <TextView android:textSize="12.0sp" android:textColor="#ffb0b0b0" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="I need help now" />
++        </LinearLayout>
++        <LinearLayout android:orientation="vertical" android:id="@id/alertOptionBell" android:background="?selectableItemBackground" android:paddingLeft="16.0dip" android:paddingTop="10.0dip" android:paddingRight="16.0dip" android:paddingBottom="10.0dip" android:layout_width="fill_parent" android:layout_height="wrap_content">
++            <TextView android:textSize="15.0sp" android:textStyle="bold" android:textColor="@android:color/white" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Ring The Bell" />
++            <TextView android:textSize="12.0sp" android:textColor="#ffb0b0b0" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="General alarm: everyone take notice" />
++        </LinearLayout>
++        <LinearLayout android:orientation="vertical" android:id="@id/alertOptionContact" android:background="?selectableItemBackground" android:paddingLeft="16.0dip" android:paddingTop="10.0dip" android:paddingRight="16.0dip" android:paddingBottom="10.0dip" android:layout_width="fill_parent" android:layout_height="wrap_content">
++            <TextView android:textSize="15.0sp" android:textStyle="bold" android:textColor="@android:color/white" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="In Contact" />
++            <TextView android:textSize="12.0sp" android:textColor="#ffb0b0b0" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="I'm facing a threat right now" />
++        </LinearLayout>
++        <LinearLayout android:orientation="vertical" android:id="@id/alertOptionGeofence" android:background="?selectableItemBackground" android:paddingLeft="16.0dip" android:paddingTop="10.0dip" android:paddingRight="16.0dip" android:paddingBottom="10.0dip" android:layout_width="fill_parent" android:layout_height="wrap_content">
++            <TextView android:textSize="15.0sp" android:textStyle="bold" android:textColor="@android:color/white" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Geo-fence Breached" />
++            <TextView android:textSize="12.0sp" android:textColor="#ffb0b0b0" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="I've crossed a boundary I shouldn't have" />
++        </LinearLayout>
      </LinearLayout>
-     <TextView android:textSize="14.0sp" android:textColor="#ffcccccc" android:id="@id/alertCancelMessage" android:padding="16.0dip" android:visibility="gone" android:layout_width="fill_parent" android:layout_height="wrap_content" android:text="Cancel your active emergency alert?" />
+-    <TextView android:textSize="14.0sp" android:textColor="#ffcccccc" android:id="@id/alertCancelMessage" android:padding="16.0dip" android:visibility="gone" android:layout_width="fill_parent" android:layout_height="wrap_content" android:text="Cancel your active emergency alert?" />
++    <TextView android:textSize="14.0sp" android:textColor="#ffcccccc" android:id="@id/alertCancelMessage" android:padding="16.0dip" android:visibility="gone" android:layout_width="fill_parent" android:layout_height="wrap_content" android:text="Your emergency alert is still active. Stop it and tell the team you're OK?" />
      <LinearLayout android:gravity="end" android:orientation="horizontal" android:background="@drawable/dialog_rounded_bottom" android:padding="12.0dip" android:layout_width="fill_parent" android:layout_height="wrap_content">
 -        <TextView android:textSize="14.0sp" android:textStyle="bold" android:textColor="#ffaaaaaa" android:id="@id/btnAlertCancel" android:background="?selectableItemBackground" android:padding="10.0dip" android:focusable="true" android:clickable="true" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="CANCEL" />
 -        <TextView android:textSize="14.0sp" android:textStyle="bold" android:textColor="#ffff5555" android:id="@id/btnAlertConfirm" android:background="?selectableItemBackground" android:padding="10.0dip" android:focusable="true" android:visibility="gone" android:clickable="true" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="CANCEL ALERT" android:layout_marginStart="8.0dip" />
-+        <TextView android:textSize="14.0sp" android:textStyle="bold" android:textColor="@color/tp_accent" android:id="@id/btnAlertCancel" android:background="?selectableItemBackground" android:padding="10.0dip" android:focusable="true" android:clickable="true" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="CANCEL" />
-+        <TextView android:textSize="14.0sp" android:textStyle="bold" android:textColor="@color/tp_btn_danger_dialog" android:id="@id/btnAlertConfirm" android:background="?selectableItemBackground" android:padding="10.0dip" android:focusable="true" android:visibility="gone" android:clickable="true" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="CANCEL ALERT" android:layout_marginStart="8.0dip" />
++        <TextView android:textSize="14.0sp" android:textStyle="bold" android:textColor="@color/tp_accent" android:id="@id/btnAlertCancel" android:background="?selectableItemBackground" android:padding="10.0dip" android:focusable="true" android:clickable="true" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="CLOSE" />
++        <TextView android:textSize="14.0sp" android:textStyle="bold" android:textColor="@color/tp_btn_danger_dialog" android:id="@id/btnAlertConfirm" android:background="?selectableItemBackground" android:padding="10.0dip" android:focusable="true" android:visibility="gone" android:clickable="true" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="STOP ALERT" android:layout_marginStart="8.0dip" />
      </LinearLayout>
  </LinearLayout>
 \ No newline at end of file
@@ -561,6 +588,17 @@ diff -ruN a/smali_classes2/com/taklite/client/MainActivity$6.smali b/smali_class
      .line 1584
      invoke-virtual/range {v1 .. v10}, Lcom/taklite/client/tak/TakManager;->sendMarker(DDDLjava/lang/String;Ljava/lang/String;Ljava/lang/String;)V
  
+@@ -379,6 +383,10 @@
+     .line 1586
+     iput-boolean v1, v0, Lcom/taklite/client/DroppedMarker;->transmitted:Z
+ 
++    iget-object v1, p0, Lcom/taklite/client/MainActivity$6;->this$0:Lcom/taklite/client/MainActivity;
++
++    invoke-static {v1, v0}, Lcom/taklite/client/mod/MarkerSend;->onSent(Lcom/taklite/client/MainActivity;Lcom/taklite/client/DroppedMarker;)V
++
+     return-void
+ 
+     :cond_1
 diff -ruN a/smali_classes2/com/taklite/client/MainActivity.smali b/smali_classes2/com/taklite/client/MainActivity.smali
 --- a/smali_classes2/com/taklite/client/MainActivity.smali
 +++ b/smali_classes2/com/taklite/client/MainActivity.smali
@@ -631,7 +669,7 @@ diff -ruN a/smali_classes2/com/taklite/client/MainActivity.smali b/smali_classes
  
      int-to-float v3, v6
  
-@@ -2998,6 +3013,128 @@
+@@ -2998,6 +3013,138 @@
      return-object v0
  .end method
  
@@ -692,6 +730,16 @@ diff -ruN a/smali_classes2/com/taklite/client/MainActivity.smali b/smali_classes
 +    iget-object v0, p0, Lcom/taklite/client/MainActivity;->takUserMarkers:Ljava/util/Map;
 +
 +    return-object v0
++.end method
++
++.method public modCancelPlacement()V
++    .locals 1
++
++    const/4 v0, 0x0
++
++    iput-object v0, p0, Lcom/taklite/client/MainActivity;->pendingMarkerAffiliation:Ljava/lang/String;
++
++    return-void
 +.end method
 +
 +.method public modSaveDroppedMarkers()V
@@ -760,7 +808,7 @@ diff -ruN a/smali_classes2/com/taklite/client/MainActivity.smali b/smali_classes
  .method private cycleMapType()V
      .locals 4
  
-@@ -3006,7 +3143,11 @@
+@@ -3006,7 +3153,11 @@
      add-int/lit8 v0, v0, 0x1
  
      .line 1806
@@ -773,7 +821,16 @@ diff -ruN a/smali_classes2/com/taklite/client/MainActivity.smali b/smali_classes
  
      iput v0, p0, Lcom/taklite/client/MainActivity;->currentMapType:I
  
-@@ -4832,6 +4973,8 @@
+@@ -4542,7 +4693,7 @@
+ 
+     check-cast v3, Landroid/widget/TextView;
+ 
+-    const-string v4, "Cancel Alert"
++    const-string v4, "Stop the Alert?"
+ 
+     invoke-virtual {v3, v4}, Landroid/widget/TextView;->setText(Ljava/lang/CharSequence;)V
+ 
+@@ -4832,6 +4983,8 @@
      .line 1526
      invoke-direct {p0}, Lcom/taklite/client/MainActivity;->saveDroppedMarkers()V
  
@@ -782,7 +839,7 @@ diff -ruN a/smali_classes2/com/taklite/client/MainActivity.smali b/smali_classes
      return-void
  .end method
  
-@@ -6091,6 +6234,8 @@
+@@ -6091,6 +6244,8 @@
  
      iput-object v1, p0, Lcom/taklite/client/MainActivity;->activeRadialMenu:Landroid/view/View;
  
@@ -791,7 +848,34 @@ diff -ruN a/smali_classes2/com/taklite/client/MainActivity.smali b/smali_classes
      .line 1602
      invoke-virtual {p0}, Lcom/taklite/client/MainActivity;->getWindow()Landroid/view/Window;
  
-@@ -8779,6 +8924,8 @@
+@@ -7576,7 +7731,7 @@
+ 
+     invoke-virtual {p2, v0}, Lcom/google/android/material/floatingactionbutton/FloatingActionButton;->setBackgroundTintList(Landroid/content/res/ColorStateList;)V
+ 
+-    const-string p2, "Alert cancelled"
++    const-string p2, "Alert stopped. Your team has been told."
+ 
+     const/4 v0, 0x0
+ 
+@@ -7634,7 +7789,7 @@
+     .line 1260
+     new-instance p3, Ljava/lang/StringBuilder;
+ 
+-    const-string v1, "Alert sent: "
++    const-string v1, "Alert sent to the team: "
+ 
+     invoke-direct {p3, v1}, Ljava/lang/StringBuilder;-><init>(Ljava/lang/String;)V
+ 
+@@ -8663,6 +8818,8 @@
+     :goto_0
+     iput-object p2, p0, Lcom/taklite/client/MainActivity;->pendingMarkerAffiliation:Ljava/lang/String;
+ 
++    invoke-static {p0, p2}, Lcom/taklite/client/mod/MarkerPlace;->armed(Lcom/taklite/client/MainActivity;Ljava/lang/String;)V
++
+     .line 1488
+     invoke-virtual {p1}, Landroid/widget/PopupWindow;->dismiss()V
+ 
+@@ -8779,6 +8936,8 @@
      invoke-virtual {p2}, Lorg/osmdroid/views/MapView;->invalidate()V
  
      .line 1696
@@ -800,7 +884,16 @@ diff -ruN a/smali_classes2/com/taklite/client/MainActivity.smali b/smali_classes
      iget-boolean p1, p1, Lcom/taklite/client/DroppedMarker;->remote:Z
  
      if-nez p1, :cond_3
-@@ -8948,6 +9095,8 @@
+@@ -8908,6 +9067,8 @@
+     invoke-direct {p0}, Lcom/taklite/client/MainActivity;->saveDroppedMarkers()V
+ 
+     :cond_3
++    invoke-static {p0, p1}, Lcom/taklite/client/mod/MarkerSend;->refresh(Lcom/taklite/client/MainActivity;Lcom/taklite/client/DroppedMarker;)V
++
+     iget-object p2, p0, Lcom/taklite/client/MainActivity;->takManager:Lcom/taklite/client/tak/TakManager;
+ 
+     if-eqz p2, :cond_4
+@@ -8948,6 +9109,8 @@
      iget-object v9, p1, Lcom/taklite/client/DroppedMarker;->remarks:Ljava/lang/String;
  
      .line 1717
@@ -809,7 +902,16 @@ diff -ruN a/smali_classes2/com/taklite/client/MainActivity.smali b/smali_classes
      invoke-virtual/range {v0 .. v9}, Lcom/taklite/client/tak/TakManager;->sendMarker(DDDLjava/lang/String;Ljava/lang/String;Ljava/lang/String;)V
  
      const/4 p2, 0x1
-@@ -9232,6 +9381,8 @@
+@@ -8955,6 +9118,8 @@
+     .line 1719
+     iput-boolean p2, p1, Lcom/taklite/client/DroppedMarker;->transmitted:Z
+ 
++    invoke-static {p0, p1}, Lcom/taklite/client/mod/MarkerSend;->onSent(Lcom/taklite/client/MainActivity;Lcom/taklite/client/DroppedMarker;)V
++
+     .line 1720
+     iget-boolean p1, p1, Lcom/taklite/client/DroppedMarker;->remote:Z
+ 
+@@ -9232,6 +9397,8 @@
  
      invoke-interface {v1, v2}, Lorg/osmdroid/config/IConfigurationProvider;->setUserAgentValue(Ljava/lang/String;)V
  
@@ -818,7 +920,7 @@ diff -ruN a/smali_classes2/com/taklite/client/MainActivity.smali b/smali_classes
      .line 146
      sget v1, Lcom/taklite/client/R$layout;->activity_main:I
  
-@@ -9624,6 +9775,8 @@
+@@ -9624,6 +9791,8 @@
      invoke-virtual {v0, p1}, Landroid/app/NotificationManager;->createNotificationChannel(Landroid/app/NotificationChannel;)V
  
      :cond_4
@@ -827,7 +929,7 @@ diff -ruN a/smali_classes2/com/taklite/client/MainActivity.smali b/smali_classes
      return-void
  .end method
  
-@@ -9768,6 +9921,8 @@
+@@ -9768,6 +9937,8 @@
      .line 260
      invoke-virtual {v1}, Lorg/osmdroid/views/MapView;->onResume()V
  

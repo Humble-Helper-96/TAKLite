@@ -90,10 +90,10 @@ final class AreaDownloader {
         final DarkDialog d = new DarkDialog(context, "Download Area for Offline");
         d.addText("Saves \"" + source.name + "\" for the area on screen, so it keeps working "
                 + "without the server. You are at zoom " + currentZoom + "; each extra zoom "
-                + "level needs about 4× the tiles. Downloads go up to zoom " + maxZoom
+                + "level needs about 4× the data. Downloads go up to zoom " + maxZoom
                 + (maxZoom < MAX_STANDARD_ZOOM ? " (street level; the same detail as zoom "
                 + MAX_STANDARD_ZOOM + " on standard 256 px maps)" : " (street level)")
-                + "; zoom in further and the map enlarges those tiles, offline too.");
+                + "; zoom in further and the map enlarges what it saved, offline too.");
         final EditText from = d.addField("From zoom", null, String.valueOf(source.minZoom),
                 InputType.TYPE_CLASS_NUMBER);
         final EditText to = d.addField("To zoom", null,
@@ -109,8 +109,8 @@ final class AreaDownloader {
                     : null;
             long tiles = range == null ? 0 : countTiles(area, range[0], range[1]);
             if (error == null && tiles > MAX_TILES) {
-                error = String.format(Locale.US, "%,d tiles is too many (limit %,d). Zoom in or lower "
-                        + "\"To zoom\".", tiles, MAX_TILES);
+                error = String.format(Locale.US, "That is too much map at once (%,d pieces; the limit is %,d). "
+                        + "Zoom in or lower \"To zoom\".", tiles, MAX_TILES);
             }
             if (error != null) {
                 estimate.setTextColor(Tak.STATE_DANGER);
@@ -120,11 +120,11 @@ final class AreaDownloader {
                 return;
             }
             long bytes = tiles * (source.tileSize >= 512 ? BYTES_PER_512_TILE : BYTES_PER_256_TILE);
-            String text = String.format(Locale.US, "%,d tiles, roughly %s (depends on the map style).",
-                    tiles, ModUtil.formatSize(bytes));
+            String text = String.format(Locale.US, "Roughly %s to download (%,d map pieces; depends on the map style).",
+                    ModUtil.formatSize(bytes), tiles);
             if (bytes > TileCache.maxBytes() - TileCache.usedBytes(context)) {
-                text += "\nThat may not fit in the offline cache (" + ModUtil.formatSize(TileCache.maxBytes())
-                        + "); older tiles would be removed. You can raise it in Settings → Map Sources.";
+                text += "\nThat may not fit in the space for saved maps (" + ModUtil.formatSize(TileCache.maxBytes())
+                        + "); the oldest saved parts would be removed. You can raise it in Settings → Manage Map Sources.";
                 estimate.setTextColor(Tak.STATE_CAUTION);
             } else {
                 estimate.setTextColor(Tak.TEXT_SECONDARY);
@@ -343,7 +343,7 @@ final class AreaDownloader {
                 bar.setProgress(total == 0 ? 1000 : (int) (1000L * done / total));
                 boolean finished = pool.isTerminated();
                 String counts = String.format(Locale.US,
-                        "%,d of %,d tiles · %,d downloaded, %,d already saved, %,d failed",
+                        "%,d of %,d · %,d downloaded, %,d already saved, %,d failed",
                         done, total, downloaded.get(), upToDate.get(), failed.get());
                 if (!finished) {
                     status.setText("Zoom " + queue.currentZoom() + " of " + toZoom + "\n" + counts);
@@ -362,15 +362,15 @@ final class AreaDownloader {
                             + "use TEST in the source's settings.";
                     status.setTextColor(Tak.STATE_DANGER);
                 } else if (cancelled[0]) {
-                    headline = "Cancelled. Tiles saved so far are kept.";
+                    headline = "Cancelled. What was saved so far is kept.";
                 } else {
                     headline = failed.get() == 0 ? "Done."
-                            : "Done, but some tiles failed (not on the server, or errors). Run it again to retry them.";
+                            : "Done, but some pieces couldn't be downloaded (not on the server, or errors). Run it again to retry them.";
                     status.setTextColor(failed.get() == 0 ? Tak.STATE_GO : Tak.STATE_CAUTION);
                 }
                 long used = TileCache.freshUsedBytes(context);
                 long grown = used - cacheBefore;
-                status.setText(headline + "\n" + counts + "\nCache: " + ModUtil.formatSize(used)
+                status.setText(headline + "\n" + counts + "\nSaved maps: " + ModUtil.formatSize(used)
                         + (grown > 0 ? " (+" + ModUtil.formatSize(grown) + ")" : ""));
                 Log.i(TAG, headline + " " + counts + "; cache " + ModUtil.formatSize(used) + " in use (+"
                         + ModUtil.formatSize(Math.max(0, grown)) + "), limit " + ModUtil.formatSize(TileCache.maxBytes()));

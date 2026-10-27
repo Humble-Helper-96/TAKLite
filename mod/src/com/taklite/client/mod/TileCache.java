@@ -180,23 +180,23 @@ final class TileCache {
     }
 
     static String summary(Context context) {
-        return "Using " + ModUtil.formatSize(usedBytes(context)) + " of " + ModUtil.formatSize(maxBytes())
-                + " · " + ModUtil.formatSize(freeBytes(cacheDir(context))) + " free on this phone. "
-                + "Shared by all maps; when it fills up, the oldest tiles are removed.";
+        return "Saved maps use " + ModUtil.formatSize(usedBytes(context)) + " of the " + ModUtil.formatSize(maxBytes())
+                + " allowed · " + ModUtil.formatSize(freeBytes(cacheDir(context))) + " free on this phone. "
+                + "All maps share this space; when it is full, the oldest saved parts are removed first.";
     }
 
     /** Confirms, then deletes every cached tile (all maps) and reopens via {@code next}. */
     static void confirmClear(final Context context, final Runnable next) {
         if (AreaDownloader.isRunning()) {
-            Toast.makeText(context, "Wait for the map download to finish, or cancel it, first.",
+            Toast.makeText(context, "Wait for the area download to finish, or cancel it, first.",
                     Toast.LENGTH_LONG).show();
             next.run();
             return;
         }
-        final DarkDialog d = new DarkDialog(context, "Clear Offline Cache?");
-        d.addText("Deletes all " + ModUtil.formatSize(usedBytes(context)) + " of saved map tiles, for every "
-                + "map. Areas you downloaded for offline use will need downloading again. Tiles are "
-                + "saved again as you use the map.");
+        final DarkDialog d = new DarkDialog(context, "Delete saved maps?");
+        d.addText("Deletes all " + ModUtil.formatSize(usedBytes(context)) + " of saved maps, for every map. "
+                + "Areas you saved for offline use will need saving again. Maps are saved again as you "
+                + "use them with a connection.");
         d.addAction("CANCEL", v -> {
             d.dismiss();
             next.run();
@@ -205,16 +205,16 @@ final class TileCache {
             d.dismiss();
             final Context app = context.getApplicationContext();
             final long before = fileBytes(context);
-            Toast.makeText(context, "Clearing the map cache\u2026", Toast.LENGTH_SHORT).show();
+            Toast.makeText(context, "Deleting saved maps\u2026", Toast.LENGTH_SHORT).show();
             new Thread(() -> {
                 String message;
                 try {
                     new Cleaner().clearAll();
                     forgetUsedBytes();
-                    message = "Map cache cleared: freed " + ModUtil.formatSize(Math.max(0, before - fileBytes(app))) + ".";
+                    message = "Saved maps deleted: freed " + ModUtil.formatSize(Math.max(0, before - fileBytes(app))) + ".";
                 } catch (RuntimeException e) {
                     Log.e(TAG, "Could not clear the map cache", e);
-                    message = "Could not clear the map cache: " + e.getMessage();
+                    message = "Could not delete the saved maps. Try again after restarting TAK Lite.";
                 }
                 final String result = message;
                 new Handler(Looper.getMainLooper()).post(() -> {
@@ -239,10 +239,11 @@ final class TileCache {
     }
 
     static void showLimitPicker(final Context context, final Runnable next) {
-        final DarkDialog d = new DarkDialog(context, "Offline Cache Size");
+        final DarkDialog d = new DarkDialog(context, "Space for Saved Maps");
         d.dialog.setOnDismissListener(dialog -> next.run());
-        d.addText("How much space map tiles may use on this phone. Lowering it removes "
-                + "tiles the next time the map opens.");
+        d.addText("How much of this phone saved maps may use. They use "
+                + ModUtil.formatSize(usedBytes(context)) + " now. Lowering it removes the oldest "
+                + "saved parts the next time the map opens.");
         long available = availableBytes(context);
         int current = limitMb(context);
         for (final int mb : LIMIT_CHOICES_MB) {

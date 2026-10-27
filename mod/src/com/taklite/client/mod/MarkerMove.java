@@ -5,15 +5,7 @@ import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
-import android.graphics.Typeface;
-import android.graphics.drawable.GradientDrawable;
-import android.util.TypedValue;
-import android.view.Gravity;
 import android.view.View;
-import android.view.ViewGroup;
-import android.widget.FrameLayout;
-import android.widget.LinearLayout;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import com.taklite.client.DroppedMarker;
@@ -93,8 +85,7 @@ public final class MarkerMove {
         final MapView map;
         final DroppedMarker marker;
         final MapEventsOverlay tapCatcher;
-        /** Full-screen, touch-transparent holder; it positions the hint bar itself. */
-        final FrameLayout hint;
+        final HintBar hint;
 
         Pending(MainActivity activity, MapView map, DroppedMarker marker) {
             this.activity = activity;
@@ -114,64 +105,8 @@ public final class MarkerMove {
             });
             // Last overlay = on top: it gets the tap before markers and the drop-marker handler.
             map.getOverlays().add(tapCatcher);
-            // The window's content view can't be relied on to honour gravity and margins
-            // (on some devices the bar came out huge and over the toolbar), so the bar sits
-            // in a full-screen holder of our own. The holder isn't clickable, so taps fall
-            // through to the map.
-            hint = new FrameLayout(activity);
-            FrameLayout.LayoutParams lp = new FrameLayout.LayoutParams(
-                    ViewGroup.LayoutParams.WRAP_CONTENT, DarkDialog.dp(activity, 44),
-                    Gravity.TOP | Gravity.CENTER_HORIZONTAL);
-            lp.topMargin = belowToolbar();
-            hint.addView(buildHint(), lp);
-            activity.getWindow().addContentView(hint, new ViewGroup.LayoutParams(
-                    ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
-        }
-
-        /** Just under TAK Lite's top bar, or 72 dp down if it can't be found. */
-        private int belowToolbar() {
-            int id = activity.getResources().getIdentifier("toolbar", "id", activity.getPackageName());
-            View toolbar = id == 0 ? null : activity.findViewById(id);
-            int bottom = toolbar == null ? 0 : toolbar.getBottom();
-            return (bottom > 0 ? bottom : DarkDialog.dp(activity, 64)) + DarkDialog.dp(activity, 8);
-        }
-
-        private View buildHint() {
-            LinearLayout bar = new LinearLayout(activity);
-            bar.setOrientation(LinearLayout.HORIZONTAL);
-            bar.setGravity(Gravity.CENTER_VERTICAL);
-            int pad = DarkDialog.dp(activity, 14);
-            bar.setPadding(pad, 0, DarkDialog.dp(activity, 2), 0);
-            GradientDrawable bg = new GradientDrawable();
-            bg.setColor(0xE6202020);
-            bg.setCornerRadius(DarkDialog.dp(activity, 22));
-            bar.setBackground(bg);
-            bar.setElevation(DarkDialog.dp(activity, 6));
-
-            TextView text = new TextView(activity);
             String name = marker.name == null || marker.name.isEmpty() ? "the marker" : "\"" + marker.name + "\"";
-            text.setText("Tap the map to move " + name);
-            text.setTextColor(Color.WHITE);
-            text.setTextSize(TypedValue.COMPLEX_UNIT_SP, 14);
-            text.setSingleLine(true);
-            text.setEllipsize(android.text.TextUtils.TruncateAt.END);
-            // Never wider than the screen allows, whatever the marker is called.
-            int screen = activity.getResources().getDisplayMetrics().widthPixels;
-            text.setMaxWidth(screen - DarkDialog.dp(activity, 14 + 40 + 2 + 32));
-            bar.addView(text, new LinearLayout.LayoutParams(
-                    ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT));
-
-            TextView close = new TextView(activity);
-            close.setText("✕");
-            close.setTextColor(Color.WHITE);
-            close.setTextSize(TypedValue.COMPLEX_UNIT_SP, 16);
-            close.setTypeface(Typeface.DEFAULT_BOLD);
-            close.setGravity(Gravity.CENTER);
-            close.setContentDescription("Cancel move");
-            int touch = DarkDialog.dp(activity, 40);
-            close.setOnClickListener(v -> cancel());
-            bar.addView(close, new LinearLayout.LayoutParams(touch, ViewGroup.LayoutParams.MATCH_PARENT));
-            return bar;
+            hint = HintBar.show(activity, "Tap the map to move " + name, MarkerMove::cancel);
         }
 
         private void moveTo(GeoPoint p) {
@@ -181,13 +116,14 @@ public final class MarkerMove {
             activity.modSaveDroppedMarkers();
             // Sent again only with "Send Marker Upon Placement" on; otherwise the user sends it.
             String message = MarkerSend.sendIfAuto(activity, marker, "moved");
+            MarkerSend.refresh(activity, marker);
             Toast.makeText(activity, message != null ? message : "Marker moved.", Toast.LENGTH_SHORT).show();
             cancel();
         }
 
         void finish() {
             map.getOverlays().remove(tapCatcher);
-            if (hint.getParent() instanceof ViewGroup) ((ViewGroup) hint.getParent()).removeView(hint);
+            hint.hide();
             map.invalidate();
         }
     }

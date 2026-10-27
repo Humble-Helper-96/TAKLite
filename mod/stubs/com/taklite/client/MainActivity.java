@@ -26,6 +26,11 @@ public class MainActivity extends android.app.Activity {
         throw new UnsupportedOperationException("stub");
     }
 
+    /** Forgets a marker placement that is waiting for a map tap (clears pendingMarkerAffiliation). */
+    public void modCancelPlacement() {
+        throw new UnsupportedOperationException("stub");
+    }
+
     /** Persists the dropped markers (stock saveDroppedMarkers). */
     public void modSaveDroppedMarkers() {
         throw new UnsupportedOperationException("stub");
