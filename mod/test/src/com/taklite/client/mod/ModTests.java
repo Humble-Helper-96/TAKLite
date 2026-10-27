@@ -100,6 +100,48 @@ public class ModTests {
         check("different device -> different uid", !a.equals(MarkerIds.stableUid("ANDROID-dev2", "Hostile-1700000000000")));
         check("uid is a UUID", a.matches("[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}"));
         check("no device uid still works", MarkerIds.stableUid(null, "k").length() == 36);
+        outgoingMarker();
+    }
+
+    /** The CoT TAK Lite's CotBuilder.buildMarker writes (10-minute stale, no archive). */
+    private static final String STOCK_MARKER = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>"
+            + "<event version=\"2.0\" type=\"a-h-G\" uid=\"6f1c2b9e-0000-3000-8000-000000000001\""
+            + " how=\"h-g-i-g-o\" time=\"2026-01-01T00:00:00.000Z\" start=\"2026-01-01T00:00:00.000Z\""
+            + " stale=\"2026-01-01T00:10:00.000Z\"><point lat=\"1.5\" lon=\"2.5\" hae=\"0.0\""
+            + " ce=\"9999999\" le=\"9999999\" /><detail><contact callsign=\"Hostile\" />"
+            + "<remarks source=\"ANDROID-dev1\">Dropped by X</remarks><link uid=\"ANDROID-dev1\""
+            + " type=\"a-f-G-U-C\" relation=\"p-p\" /><precisionlocation geopointsrc=\"Human\""
+            + " altsrc=\"DTED0\" /></detail></event>";
+
+    private static String eventAttr(String cot, String name) {
+        Matcher m = Pattern.compile("<event\\b[^>]*\\s" + name + "=\"([^\"]*)\"").matcher(cot);
+        return m.find() ? m.group(1) : null;
+    }
+
+    private static String pointTag(String cot) {
+        Matcher m = Pattern.compile("<point\\b[^>]*>").matcher(cot);
+        return m.find() ? m.group() : null;
+    }
+
+    private static void outgoingMarker() {
+        long now = 1767225600000L; // 2026-01-01T00:00:00Z, the CoT's time
+        String out = MarkerIds.keepOnOtherMaps(STOCK_MARKER, now);
+        check("outgoing marker has <archive />", out.contains("<detail><archive />"));
+        check("outgoing marker: uid unchanged", eventAttr(STOCK_MARKER, "uid").equals(eventAttr(out, "uid")));
+        check("outgoing marker: type unchanged", "a-h-G".equals(eventAttr(out, "type")));
+        check("outgoing marker: point unchanged", pointTag(STOCK_MARKER).equals(pointTag(out)));
+        check("outgoing marker: time/start unchanged", STOCK_MARKER.contains("time=\"" + eventAttr(out, "time") + "\"")
+                && eventAttr(out, "time").equals(eventAttr(out, "start")));
+        check("outgoing marker: stale a year out", "2027-01-01T00:00:00.000Z".equals(eventAttr(out, "stale")));
+        check("outgoing marker: rest of the detail kept", out.contains("<contact callsign=\"Hostile\" />")
+                && out.endsWith("</detail></event>"));
+        check("outgoing marker: still classified as a marker on receipt",
+                RemoteMarkers.isMarker("a-h-G", "h-g-i-g-o", out));
+        check("outgoing marker: archive added only once",
+                MarkerIds.keepOnOtherMaps(out, now).equals(out));
+        String odd = "<event uid='x' type='a-f-G'><point lat='1' lon='2'/></event>";
+        check("outgoing marker: unrecognised CoT sent as is", odd.equals(MarkerIds.keepOnOtherMaps(odd, now)));
+        check("outgoing marker: null passes through", MarkerIds.keepOnOtherMaps(null, now) == null);
     }
 
     // ---- ModUtil ----

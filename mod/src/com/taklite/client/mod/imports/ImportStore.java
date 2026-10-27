@@ -77,7 +77,7 @@ final class ImportStore {
         String addedText() {
             String items = count + (count == 1 ? " item" : " items") + " added to the map";
             String sources = mapSources + (mapSources == 1 ? " map source" : " map sources")
-                    + " added to Map Sources (long-press the map layers button)";
+                    + " added to Map Sources (tap the map layers button)";
             if (mapSources == 0) return items + ".";
             return (count == 0 ? sources : items + "; " + sources) + ".";
         }

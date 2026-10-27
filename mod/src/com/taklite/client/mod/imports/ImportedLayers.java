@@ -459,7 +459,7 @@ final class ImportedLayers {
                 + DateFormat.getMediumDateFormat(context).format(new Date(e.importedAt)) + " "
                 + DateFormat.getTimeFormat(context).format(new Date(e.importedAt)));
         if (e.count == 0) {
-            d.addText("Its map sources are in Map Sources: long-press the map layers button to pick "
+            d.addText("Its map sources are in Map Sources: tap the map layers button to pick "
                     + "one, or edit them in Settings \u2192 Map Sources.");
         } else d.addButton("Zoom To", Tak.BTN_PRIMARY, v -> {
             d.dismiss();
