@@ -36,7 +36,7 @@ The patch adds 34 call sites. In Java they are:
 | `MainActivity.showRadialMenu(DroppedMarker)`, after the view is created | `MarkerMove.attach(this, activeRadialMenu, marker)` | the Move slice |
 | `RadialMenuView` | a fourth slice for markers, icon `MarkerMove.radialIcon(ctx)`, runs the `modMove` Runnable | |
 | `MainActivity.placeMarker`, end | `MarkerSend.onPlaced(this, marker)` | send on placement if the setting is on |
-| Edit-marker dialog Save, before the stock send | `if (!MarkerSend.skipStockSendAfterEdit(this, marker)) { stock send }` | edit-send follows the setting (stock always sent) |
+| Edit-marker dialog, the plain Save button, after the marker is updated | `MarkerSend.onEdited(this, marker)` | with the setting on, a saved edit is sent at once; Save & Send is untouched |
 | Both stock `sendMarker` call sites (radial Send, edit Save), just before the call | `MarkerIds.beforeSend(marker)` | names the marker for the uid below |
 | `TakManager.sendMarker`, where the random uid is made | `uid = MarkerIds.uidForSend(this.uid, randomUid)` | stable uid; `MarkerIds.logOutgoing(cot)` after building |
 | `TakManager.onCotReceived`, start | `Imports.onCotReceived(cot); RemoteMarkers.observe(cot);` | package shares; marker classification |
@@ -70,8 +70,9 @@ because apktool can't allocate ids; with real ids, replace `findViewWithTag`.
   deleted, as in ATAK; people still grey out and expire.
 - **Marker uids:** stock sent a fresh random uid per send, so every re-send duplicated
   the marker on teammates' maps. Now `UUID.nameUUIDFromBytes(deviceUid + "|" + markerKey)`.
-- **Edit-send:** stock sent on every edit save; it now follows the "Send Marker Upon
-  Placement" switch (off by default: nothing is sent without Send on the radial).
+- **Send on placement (off by default):** on, a marker is sent when placed, when an
+  edit is saved and when moved. Off, nothing is sent on its own, exactly as stock:
+  the radial Send and the edit dialog's Save & Send remain the ways to share.
 - **Tile cache:** osmdroid's own trimming is disabled (`setCleanupOnStart(false)`,
   GC frequency `Long.MAX_VALUE / 2`). It compares the cache *file* size with the
   limit, and SQLite files never shrink, so once over the limit it deleted a batch
