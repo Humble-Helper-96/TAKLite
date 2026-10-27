@@ -93,7 +93,8 @@ public final class MarkerMove {
         final MapView map;
         final DroppedMarker marker;
         final MapEventsOverlay tapCatcher;
-        final View hint;
+        /** Full-screen, touch-transparent holder; it positions the hint bar itself. */
+        final FrameLayout hint;
 
         Pending(MainActivity activity, MapView map, DroppedMarker marker) {
             this.activity = activity;
@@ -113,12 +114,26 @@ public final class MarkerMove {
             });
             // Last overlay = on top: it gets the tap before markers and the drop-marker handler.
             map.getOverlays().add(tapCatcher);
-            hint = buildHint();
+            // The window's content view can't be relied on to honour gravity and margins
+            // (on some devices the bar came out huge and over the toolbar), so the bar sits
+            // in a full-screen holder of our own. The holder isn't clickable, so taps fall
+            // through to the map.
+            hint = new FrameLayout(activity);
             FrameLayout.LayoutParams lp = new FrameLayout.LayoutParams(
-                    ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT,
+                    ViewGroup.LayoutParams.WRAP_CONTENT, DarkDialog.dp(activity, 44),
                     Gravity.TOP | Gravity.CENTER_HORIZONTAL);
-            lp.topMargin = DarkDialog.dp(activity, 72);
-            activity.getWindow().addContentView(hint, lp);
+            lp.topMargin = belowToolbar();
+            hint.addView(buildHint(), lp);
+            activity.getWindow().addContentView(hint, new ViewGroup.LayoutParams(
+                    ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
+        }
+
+        /** Just under TAK Lite's top bar, or 72 dp down if it can't be found. */
+        private int belowToolbar() {
+            int id = activity.getResources().getIdentifier("toolbar", "id", activity.getPackageName());
+            View toolbar = id == 0 ? null : activity.findViewById(id);
+            int bottom = toolbar == null ? 0 : toolbar.getBottom();
+            return (bottom > 0 ? bottom : DarkDialog.dp(activity, 64)) + DarkDialog.dp(activity, 8);
         }
 
         private View buildHint() {
@@ -126,7 +141,7 @@ public final class MarkerMove {
             bar.setOrientation(LinearLayout.HORIZONTAL);
             bar.setGravity(Gravity.CENTER_VERTICAL);
             int pad = DarkDialog.dp(activity, 14);
-            bar.setPadding(pad, DarkDialog.dp(activity, 4), DarkDialog.dp(activity, 4), DarkDialog.dp(activity, 4));
+            bar.setPadding(pad, 0, DarkDialog.dp(activity, 2), 0);
             GradientDrawable bg = new GradientDrawable();
             bg.setColor(0xE6202020);
             bg.setCornerRadius(DarkDialog.dp(activity, 22));
@@ -138,7 +153,13 @@ public final class MarkerMove {
             text.setText("Tap the map to move " + name);
             text.setTextColor(Color.WHITE);
             text.setTextSize(TypedValue.COMPLEX_UNIT_SP, 14);
-            bar.addView(text);
+            text.setSingleLine(true);
+            text.setEllipsize(android.text.TextUtils.TruncateAt.END);
+            // Never wider than the screen allows, whatever the marker is called.
+            int screen = activity.getResources().getDisplayMetrics().widthPixels;
+            text.setMaxWidth(screen - DarkDialog.dp(activity, 14 + 40 + 2 + 32));
+            bar.addView(text, new LinearLayout.LayoutParams(
+                    ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT));
 
             TextView close = new TextView(activity);
             close.setText("✕");
@@ -149,7 +170,7 @@ public final class MarkerMove {
             close.setContentDescription("Cancel move");
             int touch = DarkDialog.dp(activity, 40);
             close.setOnClickListener(v -> cancel());
-            bar.addView(close, new LinearLayout.LayoutParams(touch, touch));
+            bar.addView(close, new LinearLayout.LayoutParams(touch, ViewGroup.LayoutParams.MATCH_PARENT));
             return bar;
         }
 
