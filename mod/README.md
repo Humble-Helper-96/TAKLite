@@ -221,6 +221,20 @@ change what the user sees.
 10. Full PLI XML and several lines per received message are logged; guard the
     logging behind a debug check.
 
+## Testing
+
+```
+bash mod/test/run.sh
+```
+
+runs three suites on a plain JVM in about a minute: unit tests of the tile
+URL templates, the received-marker classifier and marker uids; the XML
+hardening, KML/GPX/CoT parsers, data package edge cases and ATAK map source
+conversion; and an end-to-end run of data packages against a mock TAK Server
+API (mutual TLS) plus a plain http server. Everything it uses is generated;
+see `test/README.md`. What needs Android (map drawing, the tile cache, the
+hooks) is checked by decompiling the built APK and on a phone.
+
 ## Building
 
 TAK Lite's upstream repository has not published source since v1.1.2, so
