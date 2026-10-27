@@ -15,6 +15,7 @@ import android.os.Handler;
 import android.os.Looper;
 import android.text.format.DateFormat;
 import android.util.Log;
+import android.view.View;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.Toast;
@@ -351,11 +352,13 @@ final class ImportedLayers {
                 Toast.makeText(context, "Could not save: " + ex.getMessage(), Toast.LENGTH_LONG).show();
             }
         });
+        // Only map sources: nothing on the map to show or hide.
+        if (e.count == 0) box.setVisibility(View.INVISIBLE);
         row.addView(box);
 
         String date = DateFormat.getMediumDateFormat(context).format(new Date(e.importedAt));
         LinearLayout text = DarkDialog.row(context, e.name,
-                e.origin + " \u00b7 " + e.count + " items \u00b7 " + date, Color.WHITE, v -> {
+                e.origin + " \u00b7 " + e.contents() + " \u00b7 " + date, Color.WHITE, v -> {
                     d.dismiss();
                     showEntry(context, e);
                 });
@@ -436,7 +439,7 @@ final class ImportedLayers {
                 if (entry != null) {
                     title.setText(p.name + "  \u2713");
                     title.setTextColor(DarkDialog.COLOR_ACCENT);
-                    Toast.makeText(context, "\"" + entry.name + "\": " + entry.count + " items added to the map.",
+                    Toast.makeText(context, "\"" + entry.name + "\": " + entry.addedText(),
                             Toast.LENGTH_LONG).show();
                 } else {
                     title.setText(p.name + "  (failed)");
@@ -451,10 +454,13 @@ final class ImportedLayers {
 
     private static void showEntry(final Context context, final ImportStore.Entry e) {
         final DarkDialog d = new DarkDialog(context, e.name);
-        d.addText(e.origin + "\n" + e.count + " items, imported "
+        d.addText(e.origin + "\n" + e.contents() + ", imported "
                 + DateFormat.getMediumDateFormat(context).format(new Date(e.importedAt)) + " "
                 + DateFormat.getTimeFormat(context).format(new Date(e.importedAt)));
-        d.addButton("Zoom To", DarkDialog.COLOR_ACCENT, v -> {
+        if (e.count == 0) {
+            d.addText("Its map sources are in Map Sources: long-press the map layers button to pick "
+                    + "one, or edit them in Settings \u2192 Map Sources.");
+        } else d.addButton("Zoom To", DarkDialog.COLOR_ACCENT, v -> {
             d.dismiss();
             try {
                 if (!e.visible) Imports.setVisible(e.id, true);
@@ -466,7 +472,7 @@ final class ImportedLayers {
                 if (map != null) zoomTo((MainActivity) context, map, e);
             }
         });
-        d.addButton(e.visible ? "Hide on Map" : "Show on Map", DarkDialog.COLOR_FIELD, v -> {
+        if (e.count > 0) d.addButton(e.visible ? "Hide on Map" : "Show on Map", DarkDialog.COLOR_FIELD, v -> {
             try {
                 Imports.setVisible(e.id, !e.visible);
             } catch (IOException ex) {
@@ -490,7 +496,9 @@ final class ImportedLayers {
     /** {@code back} reopens whichever dialog the delete was started from. */
     private static void confirmDelete(final Context context, final ImportStore.Entry e, final Runnable back) {
         final DarkDialog d = new DarkDialog(context, "Delete \"" + e.name + "\"?");
-        d.addText("Removes its " + e.count + " items from the map and this phone.");
+        d.addText(e.count > 0 ? "Removes its " + e.count + " items from the map and this phone."
+                + (e.mapSources > 0 ? " Its map sources stay in Map Sources." : "")
+                : "Removes it from this phone. Its map sources stay in Map Sources; delete them there.");
         d.addAction("CANCEL", DarkDialog.COLOR_LABEL, v -> {
             d.dismiss();
             back.run();

@@ -30,7 +30,9 @@ import java.util.zip.ZipInputStream;
  *   <li>TAK data packages (mission packages): a zip with MANIFEST/manifest.xml
  *       listing .cot, .kml, .kmz, .gpx and attachments such as photos;</li>
  *   <li>KMZ and other zips without a manifest (every supported file inside);</li>
- *   <li>single .kml, .gpx and .cot files.</li>
+ *   <li>single .kml, .gpx and .cot files;</li>
+ *   <li>ATAK map source files (customMapSource XML), on their own or in a zip, which
+ *       become TAK Lite map sources rather than map items.</li>
  * </ul>
  * Photos attached to a CoT item are copied into {@code attachmentDir} and linked
  * to that item's marker.
@@ -46,6 +48,8 @@ final class Importer {
         /** Identifies "the same import" so a re-sent package replaces the old copy. */
         String key;
         final List<Feature> features = new ArrayList<>();
+        /** Map sources (ATAK map source XML) found in the file, for TAK Lite's Map Sources. */
+        final List<com.taklite.client.mod.CustomMapSources.Imported> mapSources = new ArrayList<>();
         int skipped;
         /** "file: reason" for each file left out, for logs and error messages. */
         final List<String> skippedNotes = new ArrayList<>();
@@ -53,6 +57,14 @@ final class Importer {
         void skip(String file, String reason) {
             skipped++;
             skippedNotes.add(file + " (" + reason + ")");
+        }
+
+        boolean isEmpty() {
+            return features.isEmpty() && mapSources.isEmpty();
+        }
+
+        int size() {
+            return features.size() + mapSources.size();
         }
     }
 
@@ -79,8 +91,8 @@ final class Importer {
                 readDocument(in, displayName, result);
             }
         }
-        if (result.features.isEmpty()) {
-            StringBuilder msg = new StringBuilder("No map items found in " + displayName);
+        if (result.isEmpty()) {
+            StringBuilder msg = new StringBuilder("No map items or map sources found in " + displayName);
             if (!result.skippedNotes.isEmpty()) {
                 msg.append(". Skipped: ");
                 for (int i = 0; i < result.skippedNotes.size() && i < 5; i++) {
@@ -152,7 +164,7 @@ final class Importer {
             }
         }
 
-        if (result.features.isEmpty()) {
+        if (result.isEmpty()) {
             // The manifest led nowhere (paths that don't match, unusual names): look at
             // every file in the zip instead, as for a KMZ.
             scanAll(zip, result, tried);
@@ -198,7 +210,7 @@ final class Importer {
 
     /** Reads one zip entry, recording (not throwing) why it couldn't be used. */
     private void readEntry(ZipFile zip, ZipEntry entry, Result result) throws IOException {
-        int before = result.features.size();
+        int before = result.size();
         int skippedBefore = result.skipped;
         try (InputStream in = open(zip, entry)) {
             readDocument(in, entry.getName(), result);
@@ -207,7 +219,7 @@ final class Importer {
             result.skip(entry.getName(), "could not read: " + e.getMessage());
             return;
         }
-        if (result.features.size() == before && result.skipped == skippedBefore) {
+        if (result.size() == before && result.skipped == skippedBefore) {
             result.skip(entry.getName(), "contains nothing drawable");
         }
     }
@@ -282,7 +294,11 @@ final class Importer {
                 break;
             }
             default:
-                result.skip(name, "<" + root.name + "> is not KML, GPX or CoT");
+                if (MapSourceParser.isMapSource(root)) {
+                    MapSourceParser.parse(root, baseName(name), result);
+                } else {
+                    result.skip(name, "<" + root.name + "> is not KML, GPX, CoT or a map source");
+                }
         }
     }
 
@@ -320,6 +336,12 @@ final class Importer {
                 throw new IOException("Package expands to too much data");
             }
         }
+    }
+
+    /** "imagery/mobile/mapsources/Topo.xml" -> "Topo.xml". */
+    private static String baseName(String path) {
+        String p = path.replace('\\', '/');
+        return p.substring(p.lastIndexOf('/') + 1);
     }
 
     private static String param(XmlNode node, String name) {

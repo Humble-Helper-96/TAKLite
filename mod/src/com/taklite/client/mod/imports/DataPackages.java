@@ -120,7 +120,7 @@ final class DataPackages {
                 "Data package from " + sender, size, (entry, error) -> {
                     if (entry != null) {
                         Imports.announce("Data package received",
-                                "\"" + entry.name + "\" from " + sender + ": " + entry.count + " items added to the map.");
+                                "\"" + entry.name + "\" from " + sender + ": " + entry.addedText());
                     } else {
                         Imports.announce("Data package failed", "\"" + name + "\" from " + sender + ": " + error);
                     }
@@ -245,7 +245,7 @@ final class DataPackages {
                     throw new IOException("download is corrupt (SHA-256 mismatch)");
                 }
                 entry = Imports.importFile(tmp, filename, origin);
-                Log.i(TAG, "Imported " + filename + " as \"" + entry.name + "\": " + entry.count + " items");
+                Log.i(TAG, "Imported " + filename + " as \"" + entry.name + "\": " + entry.contents());
                 remember(context, key, entry.id);
             } catch (IOException | RuntimeException e) {
                 Log.e(TAG, "Data package " + name + " failed", e);

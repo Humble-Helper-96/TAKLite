@@ -113,7 +113,7 @@ public class ImportActivity extends Activity {
             try {
                 copy(app, uri, tmp);
                 ImportStore.Entry entry = Imports.importFile(tmp, name, "File");
-                message = "Imported \"" + entry.name + "\": " + entry.count + " items on the map.";
+                message = "Imported \"" + entry.name + "\": " + entry.addedText();
             } catch (IOException | RuntimeException e) {
                 Log.e(TAG, "Import of " + name + " failed", e);
                 message = "Could not import " + name + ": " + e.getMessage();

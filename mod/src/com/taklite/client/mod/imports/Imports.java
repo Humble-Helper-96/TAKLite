@@ -106,6 +106,9 @@ public final class Imports {
         try {
             Importer.Result result = Importer.read(file, displayName, staging);
             for (String note : result.skippedNotes) Log.i(TAG, displayName + ": skipped " + note);
+            if (!result.mapSources.isEmpty()) {
+                com.taklite.client.mod.CustomMapSources.addImported(app, result.mapSources);
+            }
             ImportStore.Entry entry = store.add(result, origin, staging);
             changed();
             return entry;

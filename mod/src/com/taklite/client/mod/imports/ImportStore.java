@@ -33,7 +33,10 @@ final class ImportStore {
         String key;
         long importedAt;
         boolean visible = true;
+        /** Map items drawn by this import. */
         int count;
+        /** Map sources this import added to (or updated in) TAK Lite's Map Sources. */
+        int mapSources;
         double north;
         double east;
         double south;
@@ -42,7 +45,7 @@ final class ImportStore {
         JSONObject toJson() throws JSONException {
             return new JSONObject().put("id", id).put("name", name).put("origin", origin)
                     .put("key", key).put("importedAt", importedAt).put("visible", visible)
-                    .put("count", count).put("bbox", new JSONArray()
+                    .put("count", count).put("mapSources", mapSources).put("bbox", new JSONArray()
                             .put(north).put(east).put(south).put(west));
         }
 
@@ -55,11 +58,29 @@ final class ImportStore {
             e.importedAt = importedAt;
             e.visible = visible;
             e.count = count;
+            e.mapSources = mapSources;
             e.north = north;
             e.east = east;
             e.south = south;
             e.west = west;
             return e;
+        }
+
+        /** "129 items", "3 map sources" or "129 items, 3 map sources". */
+        String contents() {
+            String items = count + (count == 1 ? " item" : " items");
+            String sources = mapSources + (mapSources == 1 ? " map source" : " map sources");
+            if (mapSources == 0) return items;
+            return count == 0 ? sources : items + ", " + sources;
+        }
+
+        /** What an import brought in, for the "imported" toast or notification. */
+        String addedText() {
+            String items = count + (count == 1 ? " item" : " items") + " added to the map";
+            String sources = mapSources + (mapSources == 1 ? " map source" : " map sources")
+                    + " added to Map Sources (long-press the map layers button)";
+            if (mapSources == 0) return items + ".";
+            return (count == 0 ? sources : items + "; " + sources) + ".";
         }
 
         static Entry fromJson(JSONObject o) throws JSONException {
@@ -71,6 +92,7 @@ final class ImportStore {
             e.importedAt = o.optLong("importedAt");
             e.visible = o.optBoolean("visible", true);
             e.count = o.optInt("count");
+            e.mapSources = o.optInt("mapSources");
             JSONArray b = o.optJSONArray("bbox");
             if (b != null && b.length() == 4) {
                 e.north = b.getDouble(0);
@@ -113,6 +135,7 @@ final class ImportStore {
         e.key = result.key;
         e.importedAt = System.currentTimeMillis();
         e.count = result.features.size();
+        e.mapSources = result.mapSources.size();
         e.north = -90;
         e.south = 90;
         e.east = -180;
@@ -131,6 +154,7 @@ final class ImportStore {
         } catch (JSONException ex) {
             throw new IOException(ex);
         }
+        if (e.count == 0) e.north = e.south = e.east = e.west = 0; // only map sources: nothing to zoom to
         writeText(new File(stagingDir, "features.json"), features.toString());
         if (!stagingDir.renameTo(dir(e.id))) throw new IOException("Could not store import");
         entries.add(0, e);

@@ -13,11 +13,25 @@ XYZ tile server, for example:
   - **Add Map Source**: a name, the tile URL with `{z}`, `{x}`, `{y}` (or
     `{-y}` for TMS), min/max zoom and tile size. Leave tile size empty to
     auto-detect it: 512 if the URL contains `/512/` or `@2x`, otherwise 256.
+    A URL can also use `{q}` (a Bing-style quadkey) instead of z/x/y, and
+    `{s:a,b,c}` to spread tiles over several server names.
     **Test** downloads one tile and shows what the server returned.
   - **Import from TileServer GL**: enter the server address (for example
     `http://192.168.1.10:8080`). It reads `/styles.json` and adds the styles
     you tick as `…/styles/<id>/512/{z}/{x}/{y}.png`.
   - Tap a source to edit or delete it.
+- **ATAK map sources**: a data package or zip (downloaded from the server,
+  sent over TAK, or imported as a file) with ATAK map source files
+  (`<customMapSource>` XML, as in ATAK map packs and
+  [joshuafuller/ATAK-Maps](https://github.com/joshuafuller/ATAK-Maps)) adds
+  them to your Map Sources. A single `.xml` map source file works too. ATAK's
+  `{$x}`, `{$y}`, `{$z}`, `{$q}`, `{$serverpart}` with `<serverParts>`, and
+  `<invertYCoordinate>` are converted. A source with the same name as one you
+  already have replaces it, so a re-sent map pack updates its sources. WMS and
+  multi-layer sources, and projections other than Web Mercator, are skipped
+  (TAK Lite draws XYZ tiles only); the log says which and why. Deleting the
+  package from Data Packages leaves its map sources; delete those in Map
+  Sources.
 - On the map, **tap** the layers button to cycle Street → Dark → Satellite →
   Topo → your sources, as before. **Long-press** it to pick a map from a list
   or open the source manager.

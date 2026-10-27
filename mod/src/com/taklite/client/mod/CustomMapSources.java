@@ -215,6 +215,66 @@ public final class CustomMapSources {
         prefs(context).edit().putString(KEY_SOURCES, array.toString()).apply();
     }
 
+    /** A map source read from an imported file (e.g. an ATAK map source XML). */
+    public static final class Imported {
+        public String name;
+        /** In TAK Lite's template syntax (see {@link TemplateTileSource}). */
+        public String url;
+        public int minZoom = DEFAULT_MIN_ZOOM;
+        public int maxZoom = DEFAULT_MAX_ZOOM;
+        /** 0 to guess from the URL. */
+        public int tileSize;
+
+        /** Null if usable, else why not. */
+        public String problem() {
+            if (url == null || !(url.startsWith("http://") || url.startsWith("https://"))) {
+                return "tile URL must start with http:// or https://";
+            }
+            if (!TemplateTileSource.isValidTemplate(url)) return "tile URL has no {z}/{x}/{y} or {q}";
+            if (minZoom < 0 || maxZoom > MAX_ZOOM_LIMIT || minZoom > maxZoom) return "bad zoom range";
+            if (tileSize != 0 && (tileSize < 64 || tileSize > 1024)) return "bad tile size " + tileSize;
+            return null;
+        }
+    }
+
+    /**
+     * Adds imported map sources to the list. One with the same name as an existing source
+     * replaces it (a re-sent map pack updates its sources); one whose URL is already
+     * listed under another name is left out. Returns {added, updated}.
+     */
+    public static synchronized int[] addImported(Context context, List<Imported> imported) {
+        List<Source> sources = load(context);
+        int added = 0;
+        int updated = 0;
+        for (Imported in : imported) {
+            Source s = new Source();
+            s.name = in.name == null || in.name.trim().isEmpty() ? hostOf(in.url) : in.name.trim();
+            s.url = in.url;
+            s.minZoom = in.minZoom;
+            s.maxZoom = in.maxZoom;
+            s.tileSize = in.tileSize > 0 ? in.tileSize : guessTileSize(in.url);
+            int sameName = -1;
+            for (int i = 0; i < sources.size(); i++) {
+                if (sources.get(i).name.equalsIgnoreCase(s.name)) sameName = i;
+            }
+            if (sameName >= 0) {
+                Source old = sources.get(sameName);
+                if (!old.url.equals(s.url) || old.minZoom != s.minZoom || old.maxZoom != s.maxZoom
+                        || old.tileSize != s.tileSize) {
+                    sources.set(sameName, s);
+                    updated++;
+                }
+            } else if (!containsUrl(sources, s.url)) {
+                sources.add(s);
+                added++;
+            }
+        }
+        if (added + updated > 0) save(context, sources);
+        Log.i(TAG, "Imported map sources: " + added + " added, " + updated + " updated, "
+                + (imported.size() - added - updated) + " already listed");
+        return new int[]{added, updated};
+    }
+
     /** Removes a source and keeps the selected map type pointing at the same map. */
     private static void delete(Context context, List<Source> sources, int index) {
         sources.remove(index);
@@ -553,9 +613,8 @@ public final class CustomMapSources {
         if (!out.url.startsWith("http://") && !out.url.startsWith("https://")) {
             return "URL must start with http:// or https://";
         }
-        if (!out.url.contains("{z}") || !out.url.contains("{x}")
-                || !(out.url.contains("{y}") || out.url.contains("{-y}"))) {
-            return "URL must contain {z}, {x} and {y}";
+        if (!TemplateTileSource.isValidTemplate(out.url)) {
+            return "URL must contain {z}, {x} and {y} (or a {q} quadkey)";
         }
         out.name = name.getText().toString().trim();
         if (out.name.isEmpty()) out.name = hostOf(out.url);
