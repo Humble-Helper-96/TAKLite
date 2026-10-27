@@ -46,6 +46,22 @@ final class ImportStore {
                             .put(north).put(east).put(south).put(west));
         }
 
+        Entry copy() {
+            Entry e = new Entry();
+            e.id = id;
+            e.name = name;
+            e.origin = origin;
+            e.key = key;
+            e.importedAt = importedAt;
+            e.visible = visible;
+            e.count = count;
+            e.north = north;
+            e.east = east;
+            e.south = south;
+            e.west = west;
+            return e;
+        }
+
         static Entry fromJson(JSONObject o) throws JSONException {
             Entry e = new Entry();
             e.id = o.getString("id");
@@ -67,6 +83,8 @@ final class ImportStore {
     }
 
     private final File base;
+    /** index.json as last read or written; callers get copies, so they can't change it. */
+    private List<Entry> index;
 
     ImportStore(File base) {
         this.base = base;
@@ -122,22 +140,29 @@ final class ImportStore {
 
     synchronized List<Entry> list() {
         List<Entry> out = new ArrayList<>();
-        File index = new File(base, "index.json");
-        if (!index.exists()) return out;
-        try {
-            JSONArray a = new JSONArray(readText(index));
-            for (int i = 0; i < a.length(); i++) out.add(Entry.fromJson(a.getJSONObject(i)));
-        } catch (IOException | JSONException e) {
-            // A damaged index loses the list, not the app.
-        }
+        for (Entry e : index()) out.add(e.copy());
         return out;
     }
 
     synchronized Entry get(String id) {
-        for (Entry e : list()) {
-            if (e.id.equals(id)) return e;
+        for (Entry e : index()) {
+            if (e.id.equals(id)) return e.copy();
         }
         return null;
+    }
+
+    private List<Entry> index() {
+        if (index != null) return index;
+        index = new ArrayList<>();
+        File file = new File(base, "index.json");
+        if (!file.exists()) return index;
+        try {
+            JSONArray a = new JSONArray(readText(file));
+            for (int i = 0; i < a.length(); i++) index.add(Entry.fromJson(a.getJSONObject(i)));
+        } catch (IOException | JSONException e) {
+            // A damaged index loses the list, not the app.
+        }
+        return index;
     }
 
     synchronized List<Feature> features(String id) throws IOException {
@@ -168,24 +193,21 @@ final class ImportStore {
         deleteTree(dir(id));
     }
 
-    /** True if an import with this key is already stored. */
-    synchronized boolean hasKey(String key) {
-        for (Entry e : list()) {
-            if (e.key.equals(key)) return true;
-        }
-        return false;
-    }
-
     File dir(String id) {
         return new File(base, id);
     }
 
-    /** Removes staging folders left behind by an import that was interrupted. */
+    /**
+     * Removes staging folders left behind by an import that was interrupted. Runs at app
+     * start, while a new import may already be filling its own staging folder, so only
+     * folders untouched for an hour are removed.
+     */
     synchronized void cleanStaging() {
         File[] files = base.listFiles();
         if (files == null) return;
+        long cutoff = System.currentTimeMillis() - 60 * 60 * 1000L;
         for (File f : files) {
-            if (f.getName().startsWith("staging-")) deleteTree(f);
+            if (f.getName().startsWith("staging-") && f.lastModified() < cutoff) deleteTree(f);
         }
     }
 
@@ -199,6 +221,8 @@ final class ImportStore {
         File tmp = new File(base, "index.json.tmp");
         writeText(tmp, a.toString());
         if (!tmp.renameTo(new File(base, "index.json"))) throw new IOException("Could not save import list");
+        index = new ArrayList<>();
+        for (Entry e : entries) index.add(e.copy());
     }
 
     static void deleteTree(File f) {

@@ -1,5 +1,7 @@
 package com.taklite.client.mod.imports;
 
+import com.taklite.client.mod.ModUtil;
+
 import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
@@ -372,8 +374,6 @@ final class Importer {
     }
 
     private static void copy(InputStream in, OutputStream out) throws IOException {
-        byte[] buf = new byte[65536];
-        int n;
-        while ((n = in.read(buf)) > 0) out.write(buf, 0, n);
+        ModUtil.copy(in, out, Long.MAX_VALUE, "file too large");
     }
 }

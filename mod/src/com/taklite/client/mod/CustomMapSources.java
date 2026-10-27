@@ -27,9 +27,7 @@ import org.json.JSONObject;
 import org.osmdroid.util.TileSystem;
 import org.osmdroid.views.MapView;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLEncoder;
@@ -118,7 +116,7 @@ public final class CustomMapSources {
         List<Source> sources = load(context);
         int index = type - BUILT_IN_NAMES.length;
         if (index < 0 || index >= sources.size()) {
-            keepScale(mapView, BUILT_IN_TILE_SIZE);
+            keepScaleForBuiltIn(mapView);
             return null;
         }
         Source source = sources.get(index);
@@ -130,7 +128,7 @@ public final class CustomMapSources {
         } catch (RuntimeException e) {
             // This runs on every app start; never let a bad source stop the map from opening.
             Log.e(TAG, "Could not apply map source " + source.url, e);
-            keepScale(mapView, BUILT_IN_TILE_SIZE);
+            keepScaleForBuiltIn(mapView);
             return null;
         }
     }
@@ -251,10 +249,16 @@ public final class CustomMapSources {
         return zoom + Math.log((double) oldTileSize / newTileSize) / Math.log(2);
     }
 
-    private static void keepScale(MapView mapView, int newTileSize) {
-        if (TileSystem.getTileSize() != newTileSize) {
-            mapView.getController().setZoom(scaledZoom(mapView, newTileSize));
-        }
+    /**
+     * Leaving a 512 px custom source for a built-in (256 px) map needs one zoom level more
+     * for the same scale. The stock code sets the built-in source after this hook returns,
+     * and setting the zoom now would clamp it to the custom source's max zoom, so set it
+     * once the stock code is done.
+     */
+    private static void keepScaleForBuiltIn(final MapView mapView) {
+        if (TileSystem.getTileSize() == BUILT_IN_TILE_SIZE) return;
+        final double zoom = scaledZoom(mapView, BUILT_IN_TILE_SIZE);
+        mapView.post(() -> mapView.getController().setZoom(zoom));
     }
 
     static int guessTileSize(String url) {
@@ -284,13 +288,12 @@ public final class CustomMapSources {
 
         d.addDivider();
         int selectedIndex = selected - BUILT_IN_NAMES.length;
-        int mapViewId = activity.getResources().getIdentifier("mapView", "id", activity.getPackageName());
-        final View mapView = mapViewId == 0 ? null : activity.findViewById(mapViewId);
-        if (selectedIndex >= 0 && selectedIndex < sources.size() && mapView instanceof MapView) {
+        final MapView mapView = ModUtil.mapView(activity);
+        if (selectedIndex >= 0 && selectedIndex < sources.size() && mapView != null) {
             final Source source = sources.get(selectedIndex);
             d.addButton("Download visible area for offline", DarkDialog.COLOR_ACCENT, v -> {
                 d.dismiss();
-                AreaDownloader.show(activity, (MapView) mapView, source);
+                AreaDownloader.show(activity, mapView, source);
             });
         } else {
             d.addText(sources.isEmpty()
@@ -349,7 +352,7 @@ public final class CustomMapSources {
         d.addLabel("Offline cache");
         d.addText(TileCache.summary(context) + " To save an area ahead of time, long-press the "
                 + "map layers button and choose \"Download visible area\".");
-        d.addButton("Cache size: " + TileCache.formatSize(TileCache.limitMb(context) * 1024L * 1024L),
+        d.addButton("Cache size: " + ModUtil.formatSize(TileCache.limitMb(context) * 1024L * 1024L),
                 DarkDialog.COLOR_FIELD, v -> {
                     d.dialog.setOnDismissListener(null);
                     d.dismiss();
@@ -587,7 +590,7 @@ public final class CustomMapSources {
                 int code = conn.getResponseCode();
                 String type = conn.getContentType();
                 if (code == 200 && type != null && type.startsWith("image/")) {
-                    byte[] body = readAll(conn.getInputStream(), 10_000_000);
+                    byte[] body = ModUtil.readAll(conn.getInputStream(), 10_000_000, "Response too large");
                     message = "OK: " + type + ", " + Math.max(1, body.length / 1024) + " KB";
                     ok = true;
                 } else {
@@ -620,22 +623,9 @@ public final class CustomMapSources {
         try {
             int code = conn.getResponseCode();
             if (code != 200) throw new IOException("HTTP " + code + " from " + url);
-            return readAll(conn.getInputStream(), maxBytes);
+            return ModUtil.readAll(conn.getInputStream(), maxBytes, "Response too large");
         } finally {
             conn.disconnect();
-        }
-    }
-
-    private static byte[] readAll(InputStream in, int maxBytes) throws IOException {
-        try (InputStream input = in) {
-            ByteArrayOutputStream out = new ByteArrayOutputStream();
-            byte[] buffer = new byte[16384];
-            int n;
-            while ((n = input.read(buffer)) != -1) {
-                out.write(buffer, 0, n);
-                if (out.size() > maxBytes) throw new IOException("Response too large");
-            }
-            return out.toByteArray();
         }
     }
 

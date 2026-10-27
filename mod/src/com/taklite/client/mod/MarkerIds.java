@@ -16,25 +16,36 @@ import java.util.UUID;
  */
 public final class MarkerIds {
 
-    /** Key of the marker about to be sent; set and consumed on the main thread. */
+    /**
+     * Key of the marker about to be sent. sendMarker returns early when TAK is offline,
+     * leaving it unused, so it only counts for the very next send on the same thread.
+     */
     private static String pendingKey;
+    private static Thread pendingThread;
+    private static long pendingAt;
+    private static final long PENDING_MS = 2000;
 
     private MarkerIds() {
     }
 
     /** Hook: just before TakManager.sendMarker for this marker. */
-    public static void beforeSend(DroppedMarker marker) {
+    public static synchronized void beforeSend(DroppedMarker marker) {
         pendingKey = marker == null ? null : marker.key;
+        pendingThread = Thread.currentThread();
+        pendingAt = android.os.SystemClock.elapsedRealtime();
     }
 
     /**
      * Hook: inside TakManager.sendMarker. Returns this marker's stable uid, or
      * {@code fallback} (the stock random uid) for a send that didn't name a marker.
      */
-    public static String uidForSend(String deviceUid, String fallback) {
+    public static synchronized String uidForSend(String deviceUid, String fallback) {
         String key = pendingKey;
+        boolean fresh = pendingThread == Thread.currentThread()
+                && android.os.SystemClock.elapsedRealtime() - pendingAt < PENDING_MS;
         pendingKey = null;
-        if (key == null) return fallback;
+        pendingThread = null;
+        if (key == null || !fresh) return fallback;
         return stableUid(deviceUid, key);
     }
 

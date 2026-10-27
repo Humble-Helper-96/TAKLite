@@ -1,11 +1,13 @@
 package com.taklite.client.mod.imports;
 
 import android.app.Activity;
+import android.app.Application;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
+import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.util.Log;
@@ -15,7 +17,9 @@ import com.taklite.client.MainActivity;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Consumer;
 
 /**
  * Entry points for imported map data (KML, KMZ, GPX, CoT and TAK data packages).
@@ -27,13 +31,16 @@ public final class Imports {
     private static final String CHANNEL_ID = "mod_data_packages";
     private static final String TOOLBAR_BUTTON_TAG = "data_packages_button";
 
-    private static Context app;
-    private static ImportStore store;
+    // Read from the network thread; store is set before app, so app != null means both are ready.
+    private static volatile Context app;
+    private static volatile ImportStore store;
     private static final Handler MAIN = new Handler(Looper.getMainLooper());
     /** Bumped on every change, so the map knows to redraw. */
     private static volatile int version;
-    /** Import to zoom to when the map is next shown (set from Settings). */
-    static volatile String pendingZoomId;
+    /** TAK Lite's map screen while it is in the foreground. Main thread. */
+    private static MainActivity resumed;
+    /** Waiting for the map screen to come to the foreground. Main thread. */
+    private static final List<Consumer<MainActivity>> waitingForScreen = new ArrayList<>();
 
     private Imports() {
     }
@@ -43,9 +50,14 @@ public final class Imports {
     /** MainActivity.onCreate and TakLocationService.onCreate: remember the app context. */
     public static synchronized void init(Context context) {
         if (app != null) return;
-        app = context.getApplicationContext();
-        store = new ImportStore(new File(app.getFilesDir(), "mod_imports"));
-        new Thread(() -> store.cleanStaging()).start();
+        Context appContext = context.getApplicationContext();
+        final ImportStore s = new ImportStore(new File(appContext.getFilesDir(), "mod_imports"));
+        store = s;
+        app = appContext;
+        new Thread(s::cleanStaging, "ImportCleanup").start();
+        if (appContext instanceof Application) {
+            ((Application) appContext).registerActivityLifecycleCallbacks(new ScreenTracker());
+        }
     }
 
     /** TakManager.onCotReceived, on the network thread: picks out shared data packages. */
@@ -119,6 +131,57 @@ public final class Imports {
     private static void changed() {
         version++;
         MAIN.post(ImportedLayers::reload);
+    }
+
+    /**
+     * Runs {@code action} on the main thread with the map screen: now if TAK Lite is in the
+     * foreground, otherwise (after running {@code queued}) the next time it comes back.
+     */
+    static void whenOnScreen(Consumer<MainActivity> action, Runnable queued) {
+        MAIN.post(() -> {
+            if (resumed != null && !resumed.isFinishing()) {
+                action.accept(resumed);
+            } else {
+                waitingForScreen.add(action);
+                queued.run();
+            }
+        });
+    }
+
+    private static final class ScreenTracker implements Application.ActivityLifecycleCallbacks {
+        @Override
+        public void onActivityResumed(Activity activity) {
+            if (!(activity instanceof MainActivity)) return;
+            resumed = (MainActivity) activity;
+            List<Consumer<MainActivity>> waiting = new ArrayList<>(waitingForScreen);
+            waitingForScreen.clear();
+            for (Consumer<MainActivity> action : waiting) action.accept(resumed);
+        }
+
+        @Override
+        public void onActivityPaused(Activity activity) {
+            if (activity == resumed) resumed = null;
+        }
+
+        @Override
+        public void onActivityCreated(Activity activity, Bundle savedInstanceState) {
+        }
+
+        @Override
+        public void onActivityStarted(Activity activity) {
+        }
+
+        @Override
+        public void onActivityStopped(Activity activity) {
+        }
+
+        @Override
+        public void onActivitySaveInstanceState(Activity activity, Bundle outState) {
+        }
+
+        @Override
+        public void onActivityDestroyed(Activity activity) {
+        }
     }
 
     /** Shows a toast if TAK Lite is on screen and always posts a notification. */

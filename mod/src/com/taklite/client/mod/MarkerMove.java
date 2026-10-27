@@ -75,7 +75,7 @@ public final class MarkerMove {
                     Toast.LENGTH_LONG).show();
             return;
         }
-        MapView map = mapView(activity);
+        MapView map = ModUtil.mapView(activity);
         if (map == null) return;
         pending = new Pending(activity, map, marker);
     }
@@ -85,12 +85,6 @@ public final class MarkerMove {
             pending.finish();
             pending = null;
         }
-    }
-
-    private static MapView mapView(MainActivity activity) {
-        int id = activity.getResources().getIdentifier("mapView", "id", activity.getPackageName());
-        View v = id == 0 ? null : activity.findViewById(id);
-        return v instanceof MapView ? (MapView) v : null;
     }
 
     /** Move mode: a hint bar with a cancel ✕, and an overlay that takes the next map tap. */

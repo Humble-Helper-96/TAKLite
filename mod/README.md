@@ -97,6 +97,13 @@ name to zoom to it or delete it.
   server address the phone can't reach, it retries with the server configured
   in TAK Lite. A re-sent package replaces the earlier copy; it's skipped while
   that copy still exists. The limit is 200 MB.
+
+  Packages come in on their own only over https. ATAK can also send a package
+  straight from its own phone over plain http. TAK Lite accepts that only from
+  an address on the local network, and asks first ("Download it?"). If the
+  map isn't on screen, you get a notification and the question waits until
+  you open TAK Lite. An http link from anywhere else is refused, and so are
+  redirects on an http download.
 - **Files**: Data Packages → **Import File**, or open or share a `.kml`, `.kmz`, `.gpx`, `.cot` or data package `.zip` to TAK Lite
   from a file manager, email or chat app.
 - **What's drawn**:
@@ -113,6 +120,9 @@ name to zoom to it or delete it.
 
 Imports are converted once and kept in the app's private storage. They are
 drawn under markers and teammates.
+
+For safety, files with a DOCTYPE that declares entities, or with items nested
+more than 500 levels deep, are refused. Real KML, GPX and CoT never need either.
 
 Not handled: KML ground overlays, network links and custom icon images; map
 tile packages (MBTiles, SQLite) inside data packages; sending data packages
@@ -164,7 +174,7 @@ with your TAK server again), then install the APK.
 
 | Path | What it is |
 |---|---|
-| `src/com/taklite/client/mod/` | Map sources, in Java: source storage, the osmdroid tile source and dialogs (`CustomMapSources`), area download (`AreaDownloader`) and cache size (`TileCache`); marker move (`MarkerMove`), stable marker uids (`MarkerIds`) and classification of received markers (`RemoteMarkers`) |
+| `src/com/taklite/client/mod/` | Map sources, in Java: source storage, the osmdroid tile source and dialogs (`CustomMapSources`), area download (`AreaDownloader`) and cache size (`TileCache`); marker move (`MarkerMove`), stable marker uids (`MarkerIds`) and classification of received markers (`RemoteMarkers`); shared helpers (`ModUtil`) |
 | `src/com/taklite/client/mod/imports/` | Imported data: parsers (`CotShapes`, `KmlParser`, `GpxParser`, `Importer` for zips and data packages), storage (`ImportStore`), map layers and dialogs (`ImportedLayers`), data package downloads (`DataPackages`) and `ImportActivity` |
 | `patches/taklite-1.5.0.patch` | Changes to the decoded app: hooks in `MainActivity` (map-type cycling; `onCreate` before and after the map is created; `onResume`; `showRadialMenu`; the marker sends; new `modSetMapType`, `modMarkerIcon`, `modStopFollowing`, `modDismissRadialMenu`, `modSaveDroppedMarkers`), `RadialMenuView` (a fourth slice), the marker uid in `TakManager.sendMarker`, `SettingsActivity.onCreate`, `TakManager.onCotReceived` and `processCoT` (remote marker classification), and `TakLocationService.onCreate`; the Settings button, the toolbar Data Packages button and its icon; the `ImportActivity` manifest entry; `usesCleartextTraffic`; and the version name |
 | `stubs/` | Compile-time stand-ins for the stock classes the mod calls (`MainActivity`, `SettingsActivity`, `TakManager`, `TakUser` and others); they are not packaged |

@@ -121,9 +121,9 @@ final class AreaDownloader {
             }
             long bytes = tiles * (source.tileSize >= 512 ? BYTES_PER_512_TILE : BYTES_PER_256_TILE);
             String text = String.format(Locale.US, "%,d tiles, roughly %s (depends on the map style).",
-                    tiles, TileCache.formatSize(bytes));
+                    tiles, ModUtil.formatSize(bytes));
             if (bytes > TileCache.maxBytes() - TileCache.usedBytes(context)) {
-                text += "\nThat may not fit in the offline cache (" + TileCache.formatSize(TileCache.maxBytes())
+                text += "\nThat may not fit in the offline cache (" + ModUtil.formatSize(TileCache.maxBytes())
                         + "); older tiles would be removed. You can raise it in Settings → Map Sources.";
                 estimate.setTextColor(0xFFFFC107);
             } else {
@@ -335,8 +335,8 @@ final class AreaDownloader {
                     status.setTextColor(failed.get() == 0 ? DarkDialog.COLOR_ACCENT : 0xFFFFC107);
                 }
                 long grown = TileCache.usedBytes(context) - cacheBefore;
-                status.setText(headline + "\n" + counts + "\nCache: " + TileCache.formatSize(TileCache.usedBytes(context))
-                        + (grown > 0 ? " (+" + TileCache.formatSize(grown) + ")" : ""));
+                status.setText(headline + "\n" + counts + "\nCache: " + ModUtil.formatSize(TileCache.usedBytes(context))
+                        + (grown > 0 ? " (+" + ModUtil.formatSize(grown) + ")" : ""));
             }
         });
         // Belt and braces: never leave the "running" flag stuck if the UI goes away.
