@@ -80,7 +80,8 @@ public final class MarkerMove {
         pending = new Pending(activity, map, marker);
     }
 
-    private static void cancel() {
+    /** Ends move mode, if a marker is being moved. */
+    static void cancel() {
         if (pending != null) {
             pending.finish();
             pending = null;

@@ -114,6 +114,11 @@ public final class RemoteMarkers {
         }
     }
 
+    /** Drops every kept received marker from TakManager (for Clear All Markers). */
+    static void forgetAll() {
+        for (String uid : new java.util.ArrayList<>(kept)) onDeleted(uid);
+    }
+
     /** Hook: TakManager.processCoT, right after CotParser.parse. */
     public static void adjust(TakUser user) {
         if (user == null || user.isDrone()) return;

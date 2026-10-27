@@ -54,13 +54,18 @@ diff -ruN a/res/layout/activity_main.xml b/res/layout/activity_main.xml
 diff -ruN a/res/layout/activity_settings.xml b/res/layout/activity_settings.xml
 --- a/res/layout/activity_settings.xml
 +++ b/res/layout/activity_settings.xml
-@@ -27,6 +27,10 @@
+@@ -27,6 +27,15 @@
              <Button android:textSize="14.0sp" android:textColor="@android:color/white" android:id="@id/takAssignGroupsButton" android:visibility="gone" android:layout_width="fill_parent" android:layout_height="44.0dip" android:layout_marginBottom="4.0dip" android:text="Assign Selected Groups" android:backgroundTint="@color/primary" />
              <TextView android:textSize="12.0sp" android:textColor="@color/text_secondary" android:id="@id/takGroupStatus" android:visibility="gone" android:layout_width="fill_parent" android:layout_height="wrap_content" android:layout_marginBottom="12.0dip" />
              <View android:background="@color/background" android:layout_width="fill_parent" android:layout_height="1.0dip" android:layout_marginBottom="12.0dip" />
 +            <TextView android:textSize="14.0sp" android:textStyle="bold" android:textColor="@color/text_primary" android:paddingBottom="4.0dip" android:layout_width="fill_parent" android:layout_height="wrap_content" android:text="Map Sources" />
 +            <TextView android:textSize="12.0sp" android:textColor="@color/text_secondary" android:paddingBottom="8.0dip" android:layout_width="fill_parent" android:layout_height="wrap_content" android:text="Add your own tile servers, e.g. TileServer GL" />
 +            <Button android:textSize="14.0sp" android:textColor="@android:color/white" android:tag="custom_map_sources_button" android:layout_width="fill_parent" android:layout_height="44.0dip" android:layout_marginBottom="12.0dip" android:text="Manage Map Sources" android:backgroundTint="@color/accent" />
++            <View android:background="@color/background" android:layout_width="fill_parent" android:layout_height="1.0dip" android:layout_marginBottom="12.0dip" />
++            <TextView android:textSize="14.0sp" android:textStyle="bold" android:textColor="@color/text_primary" android:paddingBottom="4.0dip" android:layout_width="fill_parent" android:layout_height="wrap_content" android:text="Map" />
++            <Switch android:textSize="14.0sp" android:textColor="@color/text_primary" android:tag="mod_emergency_toggle" android:layout_width="fill_parent" android:layout_height="44.0dip" android:checked="true" android:text="Show Emergency button" />
++            <TextView android:textSize="12.0sp" android:textColor="@color/text_secondary" android:paddingBottom="12.0dip" android:layout_width="fill_parent" android:layout_height="wrap_content" android:text="Hide it if you don't use emergency alerts. It still shows while an alert is active, so it can be cancelled." />
++            <Button android:textSize="14.0sp" android:textColor="@android:color/white" android:tag="mod_clear_markers_button" android:layout_width="fill_parent" android:layout_height="44.0dip" android:layout_marginBottom="12.0dip" android:text="Clear All Markers" android:backgroundTint="#ffcc0000" />
 +            <View android:background="@color/background" android:layout_width="fill_parent" android:layout_height="1.0dip" android:layout_marginBottom="12.0dip" />
              <LinearLayout android:gravity="center_vertical" android:orientation="horizontal" android:id="@id/advancedHeader" android:background="?selectableItemBackground" android:layout_width="fill_parent" android:layout_height="44.0dip" android:layout_marginBottom="8.0dip" android:paddingStart="4.0dip" android:paddingEnd="4.0dip">
                  <TextView android:textSize="14.0sp" android:textStyle="bold" android:textColor="@color/text_secondary" android:id="@id/advancedHeaderText" android:layout_width="0.0dip" android:layout_height="wrap_content" android:text="Advanced Settings" android:layout_weight="1.0" />
@@ -111,7 +116,7 @@ diff -ruN a/smali_classes2/com/taklite/client/MainActivity.smali b/smali_classes
      const/4 v0, 0x1
  
      if-eq p1, v0, :cond_2
-@@ -2998,6 +3013,112 @@
+@@ -2998,6 +3013,128 @@
      return-object v0
  .end method
  
@@ -156,6 +161,22 @@ diff -ruN a/smali_classes2/com/taklite/client/MainActivity.smali b/smali_classes
 +    invoke-direct {p0}, Lcom/taklite/client/MainActivity;->dismissRadialMenu()V
 +
 +    return-void
++.end method
++
++.method public modDroppedMarkers()Ljava/util/Map;
++    .locals 1
++
++    iget-object v0, p0, Lcom/taklite/client/MainActivity;->droppedMarkers:Ljava/util/Map;
++
++    return-object v0
++.end method
++
++.method public modTakUserMarkers()Ljava/util/Map;
++    .locals 1
++
++    iget-object v0, p0, Lcom/taklite/client/MainActivity;->takUserMarkers:Ljava/util/Map;
++
++    return-object v0
 +.end method
 +
 +.method public modSaveDroppedMarkers()V
@@ -224,7 +245,7 @@ diff -ruN a/smali_classes2/com/taklite/client/MainActivity.smali b/smali_classes
  .method private cycleMapType()V
      .locals 4
  
-@@ -3006,7 +3127,11 @@
+@@ -3006,7 +3143,11 @@
      add-int/lit8 v0, v0, 0x1
  
      .line 1806
@@ -237,7 +258,7 @@ diff -ruN a/smali_classes2/com/taklite/client/MainActivity.smali b/smali_classes
  
      iput v0, p0, Lcom/taklite/client/MainActivity;->currentMapType:I
  
-@@ -6091,6 +6216,8 @@
+@@ -6091,6 +6232,8 @@
  
      iput-object v1, p0, Lcom/taklite/client/MainActivity;->activeRadialMenu:Landroid/view/View;
  
@@ -246,7 +267,7 @@ diff -ruN a/smali_classes2/com/taklite/client/MainActivity.smali b/smali_classes
      .line 1602
      invoke-virtual {p0}, Lcom/taklite/client/MainActivity;->getWindow()Landroid/view/Window;
  
-@@ -8948,6 +9075,8 @@
+@@ -8948,6 +9091,8 @@
      iget-object v9, p1, Lcom/taklite/client/DroppedMarker;->remarks:Ljava/lang/String;
  
      .line 1717
@@ -255,7 +276,7 @@ diff -ruN a/smali_classes2/com/taklite/client/MainActivity.smali b/smali_classes
      invoke-virtual/range {v0 .. v9}, Lcom/taklite/client/tak/TakManager;->sendMarker(DDDLjava/lang/String;Ljava/lang/String;Ljava/lang/String;)V
  
      const/4 p2, 0x1
-@@ -9232,6 +9361,8 @@
+@@ -9232,6 +9377,8 @@
  
      invoke-interface {v1, v2}, Lorg/osmdroid/config/IConfigurationProvider;->setUserAgentValue(Ljava/lang/String;)V
  
@@ -264,7 +285,7 @@ diff -ruN a/smali_classes2/com/taklite/client/MainActivity.smali b/smali_classes
      .line 146
      sget v1, Lcom/taklite/client/R$layout;->activity_main:I
  
-@@ -9624,6 +9755,8 @@
+@@ -9624,6 +9771,8 @@
      invoke-virtual {v0, p1}, Landroid/app/NotificationManager;->createNotificationChannel(Landroid/app/NotificationChannel;)V
  
      :cond_4
@@ -273,7 +294,7 @@ diff -ruN a/smali_classes2/com/taklite/client/MainActivity.smali b/smali_classes
      return-void
  .end method
  
-@@ -9768,6 +9901,8 @@
+@@ -9768,6 +9917,8 @@
      .line 260
      invoke-virtual {v1}, Lorg/osmdroid/views/MapView;->onResume()V
  

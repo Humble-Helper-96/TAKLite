@@ -167,11 +167,13 @@ public final class CustomMapSources {
     public static void onMainActivityResumed(MainActivity activity) {
         refreshMainMap(activity);
         TileCache.trimSoon(activity);
+        MapOptions.onMainActivityResumed(activity);
         Imports.onMainActivityResumed(activity);
     }
 
     /** End of SettingsActivity.onCreate(): wire up the "Manage Map Sources" button. */
     public static void onSettingsCreated(final Activity activity) {
+        MapOptions.onSettingsCreated(activity);
         View button = activity.getWindow().getDecorView().findViewWithTag(SETTINGS_BUTTON_TAG);
         if (button == null) {
             Log.w(TAG, "Map sources settings button not found");

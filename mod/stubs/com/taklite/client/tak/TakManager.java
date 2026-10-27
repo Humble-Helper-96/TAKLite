@@ -22,4 +22,9 @@ public class TakManager {
     public void modForgetUser(String uid) {
         throw new UnsupportedOperationException("stub");
     }
+
+    /** True while an emergency alert sent from this device hasn't been cancelled. */
+    public boolean hasActiveAlert() {
+        throw new UnsupportedOperationException("stub");
+    }
 }
