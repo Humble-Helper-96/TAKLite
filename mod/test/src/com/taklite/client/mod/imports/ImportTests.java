@@ -32,8 +32,23 @@ public class ImportTests {
         packages();
         mapSources();
         localNetwork();
+        originText();
         System.out.println(failures == 0 ? "ImportTests: ALL OK" : "ImportTests: " + failures + " FAILED");
         System.exit(failures == 0 ? 0 : 1);
+    }
+
+    // ---- Data Packages list: the "where it came from" line ----
+
+    private static void originText() {
+        check("origin: server with uploader", "From server \u00b7 uploaded by someone@example"
+                .equals(ImportStore.Entry.originText("Server, uploaded by someone@example")));
+        check("origin: server alone", "From server".equals(ImportStore.Entry.originText("Server")));
+        check("origin: sent over TAK", "Sent over TAK by Alpha"
+                .equals(ImportStore.Entry.originText("Data package from Alpha")));
+        check("origin: file", "Imported from a file".equals(ImportStore.Entry.originText("File")));
+        check("origin: anything else as is", "Other".equals(ImportStore.Entry.originText("Other")));
+        check("origin: empty or missing", ImportStore.Entry.originText("").isEmpty()
+                && ImportStore.Entry.originText(null).isEmpty());
     }
 
     private static String parse(String xml) {

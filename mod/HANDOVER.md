@@ -101,7 +101,7 @@ nested zips refused, `OutOfMemoryError`/`StackOverflowError` caught on import th
 
 ```
 bash mod/build.sh      # official 1.5.0 APK + patch + src -> out/TAKLite-V1.5.1-custommaps.apk
-bash mod/test/run.sh   # 137 JVM checks incl. an end-to-end run against a mock TAK server (mTLS)
+bash mod/test/run.sh   # 143 JVM checks incl. an end-to-end run against a mock TAK server (mTLS)
 ```
 
 The build needs no Android SDK (D8 and apksig come from the jadx jar; everything is
