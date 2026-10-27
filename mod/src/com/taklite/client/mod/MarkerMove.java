@@ -61,6 +61,7 @@ public final class MarkerMove {
 
     private static void start(MainActivity activity, DroppedMarker marker) {
         cancel();
+        MarkerPlace.cancel(activity); // one hint bar at a time
         if (marker.remote) {
             Toast.makeText(activity, "This marker came from another TAK user; only they can move it.",
                     Toast.LENGTH_LONG).show();
@@ -117,7 +118,7 @@ public final class MarkerMove {
             // Sent again only with "Send Marker Upon Placement" on; otherwise the user sends it.
             String message = MarkerSend.sendIfAuto(activity, marker, "moved");
             MarkerSend.refresh(activity, marker);
-            Toast.makeText(activity, message != null ? message : "Marker moved.", Toast.LENGTH_SHORT).show();
+            MarkerSend.toast(activity, message != null ? message : "Marker moved.");
             cancel();
         }
 

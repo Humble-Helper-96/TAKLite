@@ -193,7 +193,7 @@ final class TileCache {
             next.run();
             return;
         }
-        final DarkDialog d = new DarkDialog(context, "Delete saved maps?");
+        final DarkDialog d = new DarkDialog(context, "Delete Saved Maps?");
         d.addText("Deletes all " + ModUtil.formatSize(usedBytes(context)) + " of saved maps, for every map. "
                 + "Areas you saved for offline use will need saving again. Maps are saved again as you "
                 + "use them with a connection.");

@@ -288,10 +288,10 @@ diff -ruN a/res/layout/activity_settings.xml b/res/layout/activity_settings.xml
 +            <View android:background="@color/tp_divider" android:layout_width="fill_parent" android:layout_height="1.0dip" android:layout_marginBottom="6.0dip" />
 +            <TextView android:textSize="12.0sp" android:textStyle="bold" android:textColor="@color/tp_accent" android:paddingBottom="4.0dip" android:layout_width="fill_parent" android:layout_height="wrap_content" android:text="MAP" />
 +            <Switch android:textSize="14.0sp" android:textStyle="bold" android:textColor="@color/text_primary" android:tag="mod_emergency_toggle" android:layout_width="fill_parent" android:layout_height="40.0dip" android:layout_marginBottom="0.0dip" android:checked="true" android:text="Show Emergency Button" />
-+            <TextView android:textSize="12.0sp" android:textColor="@color/text_secondary" android:paddingBottom="6.0dip" android:layout_width="fill_parent" android:layout_height="wrap_content" android:text="Hides the red Emergency button on the map. It comes back while an alert from this phone is active, so it can be cancelled." />
++            <TextView android:textSize="12.0sp" android:textColor="@color/text_secondary" android:paddingBottom="6.0dip" android:layout_width="fill_parent" android:layout_height="wrap_content" android:text="Off: the red Emergency button is hidden from the map. It still comes back while an alert from this phone is active, so you can stop it." />
 +            <Switch android:textSize="14.0sp" android:textStyle="bold" android:textColor="@color/text_primary" android:tag="mod_send_on_place_toggle" android:layout_width="fill_parent" android:layout_height="40.0dip" android:layout_marginBottom="0.0dip" android:checked="false" android:text="Send Marker Upon Placement" />
 +            <TextView android:textSize="12.0sp" android:textColor="@color/text_secondary" android:paddingBottom="6.0dip" android:layout_width="fill_parent" android:layout_height="wrap_content" android:text="On: a marker you place, save after editing, or move goes to the team at once. Off: nothing is shared until you tap Send." />
-+            <TextView android:textSize="12.0sp" android:textColor="@color/text_secondary" android:paddingBottom="4.0dip" android:layout_width="fill_parent" android:layout_height="wrap_content" android:text="Add your own tile servers, e.g. TileServer GL" />
++            <TextView android:textSize="12.0sp" android:textColor="@color/text_secondary" android:paddingBottom="4.0dip" android:layout_width="fill_parent" android:layout_height="wrap_content" android:text="Add your own map servers (for example TileServer GL)" />
 +            <Button android:textSize="14.0sp" android:textColor="@android:color/white" android:tag="custom_map_sources_button" android:layout_width="fill_parent" android:layout_height="44.0dip" android:layout_marginBottom="6.0dip" android:text="Manage Map Sources" android:backgroundTint="@color/tp_btn_primary" />
 +            <Button android:textSize="14.0sp" android:textColor="@android:color/white" android:tag="mod_clear_markers_button" android:layout_width="fill_parent" android:layout_height="44.0dip" android:layout_marginBottom="6.0dip" android:text="Clear All Markers" android:backgroundTint="@color/tp_btn_danger" />
 +            <View android:background="@color/tp_divider" android:layout_width="fill_parent" android:layout_height="1.0dip" android:layout_marginBottom="6.0dip" />
@@ -865,6 +865,15 @@ diff -ruN a/smali_classes2/com/taklite/client/MainActivity.smali b/smali_classes
 +    const-string v1, "Alert sent to the team: "
  
      invoke-direct {p3, v1}, Ljava/lang/StringBuilder;-><init>(Ljava/lang/String;)V
+ 
+@@ -7805,7 +7960,7 @@
+     :cond_2
+     new-instance p1, Ljava/lang/StringBuilder;
+ 
+-    const-string v0, "Alert cancelled by "
++    const-string v0, "Alert stopped by "
+ 
+     invoke-direct {p1, v0}, Ljava/lang/StringBuilder;-><init>(Ljava/lang/String;)V
  
 @@ -8663,6 +8818,8 @@
      :goto_0

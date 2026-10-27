@@ -53,20 +53,20 @@ XYZ tile server, for example:
 
 ### Offline use
 
-Every tile you view is saved on the phone. It keeps showing when the server is
-out of reach, even after it goes stale (7 days for TileServer GL, which sends
-no cache headers). Stale tiles are refreshed when the server can be reached.
+Every part of the map you view is saved on the phone. It keeps showing when
+the server is out of reach, even after it goes stale (7 days for TileServer GL,
+which sends no expiry). Stale parts are refreshed when the server can be reached.
 
 - **Download visible area**: long-press the layers button while one of your
-  own sources is showing. Choose a zoom range and you get a tile count and a
-  rough size first. It downloads on 4 threads and skips tiles that are already
+  own sources is showing. Choose a zoom range and you get a rough size and
+  part count first. It downloads on 4 threads and skips parts that are already
   saved and fresh, so running it again only fetches what's missing or stale.
   Keep the app open while it runs; the screen stays on. Built-in maps can't
   be downloaded because their providers' usage policies don't allow bulk
   downloads.
   Downloads stop at street level: standard zoom 18, about 0.6 m per pixel.
   For 512 px TileServer GL tiles that is their zoom 17, which has the same
-  detail. Zoom in further and the map enlarges those tiles, offline too.
+  detail. Zoom in further and the map enlarges what it saved, offline too.
 - **Space for saved maps**: Settings → Manage Map Sources → **Space for saved
   maps** (300 MB to 16 GB; the default is 600 MB). All maps share it. When the
   saved maps take up more than allowed, the oldest parts are removed down to
@@ -90,13 +90,13 @@ Settings is grouped into **You** (callsign, phone, team, role), **Server**
 - **Show Emergency Button**: turn off to hide the red Emergency button on
   the map for users who don't use alerts. While an alert sent from this phone
   is active (for example from the volume-key panic), the button shows anyway,
-  so the alert can be cancelled.
+  so you can stop it.
 - **Send Marker Upon Placement** (off by default): on,
   a marker goes to the team the moment you place it, and again when you save
   an edit or move it. Off, nothing is sent on its own: placed, edited and moved
-  markers wait until you choose Send (on the marker's menu, or Save & Send in
-  the edit dialog). Markers always keep one uid, so a re-send updates the same
-  marker on teammates' maps.
+  markers wait until you choose Send (the paper plane on the marker's menu, or
+  SEND in the edit dialog). Markers always keep one uid, so a re-send updates
+  the same marker on teammates' maps.
 - **Clear All Markers** (the red button at the end of the Map group): after a confirmation, removes every marker from this
   phone's map at once, both your own and those received from others. It
   doesn't send anything: markers you already sent stay on teammates' maps.
@@ -109,9 +109,11 @@ under the top bar says "Tap the map to place the Friendly marker", with a ✕ to
 change your mind; stock TAK Lite waited for the tap with nothing on screen. A
 marker that is on your phone only carries a small hollow ring at its top right
 until it has been sent, and every placement and send ends in a short message
-("Marker placed. Tap it, then Send, to share it with the team." / "Marker sent
-to the team."). The Emergency dialogs say what each alert means ("911 Alert:
-I need help now") and ask "Stop the alert?" with CLOSE / STOP ALERT.
+("Marker placed. Tap it, then the paper plane, to share it with the team." /
+"Marker sent to the team."; the paper plane is the Send slice of the marker's
+menu). The Emergency dialogs say what each alert means ("911 Alert: I need help
+now") and ask "Stop the Alert?" with CLOSE / STOP ALERT; the toast on both
+sides says "stopped".
 
 ## Moving a marker
 
@@ -296,9 +298,9 @@ with your TAK server again), then install the APK.
 
 | Path | What it is |
 |---|---|
-| `src/com/taklite/client/mod/` | Map sources, in Java: source storage, the osmdroid tile source and dialogs (`CustomMapSources`), area download (`AreaDownloader`) and cache size (`TileCache`); marker move (`MarkerMove`), stable marker uids (`MarkerIds`) and classification of received markers (`RemoteMarkers`); shared helpers (`ModUtil`); this branch's theme: colour tokens (`Tak`), map label boxes (`MapLabel`) and the restyled `DarkDialog` |
+| `src/com/taklite/client/mod/` | Map sources, in Java: source storage, the osmdroid tile source and dialogs (`CustomMapSources`), area download (`AreaDownloader`) and cache size (`TileCache`); marker move (`MarkerMove`), stable marker uids (`MarkerIds`) and classification of received markers (`RemoteMarkers`); sending and the "not sent" ring (`MarkerSend`), the placement and move hint bars (`MarkerPlace`, `HintBar`); shared helpers (`ModUtil`); this branch's theme: colour tokens (`Tak`), map label boxes (`MapLabel`) and the restyled `DarkDialog` |
 | `src/com/taklite/client/mod/imports/` | Imported data: parsers (`CotShapes`, `KmlParser`, `GpxParser`, `Importer` for zips and data packages), storage (`ImportStore`), map layers and dialogs (`ImportedLayers`), data package downloads (`DataPackages`) and `ImportActivity` |
-| `patches/taklite-1.5.0.patch` | Changes to the decoded app: hooks in `MainActivity` (map-type cycling; `onCreate` before and after the map is created; `onResume`; `showRadialMenu`; the marker sends; new `modSetMapType`, `modMarkerIcon`, `modStopFollowing`, `modDismissRadialMenu`, `modSaveDroppedMarkers`), `RadialMenuView` (a fourth slice), the marker uid in `TakManager.sendMarker`, `SettingsActivity.onCreate`, `TakManager.onCotReceived` and `processCoT` (remote marker classification), `TakUser.isStale`/`isExpired` and the remote marker delete (keeping received markers), new `TakManager.modForgetUser` and `MainActivity.modDroppedMarkers`/`modTakUserMarkers`, the Settings screen (You / Server / Map / Advanced groups, the two switches with help lines and Clear All Markers under Map), the + popup and the radial Send (placement hint bar, "sent" feedback), the Emergency dialog texts, `placeMarker` and the edit dialog's Save (send on placement), `TakManager.sendAlert`/`cancelAlert` (Emergency button re-check), and `TakLocationService.onCreate`; the Settings button, the toolbar Data Packages button and its icon; the `ImportActivity` manifest entry; `usesCleartextTraffic`; and the version name |
+| `patches/taklite-1.5.0.patch` | Changes to the decoded app: hooks in `MainActivity` (map-type cycling; `onCreate` before and after the map is created; `onResume`; `showRadialMenu`; the marker sends; new `modSetMapType`, `modMarkerIcon`, `modStopFollowing`, `modDismissRadialMenu`, `modSaveDroppedMarkers`, `modCancelPlacement`), `RadialMenuView` (a fourth slice), the marker uid in `TakManager.sendMarker`, `SettingsActivity.onCreate`, `TakManager.onCotReceived` and `processCoT` (remote marker classification), `TakUser.isStale`/`isExpired` and the remote marker delete (keeping received markers), new `TakManager.modForgetUser` and `MainActivity.modDroppedMarkers`/`modTakUserMarkers`, the Settings screen (You / Server / Map / Advanced groups, the two switches with help lines and Clear All Markers under Map), the + popup and the radial Send (placement hint bar, "sent" feedback), the Emergency dialog texts, `placeMarker` and the edit dialog's Save (send on placement), `TakManager.sendAlert`/`cancelAlert` (Emergency button re-check), and `TakLocationService.onCreate`; the Settings button, the toolbar Data Packages button and its icon; the `ImportActivity` manifest entry; `usesCleartextTraffic`; and the version name |
 | `stubs/` | Compile-time stand-ins for the stock classes the mod calls (`MainActivity`, `SettingsActivity`, `TakManager`, `TakUser` and others); they are not packaged |
 | `tools/SignApk.java` | Zip-aligns, signs and verifies with apksig |
 

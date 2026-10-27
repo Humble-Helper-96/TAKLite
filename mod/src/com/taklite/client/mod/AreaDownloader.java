@@ -109,7 +109,7 @@ final class AreaDownloader {
                     : null;
             long tiles = range == null ? 0 : countTiles(area, range[0], range[1]);
             if (error == null && tiles > MAX_TILES) {
-                error = String.format(Locale.US, "That is too much map at once (%,d pieces; the limit is %,d). "
+                error = String.format(Locale.US, "That is too much map at once (%,d parts; the limit is %,d). "
                         + "Zoom in or lower \"To zoom\".", tiles, MAX_TILES);
             }
             if (error != null) {
@@ -120,7 +120,7 @@ final class AreaDownloader {
                 return;
             }
             long bytes = tiles * (source.tileSize >= 512 ? BYTES_PER_512_TILE : BYTES_PER_256_TILE);
-            String text = String.format(Locale.US, "Roughly %s to download (%,d map pieces; depends on the map style).",
+            String text = String.format(Locale.US, "Roughly %s to download (%,d map parts; depends on the map style).",
                     ModUtil.formatSize(bytes), tiles);
             if (bytes > TileCache.maxBytes() - TileCache.usedBytes(context)) {
                 text += "\nThat may not fit in the space for saved maps (" + ModUtil.formatSize(TileCache.maxBytes())
@@ -365,7 +365,7 @@ final class AreaDownloader {
                     headline = "Cancelled. What was saved so far is kept.";
                 } else {
                     headline = failed.get() == 0 ? "Done."
-                            : "Done, but some pieces couldn't be downloaded (not on the server, or errors). Run it again to retry them.";
+                            : "Done, but some parts couldn't be downloaded (not on the server, or errors). Run it again to retry them.";
                     status.setTextColor(failed.get() == 0 ? Tak.STATE_GO : Tak.STATE_CAUTION);
                 }
                 long used = TileCache.freshUsedBytes(context);

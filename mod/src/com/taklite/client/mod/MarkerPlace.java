@@ -25,6 +25,7 @@ public final class MarkerPlace {
     /** Hook: the + popup, right after the affiliation was chosen. */
     public static void armed(final MainActivity activity, String affiliation) {
         try {
+            MarkerMove.cancel(); // one hint bar at a time
             hideBar();
             armedOn = new WeakReference<>(activity);
             String what = affiliation == null || affiliation.isEmpty() ? "marker" : affiliation + " marker";

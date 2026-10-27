@@ -29,8 +29,9 @@ import java.util.WeakHashMap;
  * it is placed, and again when saved after an edit or moved.
  *
  * Either way the user can see the result: every placement and send ends in a short
- * toast, and a marker that is on this phone only carries a small hollow ring at its
- * top right until it has been sent.
+ * toast (the radial menu's Send slice is a paper-plane icon, so the toasts say
+ * "the paper plane"), and a marker that is on this phone only carries a small hollow
+ * ring at its top right until it has been sent.
  */
 public final class MarkerSend {
 
@@ -56,9 +57,9 @@ public final class MarkerSend {
         try {
             MarkerPlace.placed();
             String message = autoSend(activity) ? send(activity, marker, "placed")
-                    : "Marker placed. Tap it, then Send, to share it with the team.";
+                    : "Marker placed. Tap it, then the paper plane, to share it with the team.";
             refresh(activity, marker);
-            Toast.makeText(activity, message, Toast.LENGTH_SHORT).show();
+            toast(activity, message);
         } catch (RuntimeException e) {
             Log.w(TAG, "Could not finish placing the marker", e);
         }
@@ -74,7 +75,7 @@ public final class MarkerSend {
             if (marker.remote) return;
             String message = sendIfAuto(activity, marker, "updated");
             refresh(activity, marker);
-            if (message != null) Toast.makeText(activity, message, Toast.LENGTH_SHORT).show();
+            if (message != null) toast(activity, message);
         } catch (RuntimeException e) {
             Log.w(TAG, "Could not send the edited marker", e);
         }
@@ -84,7 +85,7 @@ public final class MarkerSend {
     public static void onSent(MainActivity activity, DroppedMarker marker) {
         try {
             refresh(activity, marker);
-            Toast.makeText(activity, "Marker sent to the team.", Toast.LENGTH_SHORT).show();
+            toast(activity, "Marker sent to the team.");
         } catch (RuntimeException e) {
             Log.w(TAG, "Could not show the send result", e);
         }
@@ -125,6 +126,11 @@ public final class MarkerSend {
         }
     }
 
+    /** A toast that stays long enough to read: longer messages get the long duration. */
+    static void toast(Context context, String message) {
+        Toast.makeText(context, message, message.length() > 60 ? Toast.LENGTH_LONG : Toast.LENGTH_SHORT).show();
+    }
+
     private static void invalidate(MainActivity activity) {
         MapView map = ModUtil.mapView(activity);
         if (map != null) map.invalidate();
@@ -161,7 +167,7 @@ public final class MarkerSend {
      */
     static String sendIfAuto(MainActivity activity, DroppedMarker marker, String what) {
         if (!autoSend(activity)) {
-            return marker.transmitted ? "Marker " + what + ". Send it to update the team." : null;
+            return marker.transmitted ? "Marker " + what + ". Tap it, then the paper plane, to update the team." : null;
         }
         return send(activity, marker, what);
     }
@@ -174,7 +180,7 @@ public final class MarkerSend {
             tak = null;
         }
         if (tak == null || !tak.isConnected()) {
-            return "Marker " + what + ", but you're not connected (see the top bar). Tap it and choose Send once it says Connected.";
+            return "Marker " + what + ", but not connected. Tap it, then the paper plane, once the top bar says Connected.";
         }
         MarkerIds.beforeSend(marker);
         tak.sendMarker(marker.position.getLatitude(), marker.position.getLongitude(),
