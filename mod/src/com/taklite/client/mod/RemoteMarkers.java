@@ -46,6 +46,12 @@ public final class RemoteMarkers {
                 }
             });
 
+    /**
+     * Received markers, kept on the map until deleted like ATAK does. TAK Lite otherwise
+     * greys a marker out when it goes stale and removes it 5 minutes later.
+     */
+    private static final java.util.Set<String> kept = java.util.concurrent.ConcurrentHashMap.newKeySet();
+
     private RemoteMarkers() {
     }
 
@@ -60,6 +66,11 @@ public final class RemoteMarkers {
         if (uid == null || type == null) return;
         String how = type.startsWith("a-") ? attr(tag, HOW) : null;
         boolean marker = isMarker(type, how, cot);
+        if (marker) {
+            kept.add(uid);
+        } else {
+            kept.remove(uid);
+        }
         Boolean before = markers.put(uid, marker);
         if (before == null || before != marker) {
             Log.d(TAG, uid + " type=" + type + (how != null ? " how=" + how : "") + " -> "
@@ -77,6 +88,30 @@ public final class RemoteMarkers {
         if (!type.startsWith("a-")) return false;
         if (cot.contains("<takv") || cot.contains("<__group")) return false;
         return (how != null && how.startsWith("h-")) || cot.contains("<archive") || cot.contains("<usericon");
+    }
+
+    /**
+     * Hook: start of TakUser.isStale() and isExpired(); true makes both answer false, so a
+     * received marker is neither greyed out nor removed when its stale time passes.
+     */
+    public static boolean keep(TakUser user) {
+        String uid = user.getUid();
+        return uid != null && !user.isDrone() && kept.contains(uid);
+    }
+
+    /**
+     * Hook: a received marker was deleted from the radial menu. TAK Lite only took it off
+     * the map; drop it from TakManager too, or it would be drawn again when the map comes
+     * back. If the sender sends it again, it reappears, as in ATAK.
+     */
+    public static void onDeleted(String uid) {
+        if (uid == null) return;
+        kept.remove(uid);
+        try {
+            com.taklite.client.tak.TakManager.getInstance().modForgetUser(uid);
+        } catch (RuntimeException e) {
+            Log.w(TAG, "Could not forget deleted marker " + uid, e);
+        }
     }
 
     /** Hook: TakManager.processCoT, right after CotParser.parse. */

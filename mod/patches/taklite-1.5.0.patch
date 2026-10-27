@@ -68,7 +68,16 @@ diff -ruN a/res/layout/activity_settings.xml b/res/layout/activity_settings.xml
 diff -ruN a/smali_classes2/com/taklite/client/MainActivity$6.smali b/smali_classes2/com/taklite/client/MainActivity$6.smali
 --- a/smali_classes2/com/taklite/client/MainActivity$6.smali
 +++ b/smali_classes2/com/taklite/client/MainActivity$6.smali
-@@ -369,6 +369,8 @@
+@@ -99,6 +99,8 @@
+ 
+     move-result-object p3
+ 
++    invoke-static {p3}, Lcom/taklite/client/mod/RemoteMarkers;->onDeleted(Ljava/lang/String;)V
++
+     iget-object v0, p0, Lcom/taklite/client/MainActivity$6;->this$0:Lcom/taklite/client/MainActivity;
+ 
+     .line 1562
+@@ -369,6 +371,8 @@
  
      iget-object v10, v0, Lcom/taklite/client/DroppedMarker;->remarks:Ljava/lang/String;
  
@@ -371,7 +380,24 @@ diff -ruN a/smali_classes2/com/taklite/client/tak/TakManager.smali b/smali_class
      if-eqz p1, :cond_e
  
      .line 282
-@@ -1482,6 +1484,10 @@
+@@ -961,6 +963,16 @@
+     return v0
+ .end method
+ 
++.method public modForgetUser(Ljava/lang/String;)V
++    .locals 1
++
++    iget-object v0, p0, Lcom/taklite/client/tak/TakManager;->takUsers:Ljava/util/concurrent/ConcurrentHashMap;
++
++    invoke-virtual {v0, p1}, Ljava/util/concurrent/ConcurrentHashMap;->remove(Ljava/lang/Object;)Ljava/lang/Object;
++
++    return-void
++.end method
++
+ .method public isConnected()Z
+     .locals 1
+ 
+@@ -1482,6 +1494,10 @@
  .method public onCotReceived(Ljava/lang/String;)V
      .locals 3
  
@@ -382,7 +408,7 @@ diff -ruN a/smali_classes2/com/taklite/client/tak/TakManager.smali b/smali_class
      .line 190
      new-instance v0, Ljava/lang/StringBuilder;
  
-@@ -1762,6 +1768,12 @@
+@@ -1762,6 +1778,12 @@
  
      iget-object v2, v0, Lcom/taklite/client/tak/TakManager;->uid:Ljava/lang/String;
  
@@ -395,7 +421,7 @@ diff -ruN a/smali_classes2/com/taklite/client/tak/TakManager.smali b/smali_class
      iget-object v3, v0, Lcom/taklite/client/tak/TakManager;->callsign:Ljava/lang/String;
  
      move-object v4, v1
-@@ -1783,6 +1795,8 @@
+@@ -1783,6 +1805,8 @@
  
      move-result-object v2
  
@@ -404,3 +430,44 @@ diff -ruN a/smali_classes2/com/taklite/client/tak/TakManager.smali b/smali_class
      iget-object v3, v0, Lcom/taklite/client/tak/TakManager;->client:Lcom/taklite/client/tak/TakClient;
  
      .line 172
+diff -ruN a/smali_classes2/com/taklite/client/tak/TakUser.smali b/smali_classes2/com/taklite/client/tak/TakUser.smali
+--- a/smali_classes2/com/taklite/client/tak/TakUser.smali
++++ b/smali_classes2/com/taklite/client/tak/TakUser.smali
+@@ -355,6 +355,18 @@
+ .method public isExpired()Z
+     .locals 6
+ 
++    invoke-static {p0}, Lcom/taklite/client/mod/RemoteMarkers;->keep(Lcom/taklite/client/tak/TakUser;)Z
++
++    move-result v0
++
++    if-eqz v0, :mod_not_kept
++
++    const/4 v0, 0x0
++
++    return v0
++
++    :mod_not_kept
++
+     .line 45
+     invoke-static {}, Ljava/lang/System;->currentTimeMillis()J
+ 
+@@ -384,6 +396,18 @@
+ .method public isStale()Z
+     .locals 4
+ 
++    invoke-static {p0}, Lcom/taklite/client/mod/RemoteMarkers;->keep(Lcom/taklite/client/tak/TakUser;)Z
++
++    move-result v0
++
++    if-eqz v0, :mod_not_kept
++
++    const/4 v0, 0x0
++
++    return v0
++
++    :mod_not_kept
++
+     .line 41
+     invoke-static {}, Ljava/lang/System;->currentTimeMillis()J
+ 
