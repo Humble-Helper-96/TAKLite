@@ -5,6 +5,16 @@ plus a restyle after TAK Aware (map screen) and the TAKPilot2 UI spec (dialogs a
 settings). Version 1.5.0 (`main`) has the same
 features on TAK Lite's original look.
 
+## Design principle
+
+TAK Lite is for people with little or no TAK training: see your team, be seen,
+send an alert, with nothing to learn first. Every screen on this branch is held
+to that. Plain words, not TAK or GIS terms; one obvious way to do each thing; no
+pop-ups or confirmations beyond the ones that stop a mistake; sensible defaults
+so most users never open Settings; the detail a power user wants is there, but
+behind a smaller control, never in the way. Features are kept; it is how they
+are presented that must stay simple.
+
 This adds your own raster map sources and data import (TAK data packages,
 KML, KMZ, GPX, CoT) to TAK Lite 1.5.0. Map sources are built for
 [TileServer GL](https://github.com/maptiler/tileserver-gl) but working with any
