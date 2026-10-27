@@ -18,6 +18,7 @@ import android.util.Log;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.taklite.client.MainActivity;
@@ -309,7 +310,7 @@ final class ImportedLayers {
         return BitmapFactory.decodeFile(file.getPath(), opts);
     }
 
-    /** The Data Packages menu (toolbar button): imports with visibility checkboxes, server, file. */
+    /** The Data Packages menu (toolbar button): imports with show/hide eyes, server, file. */
     static void showManager(final Context context) {
         final DarkDialog d = new DarkDialog(context, "Data Packages");
         List<ImportStore.Entry> entries = Imports.list();
@@ -317,6 +318,9 @@ final class ImportedLayers {
             d.addText("Nothing imported yet. Data packages sent to you over TAK appear here "
                     + "automatically; you can also download them from the server or import a file.");
         }
+        boolean anyOnMap = false;
+        for (ImportStore.Entry e : entries) anyOnMap |= e.count > 0;
+        if (anyOnMap) d.addText("Tap the eye to show or hide a package on the map.");
         for (final ImportStore.Entry e : entries) {
             addEntryRow(context, d, e);
         }
@@ -333,35 +337,47 @@ final class ImportedLayers {
         d.show();
     }
 
-    /** Checkbox toggles visibility; tapping the name opens zoom / show / delete. */
+    /**
+     * One package: the eye (show/hide on the map, as in TAK Aware) at the left, then the name,
+     * where it came from and what it holds; tapping the text opens zoom / show / delete. The
+     * delete button stays apart at the right.
+     */
     private static void addEntryRow(final Context context, final DarkDialog d, final ImportStore.Entry e) {
         LinearLayout row = new LinearLayout(context);
         row.setOrientation(LinearLayout.HORIZONTAL);
         row.setGravity(android.view.Gravity.CENTER_VERTICAL);
 
-        final android.widget.CheckBox box = new android.widget.CheckBox(context);
-        box.setChecked(e.visible);
-        box.setButtonTintList(android.content.res.ColorStateList.valueOf(DarkDialog.COLOR_ACCENT));
-        box.setContentDescription("Show " + e.name + " on the map");
-        box.setOnCheckedChangeListener((b, checked) -> {
-            try {
-                Imports.setVisible(e.id, checked);
-                e.visible = checked;
-            } catch (IOException ex) {
-                b.setChecked(!checked);
-                Toast.makeText(context, "Could not save: " + ex.getMessage(), Toast.LENGTH_LONG).show();
-            }
-        });
-        // Only map sources: nothing on the map to show or hide.
-        if (e.count == 0) box.setVisibility(View.INVISIBLE);
-        row.addView(box);
+        final ImageView eye = new ImageView(context);
+        eye.setScaleType(ImageView.ScaleType.CENTER);
+        eye.setBackgroundResource(themeAttr(context, android.R.attr.selectableItemBackgroundBorderless));
 
         String date = DateFormat.getMediumDateFormat(context).format(new Date(e.importedAt));
-        LinearLayout text = DarkDialog.row(context, e.name,
-                e.origin + " \u00b7 " + e.contents() + " \u00b7 " + date, Color.WHITE, v -> {
-                    d.dismiss();
-                    showEntry(context, e);
-                });
+        LinearLayout text = new LinearLayout(context);
+        text.setOrientation(LinearLayout.VERTICAL);
+        text.setPadding(d.dp(4), d.dp(10), d.dp(8), d.dp(10));
+        text.setBackgroundResource(themeAttr(context, android.R.attr.selectableItemBackground));
+        text.setOnClickListener(v -> {
+            d.dismiss();
+            showEntry(context, e);
+        });
+        TextView name = rowText(context, e.name, 15, Color.WHITE);
+        name.setTypeface(Typeface.DEFAULT_BOLD);
+        text.addView(name, DarkDialog.matchWrap());
+        String origin = ImportStore.Entry.originText(e.origin);
+        if (!origin.isEmpty()) text.addView(rowText(context, origin, 12, DarkDialog.COLOR_SECONDARY), DarkDialog.matchWrap());
+        final TextView contents = rowText(context, e.contents() + " \u00b7 " + date, 12, DarkDialog.COLOR_LABEL);
+        text.addView(contents, DarkDialog.matchWrap());
+
+        // Only map sources: nothing on the map to show or hide.
+        if (e.count == 0) {
+            eye.setVisibility(View.INVISIBLE);
+        } else {
+            showEyeState(eye, contents, e);
+            eye.setOnClickListener(v -> {
+                if (setVisible(context, e, !e.visible)) showEyeState(eye, contents, e);
+            });
+        }
+        row.addView(eye, new LinearLayout.LayoutParams(d.dp(48), d.dp(48)));
         row.addView(text, new LinearLayout.LayoutParams(0,
                 LinearLayout.LayoutParams.WRAP_CONTENT, 1f));
 
@@ -374,8 +390,117 @@ final class ImportedLayers {
             d.dismiss();
             confirmDelete(context, e, () -> showManager(context));
         });
-        row.addView(delete, new LinearLayout.LayoutParams(d.dp(44), d.dp(44)));
+        LinearLayout.LayoutParams deleteLp = new LinearLayout.LayoutParams(d.dp(48), d.dp(48));
+        deleteLp.leftMargin = d.dp(8);
+        row.addView(delete, deleteLp);
         d.content.addView(row, DarkDialog.matchWrap());
+    }
+
+    /** Bright open eye when shown, dim slashed eye when hidden; the name stays readable either way. */
+    private static void showEyeState(ImageView eye, TextView contents, ImportStore.Entry e) {
+        eye.setImageDrawable(new EyeIcon(eye.getResources().getDisplayMetrics().density, e.visible));
+        eye.setContentDescription((e.visible ? "Hide from map: " : "Show on map: ") + e.name);
+        contents.setAlpha(e.visible ? 1f : 0.6f);
+    }
+
+    /**
+     * Shows or hides a package's items on the map; nothing is deleted and its map sources are
+     * untouched. Logged under DataPackages so a test run can be checked. False if it couldn't save.
+     */
+    private static boolean setVisible(Context context, ImportStore.Entry e, boolean visible) {
+        try {
+            Imports.setVisible(e.id, visible);
+            e.visible = visible;
+            Log.i("DataPackages", "Package \"" + e.name + "\" " + (visible ? "shown" : "hidden")
+                    + " on the map (" + e.count + (e.count == 1 ? " item)" : " items)"));
+            return true;
+        } catch (IOException ex) {
+            Log.e("DataPackages", "Could not save show/hide for \"" + e.name + "\"", ex);
+            Toast.makeText(context, "Could not save: " + ex.getMessage(), Toast.LENGTH_LONG).show();
+            return false;
+        }
+    }
+
+    private static TextView rowText(Context context, String value, int sp, int color) {
+        TextView t = new TextView(context);
+        t.setText(value);
+        t.setTextSize(android.util.TypedValue.COMPLEX_UNIT_SP, sp);
+        t.setTextColor(color);
+        return t;
+    }
+
+    private static int themeAttr(Context context, int attr) {
+        android.util.TypedValue tv = new android.util.TypedValue();
+        context.getTheme().resolveAttribute(attr, tv, true);
+        return tv.resourceId;
+    }
+
+    /** TAK Aware's show/hide eye: white and open when shown, grey with a slash when hidden. */
+    private static final class EyeIcon extends Drawable {
+        private final Paint paint = new Paint(Paint.ANTI_ALIAS_FLAG);
+        private final float density;
+        private final boolean shown;
+
+        EyeIcon(float density, boolean shown) {
+            this.density = density;
+            this.shown = shown;
+            paint.setColor(shown ? Color.WHITE : 0xFF8A8A8A);
+            paint.setStrokeCap(Paint.Cap.ROUND);
+            paint.setStrokeJoin(Paint.Join.ROUND);
+        }
+
+        @Override
+        public int getIntrinsicWidth() {
+            return Math.round(26 * density);
+        }
+
+        @Override
+        public int getIntrinsicHeight() {
+            return Math.round(26 * density);
+        }
+
+        @Override
+        public void draw(Canvas canvas) {
+            android.graphics.Rect b = getBounds();
+            float cx = b.exactCenterX(), cy = b.exactCenterY();
+            float w = 11 * density, h = 6.5f * density;
+            // Almond outline: two quadratic curves meeting at the corners of the eye.
+            android.graphics.Path outline = new android.graphics.Path();
+            outline.moveTo(cx - w, cy);
+            outline.quadTo(cx, cy - 2 * h, cx + w, cy);
+            outline.quadTo(cx, cy + 2 * h, cx - w, cy);
+            outline.close();
+            if (shown) {
+                paint.setStyle(Paint.Style.FILL);
+                canvas.drawPath(outline, paint);
+                paint.setColor(Color.BLACK);
+                canvas.drawCircle(cx, cy, 3.6f * density, paint);
+                paint.setColor(Color.WHITE);
+                canvas.drawCircle(cx, cy, 1.8f * density, paint);
+            } else {
+                paint.setStyle(Paint.Style.STROKE);
+                paint.setStrokeWidth(1.6f * density);
+                canvas.drawPath(outline, paint);
+                canvas.drawCircle(cx, cy, 3f * density, paint);
+                paint.setStrokeWidth(2f * density);
+                canvas.drawLine(cx - w * 0.85f, cy - w * 0.85f, cx + w * 0.85f, cy + w * 0.85f, paint);
+            }
+        }
+
+        @Override
+        public void setAlpha(int alpha) {
+            paint.setAlpha(alpha);
+        }
+
+        @Override
+        public void setColorFilter(android.graphics.ColorFilter filter) {
+            paint.setColorFilter(filter);
+        }
+
+        @Override
+        public int getOpacity() {
+            return android.graphics.PixelFormat.TRANSLUCENT;
+        }
     }
 
     /** Lists the server's data packages; tap one to download and import it. */
@@ -455,7 +580,8 @@ final class ImportedLayers {
 
     private static void showEntry(final Context context, final ImportStore.Entry e) {
         final DarkDialog d = new DarkDialog(context, e.name);
-        d.addText(e.origin + "\n" + e.contents() + ", imported "
+        String origin = ImportStore.Entry.originText(e.origin);
+        d.addText((origin.isEmpty() ? "" : origin + "\n") + e.contents() + ", imported "
                 + DateFormat.getMediumDateFormat(context).format(new Date(e.importedAt)) + " "
                 + DateFormat.getTimeFormat(context).format(new Date(e.importedAt)));
         if (e.count == 0) {
@@ -463,22 +589,14 @@ final class ImportedLayers {
                     + "one, or edit them in Settings \u2192 Map Sources.");
         } else d.addButton("Zoom To", DarkDialog.COLOR_ACCENT, v -> {
             d.dismiss();
-            try {
-                if (!e.visible) Imports.setVisible(e.id, true);
-            } catch (IOException ex) {
-                Log.e(TAG, "Could not show " + e.name, ex);
-            }
+            if (!e.visible) setVisible(context, e, true);
             if (context instanceof MainActivity) {
                 MapView map = mapView((MainActivity) context);
                 if (map != null) zoomTo((MainActivity) context, map, e);
             }
         });
-        if (e.count > 0) d.addButton(e.visible ? "Hide on Map" : "Show on Map", DarkDialog.COLOR_FIELD, v -> {
-            try {
-                Imports.setVisible(e.id, !e.visible);
-            } catch (IOException ex) {
-                Toast.makeText(context, "Could not save: " + ex.getMessage(), Toast.LENGTH_LONG).show();
-            }
+        if (e.count > 0) d.addButton(e.visible ? "Hide from Map" : "Show on Map", DarkDialog.COLOR_FIELD, v -> {
+            setVisible(context, e, !e.visible);
             d.dismiss();
             showManager(context);
         });

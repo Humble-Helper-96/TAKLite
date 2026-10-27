@@ -142,8 +142,19 @@ logcat command (it's off by default, as it runs for every send).
 
 Everything lives under the **Data Packages** button on the map's top bar (the
 box icon, as in ATAK, between the connection status and the wrench). It lists
-your imports, each with a checkbox to show or hide it on the map. Tap a
-name to zoom to it or delete it.
+your imports. Each row shows the package name, where it came from ("From
+server · uploaded by …", "Sent over TAK by …", "Imported from a file"; long
+names wrap rather than being cut off) and its item count and date.
+
+- **The eye** at the left of a row shows or hides that package's items on the
+  map, as in TAK Aware: a bright open eye is shown, a dim eye with a slash is
+  hidden. Hiding deletes nothing and doesn't touch map sources that came with
+  the package; the name stays readable. The eye has a 48 dp tap target and a
+  screen reader label ("Show on map" / "Hide from map"). Each toggle is logged
+  (`adb logcat -s DataPackages`) with the package name, new state and item count.
+- **The red bin** at the right deletes the package and its items, after a
+  confirmation.
+- Tap a package's name to zoom to it, show or hide it, or delete it.
 
 - **Download from Server**: lists the data packages on your TAK server (the
   same query as ATAK's data package server search,

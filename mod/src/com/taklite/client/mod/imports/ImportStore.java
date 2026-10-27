@@ -66,6 +66,21 @@ final class ImportStore {
         }
 
         /** "129 items", "3 map sources" or "129 items, 3 map sources". */
+        /** The origin as shown in the list: "From server · uploaded by …", "Sent over TAK by …". */
+        static String originText(String origin) {
+            if (origin == null || origin.isEmpty()) return "";
+            String server = "Server";
+            String uploaded = ", uploaded by ";
+            if (origin.equals(server)) return "From server";
+            if (origin.startsWith(server + uploaded)) {
+                return "From server \u00b7 uploaded by " + origin.substring((server + uploaded).length());
+            }
+            String sent = "Data package from ";
+            if (origin.startsWith(sent)) return "Sent over TAK by " + origin.substring(sent.length());
+            if (origin.equals("File")) return "Imported from a file";
+            return origin;
+        }
+
         String contents() {
             String items = count + (count == 1 ? " item" : " items");
             String sources = mapSources + (mapSources == 1 ? " map source" : " map sources");
