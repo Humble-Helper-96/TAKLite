@@ -11,12 +11,10 @@ import com.taklite.client.tak.TakManager;
 /**
  * Settings → "Send Marker Upon Placement".
  *
- * Off (default, stock TAK Lite's placement behaviour): nothing goes out on its own. A
- * placed, edited or moved marker is sent only from its radial menu's Send. On: a marker
- * is sent to the team as soon as it is placed, and again when edited or moved.
- *
- * Stock TAK Lite sent on every edit regardless; the edit hook makes that follow the
- * setting too, so "off" means off everywhere.
+ * Off (default, stock TAK Lite's behaviour): nothing goes out on its own. A placed,
+ * edited or moved marker is sent only when the user asks: the radial menu's Send, or
+ * Save & Send in the edit dialog. On: a marker is sent to the team as soon as it is
+ * placed, and again when saved after an edit or moved.
  */
 public final class MarkerSend {
 
@@ -44,14 +42,17 @@ public final class MarkerSend {
     }
 
     /**
-     * Hook: the edit dialog's Save, after the marker is updated and before the stock code
-     * sends it. True skips the stock send (and its "Not connected" toast).
+     * Hook: the edit dialog's plain Save, after the marker is updated (Save & Send is
+     * untouched and always sends). With the setting on the change goes to the team at
+     * once; off, a marker the team already has gets a reminder to send it.
      */
-    public static boolean skipStockSendAfterEdit(MainActivity activity, DroppedMarker marker) {
+    public static void onEdited(MainActivity activity, DroppedMarker marker) {
         try {
-            return !autoSend(activity);
+            if (marker.remote) return;
+            String message = sendIfAuto(activity, marker, "updated");
+            if (message != null) Toast.makeText(activity, message, Toast.LENGTH_SHORT).show();
         } catch (RuntimeException e) {
-            return false;
+            Log.w(TAG, "Could not send the edited marker", e);
         }
     }
 
